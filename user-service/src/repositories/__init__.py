@@ -34,5 +34,7 @@ class UserRepository:
                 await session.refresh(user)
                 return user
         except IntegrityError as e:
+            raise e
+        except Exception as e:
             logger.error(f'Database Error {e}')
             raise e

@@ -14,19 +14,21 @@ class UserService:
             logger.warning(f'User not found {id}')
             await context.abort(
                 grpc.StatusCode.NOT_FOUND,
-                'Idi nahuy'
+                'User not found'
             )
-        logger.info(f'Found user: {user.username}')
+        logger.info(f'Найден пользователь: {user.username}')
         return user
     
     async def create(self, data: dict, context: grpc.aio.ServicerContext):
         try:
             new_user = await self.repo.create(data)
+            logger.info(f'Создан пользователь: {data['username']}')
             return new_user
         except IntegrityError as e:
+            logger.error(f"Попытка повторно создать пользователя: {data['username']}")
             await context.abort(
                 grpc.StatusCode.ALREADY_EXISTS,
-                'Idi nahuy x2'
+                'User already exists'
             )
 
     #Здесь будут потом вызываться репозитории
