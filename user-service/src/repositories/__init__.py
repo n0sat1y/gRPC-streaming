@@ -16,10 +16,10 @@ class UserRepository:
             logger.error(f'Database Error {e}')
             raise e
 
-    async def get_by_username(self, id: int) -> UserModel:
+    async def get_by_username(self, username: str) -> UserModel:
         try:
             async with SessionLocal() as session:
-                result = await session.execute(select(UserModel))
+                result = await session.execute(select(UserModel).where(UserModel.username == username))
                 return result.scalar_one_or_none()
         except Exception as e:
             logger.error(f'Database Error {e}')

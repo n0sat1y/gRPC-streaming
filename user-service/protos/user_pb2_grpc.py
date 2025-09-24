@@ -44,6 +44,11 @@ class UserStub(object):
                 request_serializer=user__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=user__pb2.CreateUserResponse.FromString,
                 _registered_method=True)
+        self.AuthUser = channel.unary_unary(
+                '/User/AuthUser',
+                request_serializer=user__pb2.AuthUserRequest.SerializeToString,
+                response_deserializer=user__pb2.AuthUserResponse.FromString,
+                _registered_method=True)
 
 
 class UserServicer(object):
@@ -61,6 +66,12 @@ class UserServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AuthUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_UserServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -73,6 +84,11 @@ def add_UserServicer_to_server(servicer, server):
                     servicer.CreateUser,
                     request_deserializer=user__pb2.CreateUserRequest.FromString,
                     response_serializer=user__pb2.CreateUserResponse.SerializeToString,
+            ),
+            'AuthUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.AuthUser,
+                    request_deserializer=user__pb2.AuthUserRequest.FromString,
+                    response_serializer=user__pb2.AuthUserResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,6 +145,33 @@ class User(object):
             '/User/CreateUser',
             user__pb2.CreateUserRequest.SerializeToString,
             user__pb2.CreateUserResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AuthUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/User/AuthUser',
+            user__pb2.AuthUserRequest.SerializeToString,
+            user__pb2.AuthUserResponse.FromString,
             options,
             channel_credentials,
             insecure,

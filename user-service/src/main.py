@@ -2,12 +2,10 @@ import asyncio
 import grpc
 from loguru import logger
 from concurrent import futures
-from fast_depends import Depends
 
-from protos import user_pb2, user_pb2_grpc
+from protos import user_pb2_grpc
 from src.core.config import settings
 from src.routers import User
-from src.services import UserService
 
 
 

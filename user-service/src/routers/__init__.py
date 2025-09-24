@@ -16,3 +16,9 @@ class User(user_pb2_grpc.UserServicer):
         return user_pb2.CreateUserResponse(
             id=new_user.id
         )
+    
+    async def AuthUser(self, request, context):
+        user = await self.service.get_or_create(request.username, context)
+        return user_pb2.AuthUserResponse(
+            id=user.id
+        )
