@@ -46,6 +46,12 @@ class ChatService:
     async def get_user_chats(self, user_id: int, context: grpc.aio.ServicerContext):
         try:
             chats = await self.repo.get_by_user_id(user_id)
+            if not chats:
+                logger.info(f"Чаты пользователя не найдены: {user_id}")
+                await context.abort(
+                    grpc.StatusCode.NOT_FOUND,
+                    details='User chats not found'
+                )
             result = [GetChatData.model_validate(model) for model in chats]
             return result
         except Exception as e:

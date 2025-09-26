@@ -11,7 +11,6 @@ class Chat(chat_pb2_grpc.ChatServicer):
 
     async def GetUserChats(self, request, context):
         chats = await self.service.get_user_chats(request.user_id, context)
-        print(chats)
         return chat_pb2.MultipleChatsResponse(
             chats=[chat_pb2.ChatResponse(id=model.id, name=model.name) for model in chats]
         )
@@ -19,7 +18,6 @@ class Chat(chat_pb2_grpc.ChatServicer):
     async def CreateChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         chat = await self.service.create(data, context)
-        print(chat)
         return chat_pb2.ChatResponse(id=chat.id, name=chat.name)
     
     async def GetChatData(self, request, context):

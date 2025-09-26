@@ -1,9 +1,9 @@
 import grpc
 from fastapi import APIRouter
 
-from src.services import RpcUserService
+from src.services.user import RpcUserService
 
-router = APIRouter(prefix='/user')
+router = APIRouter(prefix='/user', tags=['user'])
 
 @router.get('/{user_id}')
 async def get_user(id: int):

@@ -9,5 +9,6 @@ class Settings(BaseSettings):
     # --- GRPC ---
     GRPC_HOST: str = 'localhost'
     GRPC_USER_PORT: int = 50051
+    GRPC_CHAT_PORT: int = 50052
 
 settings = Settings()
