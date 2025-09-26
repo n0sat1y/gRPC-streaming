@@ -17,6 +17,8 @@ class Settings(BaseSettings):
 
     # --- GRPC ---
     GRPC_HOST: str = 'localhost'
-    GRPC_PORT: int = 50051
+    GRPC_PORT: int = 50052
+
+    GRPC_USER_PORT: int = 50051
 
 settings = Settings()

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+service MessageService {
+    rpc MessageStream (stream Message) returns (stream MessageResponse) {}
+}
+
+message Message {
+    string sender = 1;
+    string content = 2;
+    string chat_id = 3;
+    int32 timestamp = 4;
+}
+
+message MessageResponse {
+    Message message = 1;
+}

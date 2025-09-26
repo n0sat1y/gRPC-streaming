@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+service Chat {
+    rpc GetUserChats (GetUserChatsRequest) returns (MultipleChatsResponse) {}
+    rpc CreateChat (CreateChatRequest) returns (ChatResponse) {}
+    rpc AddMembersToChat (AddMembersToChatRequest) returns (ChatResponse) {}
+    rpc GetChatData (GetChatDataRequest) returns (ChatData) {}
+}
+
+message ChatMember {
+    int32 id = 1;
+}
+
+message GetUserChatsRequest {
+    int32 user_id = 1;
+}
+
+message ChatResponse {
+    int32 id = 1;
+    string name = 2;
+}
+
+message MultipleChatsResponse {
+    repeated ChatResponse chats = 1;
+}
+
+message CreateChatRequest {
+    string name = 1;
+    repeated ChatMember members = 2;
+}
+
+message AddMembersToChatRequest {
+    int32 chat_id = 1;
+    repeated ChatMember members = 2;
+}
+
+message GetChatDataRequest {
+    int32 chat_id = 1;
+}
+
+message FullChatMember {
+    int32 id = 1;
+    string username = 2;
+}
+
+message ChatData {
+    string name = 1;
+    repeated FullChatMember members = 2;
+    string created_at = 3;
+}
