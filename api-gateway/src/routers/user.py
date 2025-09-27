@@ -3,7 +3,7 @@ from fastapi import APIRouter
 
 from src.services.user import RpcUserService
 
-router = APIRouter(prefix='/user', tags=['user'])
+router = APIRouter(prefix='/user', tags=['User'])
 
 @router.get('/{user_id}')
 async def get_user(id: int):

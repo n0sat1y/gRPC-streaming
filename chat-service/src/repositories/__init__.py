@@ -1,5 +1,5 @@
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 
@@ -34,7 +34,7 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e
         
-    async def create(self, chat_data: dict, members: dict):
+    async def create(self, chat_data: dict, members: dict) -> GetChatData:
         try:
             async with SessionLocal() as session:
                 chat = ChatModel(
@@ -51,7 +51,7 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e
         
-    async def add_members(self, chat: ChatModel, new_members: list):
+    async def add_members(self, chat: ChatModel, new_members: list) -> ChatModel:
         try:
             async with SessionLocal() as session:
                 chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in new_members]
@@ -63,4 +63,34 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e 
         
+    async def delete(self, chat_id: int) -> None:
+        try:
+            async with SessionLocal() as session:
+                stmt = (
+                    delete(ChatModel).
+                    where(
+                        ChatModel.id==chat_id
+                    )
+                )
+                await session.execute(stmt)
+                await session.commit()
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            raise e 
+        
+    async def delete_user_from_chat(self, user_id: int, chat_id: int) -> None:
+        try:
+            async with SessionLocal() as session:
+                stmt = (
+                    delete(ChatMemberModel).
+                    where(
+                        ChatMemberModel.user_id==user_id, 
+                        ChatMemberModel.chat_id==chat_id
+                    )
+                )
+                await session.execute(stmt)
+                await session.commit()
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            raise e 
 

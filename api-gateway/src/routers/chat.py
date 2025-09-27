@@ -28,4 +28,13 @@ async def add_members(data: AddMembersToChatRequest) -> ChatResponse:
     response = await RpcChatService().add_members_to_chat(data)
     return response
 
+@router.delete('/user-chat')
+async def delete_user_from_chat(user_id: int, chat_id: int):
+    response = await RpcChatService().delete_user_from_chat(user_id, chat_id)
+    return response
+
+@router.delete('/{chat_id}')
+async def delete_chat(chat_id: int):
+    response = await RpcChatService().delete_chat(chat_id)
+    return response
 

@@ -64,3 +64,21 @@ class RpcChatService:
         logger.info(f"Добавлены пользователи: {', '.join([str(member.id) for member in data.members])}")
         response = MessageToDict(response, preserving_proto_field_name=True)
         return ChatResponse.model_validate(response)
+
+    @handle_grpc_exceptions
+    async def delete_user_from_chat(self, user_id: int, chat_id: int):
+        async with self.get_stub() as stub:
+            request = chat_pb2.DeleteUserChatRequest(user_id=user_id, chat_id=chat_id)
+            response = await stub.DeleteUserChat(request)
+
+        logger.info(f"Пользователь {user_id=} был удален из чата {chat_id=}")
+        return {'status': response.status}
+    
+    @handle_grpc_exceptions
+    async def delete_chat(self, chat_id: int):
+        async with self.get_stub() as stub:
+            request = chat_pb2.DeleteChatRequest(chat_id=chat_id)
+            response = await stub.DeleteChat(request)
+
+        logger.info(f"Чат был удален {chat_id=}")
+        return {'status': response.status}

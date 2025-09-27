@@ -5,6 +5,9 @@ service Chat {
     rpc CreateChat (CreateChatRequest) returns (ChatResponse) {}
     rpc AddMembersToChat (AddMembersToChatRequest) returns (ChatResponse) {}
     rpc GetChatData (GetChatDataRequest) returns (ChatData) {}
+    rpc DeleteUserChat (DeleteUserChatRequest) returns (DeleteResponse) {}
+    rpc DeleteChat (DeleteChatRequest) returns (DeleteResponse) {}
+
 }
 
 message ChatMember {
@@ -47,4 +50,17 @@ message ChatData {
     string name = 1;
     repeated FullChatMember members = 2;
     string created_at = 3;
+}
+
+message DeleteUserChatRequest {
+    int32 user_id = 1;
+    int32 chat_id = 2;
+}
+
+message DeleteChatRequest {
+    int32 chat_id = 1;
+}
+
+message DeleteResponse {
+    string status = 1;
 }

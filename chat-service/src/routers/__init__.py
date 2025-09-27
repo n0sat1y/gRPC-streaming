@@ -35,3 +35,11 @@ class Chat(chat_pb2_grpc.ChatServicer):
         members = data_dict.pop('members')
         chat = await self.service.add_members(chat_id, members, context)
         return chat_pb2.ChatResponse(id=chat.id, name=chat.name)
+
+    async def DeleteUserChat(self, request, context):
+        response = await self.service.delete_user_from_chat(request.user_id, request.chat_id, context)
+        return chat_pb2.DeleteResponse(status=response)
+    
+    async def DeleteChat(self, request, context):
+        response = await self.service.delete(request.chat_id, context)
+        return chat_pb2.DeleteResponse(status=response)
