@@ -1,16 +1,44 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 service MessageService {
-    rpc MessageStream (stream Message) returns (stream MessageResponse) {}
+    rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {}
+    rpc SubscribeMessages (SubscribeRequest) returns (stream Message) {}
+    rpc GetAllMessages (GetAllMessagesRequest) returns (GetAllMessagesResponse) {}
+}
+
+message SendMessageRequest {
+    int32 user_id = 1;
+    int32 chat_id = 3;
+    string content = 4;
+}
+
+message SendMessageResponse {
+    bool status = 1;    
+    string message_id = 2;
+    google.protobuf.Timestamp created_at = 3;
+}
+
+
+message SubscribeRequest {
+    int32 chat_id = 1;
+    int32 user_id = 2;
 }
 
 message Message {
-    string sender = 1;
-    string content = 2;
-    string chat_id = 3;
-    int32 timestamp = 4;
+    string message_id = 1;
+    int32 chat_id = 2;
+    int32 user_id = 3;
+    string username = 4;
+    string content = 5;
+    google.protobuf.Timestamp created_at = 6;
 }
 
-message MessageResponse {
-    Message message = 1;
+message GetAllMessagesRequest {
+    int32 chat_id = 1;
+}
+
+message GetAllMessagesResponse {
+    repeated Message messages = 1;
 }
