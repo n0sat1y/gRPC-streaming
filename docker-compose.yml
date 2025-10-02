@@ -42,7 +42,30 @@ services:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_USER
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_PASS
 
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka-kraft
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-kraft-data:/bitnami/kafka # Сохраняем данные между перезапусками
+    environment:
+      # Настройки KRaft
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker # Указываем, что узел выполняет обе роли
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093 # Список "голосующих" контроллеров. Для одного узла - он сам
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+      # Настройки Listeners (как к нам подключаться)
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 # Адрес для подключения с хост-машины
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      # Разрешаем создавать топики автоматически
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+
 volumes:
   user_db:
   chat_db:
   mongo_data:
+  kafka-kraft-data:

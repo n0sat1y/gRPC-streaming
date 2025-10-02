@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from src.routers import router
 
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
