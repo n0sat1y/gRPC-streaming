@@ -34,3 +34,12 @@ class RpcUserService:
 
         logger.info(f"Пользователь создан: {response.id}")
         return response.id
+    
+    @handle_grpc_exceptions
+    async def delete_user(self, user_id: int):
+        async with self.get_stub() as stub:
+            request = user_pb2.DeleteUserRequest(user_id=user_id)
+            response = await stub.DeleteUser(request)
+
+        logger.info(f'Удален пользователь: {user_id}')
+        return response.status

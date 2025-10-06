@@ -1,5 +1,5 @@
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.exc import IntegrityError
 
@@ -35,6 +35,18 @@ class UserRepository:
                 return user
         except IntegrityError as e:
             raise e
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            raise e
+        
+    async def delete(self, user_id: int) -> None:
+        try:
+            async with SessionLocal() as session:
+                await session.execute(
+                    delete(UserModel).
+                    where(UserModel.id == user_id)
+                )
+                await session.commit()
         except Exception as e:
             logger.error(f'Database Error {e}')
             raise e

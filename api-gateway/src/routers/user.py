@@ -14,3 +14,8 @@ async def get_user(id: int):
 async def create_user(username: str):
     response = await RpcUserService().create_user(username)
     return {'id': response}
+
+@router.delete('/{user_id}')
+async def delete_user(id: int):
+    response = await RpcUserService().delete_user(id)
+    return {'status': response}

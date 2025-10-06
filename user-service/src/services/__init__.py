@@ -3,6 +3,7 @@ from loguru import logger
 
 from sqlalchemy.exc import IntegrityError
 from src.repositories import UserRepository
+from src.kafka import broker
 
 class UserService:
     def __init__(self):
@@ -39,3 +40,26 @@ class UserService:
             user = await self.create({'username': username}, context)
         logger.info(f"Получен пользователь: {username}")
         return user
+    
+    async def delete(self, user_id: int, context:grpc.aio.ServicerContext):
+        try:
+            await self.repo.delete(user_id)
+
+            if await self.repo.get(user_id):
+                logger.warning(f"Не удалось удалить пользователя {user_id=}")
+                await context.abort(
+                    grpc.StatusCode.ABORTED,
+                    details='Failed to delete user'
+                )
+            logger.info(f"Удален пользователь {user_id=}")
+
+            await broker.publish(user_id, 'UserDeleted')
+            logger.info(f'Отправлено уведомление об удалении пользователя {user_id=}')
+
+            return 'Successfully deleted'
+        except Exception as e:
+            logger.error("Ошибка при удалении пользователя", e)
+            await context.abort(
+                grpc.StatusCode.INTERNAL,
+                details=e
+            ) 

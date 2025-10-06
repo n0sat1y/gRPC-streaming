@@ -78,6 +78,19 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e 
         
+    async def delete_user(self, user_id: int) -> None:
+        try:
+            async with SessionLocal() as session:
+                stmt = (
+                    delete(ChatMemberModel).
+                    where(ChatMemberModel.user_id==user_id)
+                )
+                await session.execute(stmt)
+                await session.commit()
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            raise e 
+        
     async def delete_user_from_chat(self, user_id: int, chat_id: int) -> None:
         try:
             async with SessionLocal() as session:

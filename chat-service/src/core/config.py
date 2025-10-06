@@ -21,4 +21,8 @@ class Settings(BaseSettings):
 
     GRPC_USER_PORT: int = 50051
 
+    # --- KAFKA ---
+    KAFKA_HOST: str = 'localhost'
+    KAFKA_PORT: int = 9092
+
 settings = Settings()

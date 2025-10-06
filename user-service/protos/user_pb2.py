@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\" \n\x12GetUserByIdRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"\'\n\x13GetUserByIdResponse\x12\x10\n\x08username\x18\x02 \x01(\t\"%\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\" \n\x12\x43reateUserResponse\x12\n\n\x02id\x18\x01 \x01(\x05\"#\n\x0f\x41uthUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1e\n\x10\x41uthUserResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x32\xae\x01\n\x04User\x12:\n\x0bGetUserById\x12\x13.GetUserByIdRequest\x1a\x14.GetUserByIdResponse\"\x00\x12\x37\n\nCreateUser\x12\x12.CreateUserRequest\x1a\x13.CreateUserResponse\"\x00\x12\x31\n\x08\x41uthUser\x12\x10.AuthUserRequest\x1a\x11.AuthUserResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\" \n\x12GetUserByIdRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"\'\n\x13GetUserByIdResponse\x12\x10\n\x08username\x18\x02 \x01(\t\"%\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\" \n\x12\x43reateUserResponse\x12\n\n\x02id\x18\x01 \x01(\x05\"#\n\x0f\x41uthUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\"\x1e\n\x10\x41uthUserResponse\x12\n\n\x02id\x18\x01 \x01(\x05\"$\n\x11\x44\x65leteUserRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\"$\n\x12\x44\x65leteUserResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xe7\x01\n\x04User\x12:\n\x0bGetUserById\x12\x13.GetUserByIdRequest\x1a\x14.GetUserByIdResponse\"\x00\x12\x37\n\nCreateUser\x12\x12.CreateUserRequest\x1a\x13.CreateUserResponse\"\x00\x12\x31\n\x08\x41uthUser\x12\x10.AuthUserRequest\x1a\x11.AuthUserResponse\"\x00\x12\x37\n\nDeleteUser\x12\x12.DeleteUserRequest\x1a\x13.DeleteUserResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -43,6 +43,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_AUTHUSERREQUEST']._serialized_end=197
   _globals['_AUTHUSERRESPONSE']._serialized_start=199
   _globals['_AUTHUSERRESPONSE']._serialized_end=229
-  _globals['_USER']._serialized_start=232
-  _globals['_USER']._serialized_end=406
+  _globals['_DELETEUSERREQUEST']._serialized_start=231
+  _globals['_DELETEUSERREQUEST']._serialized_end=267
+  _globals['_DELETEUSERRESPONSE']._serialized_start=269
+  _globals['_DELETEUSERRESPONSE']._serialized_end=305
+  _globals['_USER']._serialized_start=308
+  _globals['_USER']._serialized_end=539
 # @@protoc_insertion_point(module_scope)

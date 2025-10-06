@@ -22,3 +22,9 @@ class User(user_pb2_grpc.UserServicer):
         return user_pb2.AuthUserResponse(
             id=user.id
         )
+    
+    async def DeleteUser(self, request, context):
+        result = await self.service.delete(request.user_id, context)
+        return user_pb2.DeleteUserResponse(
+            status=result
+        )

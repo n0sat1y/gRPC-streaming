@@ -4,6 +4,7 @@ service User {
     rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
     rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
     rpc AuthUser (AuthUserRequest) returns (AuthUserResponse) {}
+    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
 }
 
 message GetUserByIdRequest {
@@ -28,4 +29,12 @@ message AuthUserRequest {
 
 message AuthUserResponse {
     int32 id = 1;
+}
+
+message DeleteUserRequest {
+    int32 user_id = 1;
+}
+
+message DeleteUserResponse {
+    string status = 1;
 }

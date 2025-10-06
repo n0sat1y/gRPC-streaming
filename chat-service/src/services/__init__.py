@@ -138,6 +138,14 @@ class ChatService:
                 details=e
             ) 
 
+    async def delete_user(self, user_id: int):
+        try:
+            await self.repo.delete(user_id)
+            logger.info(f"Удален чат {user_id=}")
+            return
+        except Exception as e:
+            logger.error("Ошибка при удалении пользователя из чата", e)
+
     async def delete_user_from_chat(self, user_id: int, chat_id: int, context: grpc.aio.ServicerContext):
         try:
             user_chats = await self.get_user_chats(user_id, context)
@@ -162,5 +170,7 @@ class ChatService:
                 grpc.StatusCode.INTERNAL,
                 details=e
             ) 
+
+    
         
 
