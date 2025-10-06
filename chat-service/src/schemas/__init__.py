@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict
 
 class ChatMemberSchema(BaseModel):
     user_id: int
-    username: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

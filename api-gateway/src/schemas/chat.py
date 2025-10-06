@@ -12,7 +12,6 @@ class MultipleChatsResponse(BaseModel):
 
 class FullChatMember(BaseModel):
     id: int
-    username: str
 
 class ChatData(BaseModel):
     name: str

@@ -25,7 +25,7 @@ class Chat(chat_pb2_grpc.ChatServicer):
         created_at_str = chat.created_at.isoformat()
         return chat_pb2.ChatData(
             name=chat.name,
-            members=[chat_pb2.FullChatMember(id=member.user_id, username=member.username) for member in chat.members],
+            members=[chat_pb2.FullChatMember(id=member.user_id) for member in chat.members],
             created_at=created_at_str,
         )
 

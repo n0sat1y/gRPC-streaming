@@ -43,7 +43,6 @@ message GetChatDataRequest {
 
 message FullChatMember {
     int32 id = 1;
-    string username = 2;
 }
 
 message ChatData {

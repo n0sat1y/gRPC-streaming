@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nchat.proto\"\x18\n\nChatMember\x12\n\n\x02id\x18\x01 \x01(\x05\"&\n\x13GetUserChatsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\"(\n\x0c\x43hatResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\"5\n\x15MultipleChatsResponse\x12\x1c\n\x05\x63hats\x18\x01 \x03(\x0b\x32\r.ChatResponse\"?\n\x11\x43reateChatRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1c\n\x07members\x18\x02 \x03(\x0b\x32\x0b.ChatMember\"H\n\x17\x41\x64\x64MembersToChatRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\x12\x1c\n\x07members\x18\x02 \x03(\x0b\x32\x0b.ChatMember\"%\n\x12GetChatDataRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\".\n\x0e\x46ullChatMember\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08username\x18\x02 \x01(\t\"N\n\x08\x43hatData\x12\x0c\n\x04name\x18\x01 \x01(\t\x12 \n\x07members\x18\x02 \x03(\x0b\x32\x0f.FullChatMember\x12\x12\n\ncreated_at\x18\x03 \x01(\t\"9\n\x15\x44\x65leteUserChatRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\"$\n\x11\x44\x65leteChatRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\" \n\x0e\x44\x65leteResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xdb\x02\n\x04\x43hat\x12>\n\x0cGetUserChats\x12\x14.GetUserChatsRequest\x1a\x16.MultipleChatsResponse\"\x00\x12\x31\n\nCreateChat\x12\x12.CreateChatRequest\x1a\r.ChatResponse\"\x00\x12=\n\x10\x41\x64\x64MembersToChat\x12\x18.AddMembersToChatRequest\x1a\r.ChatResponse\"\x00\x12/\n\x0bGetChatData\x12\x13.GetChatDataRequest\x1a\t.ChatData\"\x00\x12;\n\x0e\x44\x65leteUserChat\x12\x16.DeleteUserChatRequest\x1a\x0f.DeleteResponse\"\x00\x12\x33\n\nDeleteChat\x12\x12.DeleteChatRequest\x1a\x0f.DeleteResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nchat.proto\"\x18\n\nChatMember\x12\n\n\x02id\x18\x01 \x01(\x05\"&\n\x13GetUserChatsRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\"(\n\x0c\x43hatResponse\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\"5\n\x15MultipleChatsResponse\x12\x1c\n\x05\x63hats\x18\x01 \x03(\x0b\x32\r.ChatResponse\"?\n\x11\x43reateChatRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x1c\n\x07members\x18\x02 \x03(\x0b\x32\x0b.ChatMember\"H\n\x17\x41\x64\x64MembersToChatRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\x12\x1c\n\x07members\x18\x02 \x03(\x0b\x32\x0b.ChatMember\"%\n\x12GetChatDataRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\"\x1c\n\x0e\x46ullChatMember\x12\n\n\x02id\x18\x01 \x01(\x05\"N\n\x08\x43hatData\x12\x0c\n\x04name\x18\x01 \x01(\t\x12 \n\x07members\x18\x02 \x03(\x0b\x32\x0f.FullChatMember\x12\x12\n\ncreated_at\x18\x03 \x01(\t\"9\n\x15\x44\x65leteUserChatRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\"$\n\x11\x44\x65leteChatRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\" \n\x0e\x44\x65leteResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xdb\x02\n\x04\x43hat\x12>\n\x0cGetUserChats\x12\x14.GetUserChatsRequest\x1a\x16.MultipleChatsResponse\"\x00\x12\x31\n\nCreateChat\x12\x12.CreateChatRequest\x1a\r.ChatResponse\"\x00\x12=\n\x10\x41\x64\x64MembersToChat\x12\x18.AddMembersToChatRequest\x1a\r.ChatResponse\"\x00\x12/\n\x0bGetChatData\x12\x13.GetChatDataRequest\x1a\t.ChatData\"\x00\x12;\n\x0e\x44\x65leteUserChat\x12\x16.DeleteUserChatRequest\x1a\x0f.DeleteResponse\"\x00\x12\x33\n\nDeleteChat\x12\x12.DeleteChatRequest\x1a\x0f.DeleteResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -46,15 +46,15 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_GETCHATDATAREQUEST']._serialized_start=316
   _globals['_GETCHATDATAREQUEST']._serialized_end=353
   _globals['_FULLCHATMEMBER']._serialized_start=355
-  _globals['_FULLCHATMEMBER']._serialized_end=401
-  _globals['_CHATDATA']._serialized_start=403
-  _globals['_CHATDATA']._serialized_end=481
-  _globals['_DELETEUSERCHATREQUEST']._serialized_start=483
-  _globals['_DELETEUSERCHATREQUEST']._serialized_end=540
-  _globals['_DELETECHATREQUEST']._serialized_start=542
-  _globals['_DELETECHATREQUEST']._serialized_end=578
-  _globals['_DELETERESPONSE']._serialized_start=580
-  _globals['_DELETERESPONSE']._serialized_end=612
-  _globals['_CHAT']._serialized_start=615
-  _globals['_CHAT']._serialized_end=962
+  _globals['_FULLCHATMEMBER']._serialized_end=383
+  _globals['_CHATDATA']._serialized_start=385
+  _globals['_CHATDATA']._serialized_end=463
+  _globals['_DELETEUSERCHATREQUEST']._serialized_start=465
+  _globals['_DELETEUSERCHATREQUEST']._serialized_end=522
+  _globals['_DELETECHATREQUEST']._serialized_start=524
+  _globals['_DELETECHATREQUEST']._serialized_end=560
+  _globals['_DELETERESPONSE']._serialized_start=562
+  _globals['_DELETERESPONSE']._serialized_end=594
+  _globals['_CHAT']._serialized_start=597
+  _globals['_CHAT']._serialized_end=944
 # @@protoc_insertion_point(module_scope)

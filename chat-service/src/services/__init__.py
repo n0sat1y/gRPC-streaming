@@ -19,19 +19,10 @@ class ChatService:
             chat = await self.get_model(id, context)
             chat = GetFullChatData.model_validate(chat)
 
-            tasks = [self.rpc.get_user_by_id(member.user_id) for member in chat.members]
-            usernames = await asyncio.gather(*tasks)
-
-            full_members = []
-            for member, username in zip(chat.members, usernames):
-                full_members.append(
-                    ChatMemberSchema(user_id=member.user_id, username=username)
-                )
-
             return GetFullChatData(
                 name=chat.name,
                 created_at=chat.created_at,
-                members=full_members
+                members=chat.members
             )
         except Exception as e:
             raise e
