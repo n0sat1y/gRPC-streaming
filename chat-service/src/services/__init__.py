@@ -5,14 +5,14 @@ from sqlalchemy.exc import IntegrityError
 
 from src.repositories import ChatRepository
 from src.models import ChatModel
-from src.services.rpc import RpcService
+from src.services.rpc import RpcUserService
 from src.schemas import *
 
 
 class ChatService:
     def __init__(self):
         self.repo = ChatRepository()
-        self.rpc = RpcService()
+        self.rpc = RpcUserService()
 
     async def get(self, id: int, context: grpc.aio.ServicerContext):
         try:
@@ -87,6 +87,17 @@ class ChatService:
                     grpc.StatusCode.DATA_LOSS,
                     details='Members not added'
                 )
+            try:
+                users_data = await self.rpc.get_multiple(members)
+                if users_data.status == 'Missed':
+                    logger.warning(f"Не найдены пользователи: {users_data.missed=}")
+                    await context.abort(
+                        grpc.StatusCode.NOT_FOUND,
+                        details=f"Missed users: {', '.join(str(x) for x in users_data.missed)}"
+                    )
+            except grpc.RpcError as e:
+                logger.error(e.details)
+                raise e
 
             chat = await self.repo.get(chat_id)
             if not chat:

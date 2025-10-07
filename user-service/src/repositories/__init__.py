@@ -25,19 +25,28 @@ class UserRepository:
             logger.error(f'Database Error {e}')
             raise e
         
-    async def create(self, user_data: dict) -> UserModel:
+    async def get_multiple(self, ids: list) -> list[UserModel]:
         try:
             async with SessionLocal() as session:
+                result = await session.execute(select(UserModel).where(UserModel.id.in_(ids)))
+                return result.scalars().all()
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            raise e
+        
+    async def create(self, user_data: dict) -> UserModel:
+        async with SessionLocal() as session:
+            try:
                 user = UserModel(**user_data)
                 session.add(user)
                 await session.commit()
                 await session.refresh(user)
                 return user
-        except IntegrityError as e:
-            raise e
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            raise e
+            except IntegrityError as e:
+                raise e
+            except Exception as e:
+                logger.error(f'Database Error {e}')
+                raise e
         
     async def delete(self, user_id: int) -> None:
         try:

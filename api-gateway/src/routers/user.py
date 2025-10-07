@@ -1,21 +1,17 @@
 import grpc
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from src.services.user import RpcUserService
+from src.dependencies import get_user
 
 router = APIRouter(prefix='/user', tags=['User'])
 
 @router.get('/{user_id}')
-async def get_user(id: int):
+async def get_user(id: int, _reciever_id = Depends(get_user)):
     response = await RpcUserService().get_user_by_id(id)
     return {'username': response}
 
-@router.post('/')
-async def create_user(username: str):
-    response = await RpcUserService().create_user(username)
-    return {'id': response}
-
 @router.delete('/{user_id}')
-async def delete_user(id: int):
+async def delete_user(id: int, _reciever_id = Depends(get_user)):
     response = await RpcUserService().delete_user(id)
     return {'status': response}

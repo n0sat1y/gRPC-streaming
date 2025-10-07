@@ -17,6 +17,7 @@ server: grpc.aio.Server | None = None
 async def startup():
     global server
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
+    chat_pb2_grpc.add_ChatServicer_to_server(Chat(), server)
     server.add_insecure_port(f'[::]:{settings.GRPC_PORT}')
     await server.start()
     logger.info(f'Listening on port :{settings.GRPC_PORT}')

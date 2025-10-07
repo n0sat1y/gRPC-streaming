@@ -27,9 +27,21 @@ class RpcUserService:
         return response.username
     
     @handle_grpc_exceptions
-    async def create_user(self, username: str):
+    async def get_user_with_password(self, username: str):
         async with self.get_stub() as stub:
-            request = user_pb2.CreateUserRequest(username=username)
+            request = user_pb2.GetUserWithPasswordRequest(username=username)
+            response = await stub.GetUserWithPassword(request)
+
+        logger.info(f'Получен пользователь: {response.user_id}')
+        return response
+    
+    @handle_grpc_exceptions
+    async def create_user(self, username: str, password: str):
+        async with self.get_stub() as stub:
+            request = user_pb2.CreateUserRequest(
+                username=username, 
+                password=password
+            )
             response = await stub.CreateUser(request)
 
         logger.info(f"Пользователь создан: {response.id}")

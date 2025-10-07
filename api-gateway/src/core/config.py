@@ -12,4 +12,10 @@ class Settings(BaseSettings):
     GRPC_CHAT_PORT: int = 50052
     GRPC_MESSAGE_PORT: int = 50053
 
+    #--- JWT ---
+    SECRET_KEY: str = 'Secret key'
+    JWT_ALGORITHM: str = 'HS256'
+    JWT_ACCESS_LIFESPAN_MINUTES: int = 15
+    JWT_REFRESH_LIFESPAN_DAYS: int = 10
+
 settings = Settings()

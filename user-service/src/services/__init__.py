@@ -20,10 +20,35 @@ class UserService:
         logger.info(f'Найден пользователь: {user.username}')
         return user
     
+    async def get_by_username(self, username: str, context: grpc.aio.ServicerContext):
+        user = await self.repo.get_by_username(username)
+        if not user:
+            logger.warning(f'User not found {id}')
+            await context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                'User not found'
+            )
+        logger.info(f'Найден пользователь: {user.username}')
+        return user
+    
+    async def get_multiple(self, ids: list, context: grpc.aio.ServicerContext):
+        ids = [x.id for x in ids]
+        users = await self.repo.get_multiple(ids)
+        missed = []
+        if not len(users) == len(ids):
+            found = [x.id for x in users]
+            missed = [x for x in ids if x not in found]
+            logger.warning(f"Не найдены пользователи: {missed=}")
+        else:
+            logger.info(f"Найдены пользователи: {ids=}")
+        return users, missed
+
+    
     async def create(self, data: dict, context: grpc.aio.ServicerContext):
         try:
-            new_user = await self.repo.create(data)
             username = data['username']
+            logger.info(f'Создаем пользователя: {username}')
+            new_user = await self.repo.create(data)
             logger.info(f'Создан пользователь: {username}')
             return new_user
         except IntegrityError as e:
@@ -32,14 +57,6 @@ class UserService:
                 grpc.StatusCode.ALREADY_EXISTS,
                 'User already exists'
             )
-
-    async def get_or_create(self, username: str, context:grpc.aio.ServicerContext):
-        user = await self.repo.get_by_username(username)
-        if not user:
-            logger.warning(f'Не удалось получить пользователя: {username}. Создаем нового.')
-            user = await self.create({'username': username}, context)
-        logger.info(f"Получен пользователь: {username}")
-        return user
     
     async def delete(self, user_id: int, context:grpc.aio.ServicerContext):
         try:

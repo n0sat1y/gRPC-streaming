@@ -2,8 +2,9 @@ syntax = "proto3";
 
 service User {
     rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
+    rpc GetUserWithPassword (GetUserWithPasswordRequest) returns (GetUserWithPasswordResponse) {}
+    rpc GetMultipleUsers (GetMultipleUsersRequest) returns (GetMultipleUsersResponse) {}
     rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
-    rpc AuthUser (AuthUserRequest) returns (AuthUserResponse) {}
     rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
 }
 
@@ -15,19 +16,40 @@ message GetUserByIdResponse {
     string username = 2;
 }
 
+message GetMultipleUsersRequest {
+    repeated GetUserByIdRequest ids = 1;
+}
+
+message OptionalUserId{
+    optional int32 id = 1;
+}
+
+message UserData {
+    int32 id = 1;
+    string username = 2;
+}
+
+message GetMultipleUsersResponse {
+    string status = 1;
+    repeated UserData users = 2;
+    repeated OptionalUserId missed = 3;
+}
+
+message GetUserWithPasswordRequest {
+    string username = 2;
+}
+
+message GetUserWithPasswordResponse {
+    int32 user_id = 1;
+    bytes password = 2;
+}
+
 message CreateUserRequest {
     string username = 1;
+    bytes password = 2;
 }
 
 message CreateUserResponse {
-    int32 id = 1;
-}
-
-message AuthUserRequest {
-    string username = 1;
-}
-
-message AuthUserResponse {
     int32 id = 1;
 }
 
