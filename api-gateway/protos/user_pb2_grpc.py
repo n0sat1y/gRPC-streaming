@@ -44,6 +44,11 @@ class UserStub(object):
                 request_serializer=user__pb2.GetUserWithPasswordRequest.SerializeToString,
                 response_deserializer=user__pb2.GetUserWithPasswordResponse.FromString,
                 _registered_method=True)
+        self.GetMultipleUsers = channel.unary_unary(
+                '/User/GetMultipleUsers',
+                request_serializer=user__pb2.GetMultipleUsersRequest.SerializeToString,
+                response_deserializer=user__pb2.GetMultipleUsersResponse.FromString,
+                _registered_method=True)
         self.CreateUser = channel.unary_unary(
                 '/User/CreateUser',
                 request_serializer=user__pb2.CreateUserRequest.SerializeToString,
@@ -66,6 +71,12 @@ class UserServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetUserWithPassword(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetMultipleUsers(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -95,6 +106,11 @@ def add_UserServicer_to_server(servicer, server):
                     servicer.GetUserWithPassword,
                     request_deserializer=user__pb2.GetUserWithPasswordRequest.FromString,
                     response_serializer=user__pb2.GetUserWithPasswordResponse.SerializeToString,
+            ),
+            'GetMultipleUsers': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMultipleUsers,
+                    request_deserializer=user__pb2.GetMultipleUsersRequest.FromString,
+                    response_serializer=user__pb2.GetMultipleUsersResponse.SerializeToString,
             ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
@@ -161,6 +177,33 @@ class User(object):
             '/User/GetUserWithPassword',
             user__pb2.GetUserWithPasswordRequest.SerializeToString,
             user__pb2.GetUserWithPasswordResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMultipleUsers(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/User/GetMultipleUsers',
+            user__pb2.GetMultipleUsersRequest.SerializeToString,
+            user__pb2.GetMultipleUsersResponse.FromString,
             options,
             channel_credentials,
             insecure,

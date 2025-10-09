@@ -9,6 +9,9 @@ class ChatModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
+    avatar: Mapped[str] = mapped_column(nullable=True)
+    last_message: Mapped[str] = mapped_column(nullable=True)
+    last_message_at: Mapped[datetime] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     members: Mapped[list["ChatMemberModel"]] = relationship(

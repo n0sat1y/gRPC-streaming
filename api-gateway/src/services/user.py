@@ -2,10 +2,11 @@ import grpc
 from loguru import logger
 from protos import user_pb2, user_pb2_grpc
 from contextlib import asynccontextmanager
+from google.protobuf.json_format import MessageToDict
 
 from src.core.config import settings
 from src.decorators.grpc import handle_grpc_exceptions
-
+from src.schemas.user import UserData
 
 class RpcUserService:
     def __init__(self):
@@ -24,7 +25,8 @@ class RpcUserService:
             response = await stub.GetUserById(request)
 
         logger.info(f'Получен пользователь: {response.username}')
-        return response.username
+        response = UserData.model_validate(response)
+        return response
     
     @handle_grpc_exceptions
     async def get_user_with_password(self, username: str):

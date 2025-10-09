@@ -60,9 +60,9 @@ class UserService:
     
     async def delete(self, user_id: int, context:grpc.aio.ServicerContext):
         try:
-            await self.repo.delete(user_id)
+            result = await self.repo.delete(user_id)
 
-            if await self.repo.get(user_id):
+            if result == 0:
                 logger.warning(f"Не удалось удалить пользователя {user_id=}")
                 await context.abort(
                     grpc.StatusCode.ABORTED,

@@ -3,29 +3,48 @@ from google.protobuf.json_format import MessageToDict
 
 from protos import chat_pb2, chat_pb2_grpc
 from src.services import ChatService
+from src.routers.kafka import broker
 
 
 class Chat(chat_pb2_grpc.ChatServicer):
     def __init__(self):
         self.service = ChatService()
+        self.broker = broker
 
     async def GetUserChats(self, request, context):
         chats = await self.service.get_user_chats(request.user_id, context)
         return chat_pb2.MultipleChatsResponse(
-            chats=[chat_pb2.ChatResponse(id=model.id, name=model.name) for model in chats]
+            chats=[chat_pb2.ChatResponse(
+                id=model.id, 
+                name=model.name,
+                avatar=model.avatar,
+                last_message=model.last_message,
+                last_message_at=model.last_message_at
+                ) for model in chats
+            ]
         )
     
     async def CreateChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         chat = await self.service.create(data, context)
-        return chat_pb2.ChatResponse(id=chat.id, name=chat.name)
+        return chat_pb2.ChatResponse(
+                id=chat.id, 
+                name=chat.name,
+                avatar=chat.avatar,
+                last_message=chat.last_message,
+                last_message_at=chat.last_message_at
+            )
     
     async def GetChatData(self, request, context):
         chat = await self.service.get(request.chat_id, context)
         created_at_str = chat.created_at.isoformat()
         return chat_pb2.ChatData(
+            id=chat.id,
             name=chat.name,
             members=[chat_pb2.FullChatMember(id=member.user_id) for member in chat.members],
+            avatar=chat.avatar,
+            last_message=chat.last_message,
+            last_message_at=chat.last_message_at,
             created_at=created_at_str,
         )
 
@@ -34,12 +53,18 @@ class Chat(chat_pb2_grpc.ChatServicer):
         chat_id = data_dict.pop('chat_id')
         members = data_dict.pop('members')
         chat = await self.service.add_members(chat_id, members, context)
-        return chat_pb2.ChatResponse(id=chat.id, name=chat.name)
+        return chat_pb2.ChatResponse(
+                id=chat.id, 
+                name=chat.name,
+                avatar=chat.avatar,
+                last_message=chat.last_message,
+                last_message_at=chat.last_message_at
+            )
 
     async def DeleteUserChat(self, request, context):
         response = await self.service.delete_user_from_chat(request.user_id, request.chat_id, context)
         return chat_pb2.DeleteResponse(status=response)
     
     async def DeleteChat(self, request, context):
-        response = await self.service.delete(request.chat_id, context)
+        response = await self.service.delete(request.chat_id, context, self.broker)
         return chat_pb2.DeleteResponse(status=response)

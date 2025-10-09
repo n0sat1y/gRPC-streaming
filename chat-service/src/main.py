@@ -7,8 +7,8 @@ from faststream.kafka import KafkaBroker
 
 from protos import chat_pb2, chat_pb2_grpc
 from src.core.config import settings
-from src.routers import Chat
-from src.kafka import broker
+from src.routers.grpc import Chat
+from src.routers.kafka import broker
 
 app = FastStream(broker)
 server: grpc.aio.Server | None = None

@@ -51,11 +51,13 @@ class UserRepository:
     async def delete(self, user_id: int) -> None:
         try:
             async with SessionLocal() as session:
-                await session.execute(
+                stmt = (
                     delete(UserModel).
                     where(UserModel.id == user_id)
                 )
+                result = await session.execute(stmt)
                 await session.commit()
+                return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
             raise e

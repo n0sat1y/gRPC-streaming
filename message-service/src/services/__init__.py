@@ -19,6 +19,10 @@ class MessageService:
         message = await self.repo.insert(message)
         logger.info(f"Добавлено сообщение {message.id=} в {chat_id=}")
         return message
+    
+    async def delete_user_messages(self, user_id: int):
+        deleted_count = await self.repo.delete_user_messages(user_id)
+        logger.info(f"Удалены {deleted_count} сообщения пользователя: {user_id=}")
 
 class ConnectionService:
     def __init__(self):

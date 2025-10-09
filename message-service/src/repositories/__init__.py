@@ -18,3 +18,13 @@ class MessageRepository:
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e
+        
+    async def delete_user_messages(self, user_id: int):
+        try:
+            messages = Message.find(Message.user_id == user_id)
+            count = await messages.count()
+            await messages.delete()
+            return count
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 service Chat {
     rpc GetUserChats (GetUserChatsRequest) returns (MultipleChatsResponse) {}
     rpc CreateChat (CreateChatRequest) returns (ChatResponse) {}
@@ -21,6 +23,9 @@ message GetUserChatsRequest {
 message ChatResponse {
     int32 id = 1;
     string name = 2;
+    optional string avatar = 3;
+    optional string last_message = 4;
+    optional google.protobuf.Timestamp last_message_at = 5;
 }
 
 message MultipleChatsResponse {
@@ -46,9 +51,13 @@ message FullChatMember {
 }
 
 message ChatData {
-    string name = 1;
-    repeated FullChatMember members = 2;
-    string created_at = 3;
+    int32 id = 1;
+    string name = 2;
+    optional string avatar = 3;
+    optional string last_message = 4;
+    optional google.protobuf.Timestamp last_message_at = 5;
+    repeated FullChatMember members = 6;
+    string created_at = 7;
 }
 
 message DeleteUserChatRequest {

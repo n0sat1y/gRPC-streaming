@@ -9,7 +9,7 @@ class User(user_pb2_grpc.UserServicer):
 
     async def GetUserById(self, request, context):
         data = await self.service.get_by_id(request.id, context)
-        return user_pb2.GetUserByIdResponse(username=data.username)
+        return user_pb2.GetUserByIdResponse(id=data.id, username=data.username)
     
     async def GetUserWithPassword(self, request, context):
         data = await self.service.get_by_username(request.username, context)

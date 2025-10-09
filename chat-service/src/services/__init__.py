@@ -2,6 +2,7 @@ import asyncio
 import grpc
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
+from faststream.kafka import KafkaBroker
 
 from src.repositories import ChatRepository
 from src.models import ChatModel
@@ -17,13 +18,14 @@ class ChatService:
     async def get(self, id: int, context: grpc.aio.ServicerContext):
         try:
             chat = await self.get_model(id, context)
-            chat = GetFullChatData.model_validate(chat)
+            return chat
+            # chat = GetFullChatData.model_validate(chat)
 
-            return GetFullChatData(
-                name=chat.name,
-                created_at=chat.created_at,
-                members=chat.members
-            )
+            # return GetFullChatData(
+            #     name=chat.name,
+            #     created_at=chat.created_at,
+            #     members=chat.members
+            # )
         except Exception as e:
             raise e
         
@@ -43,7 +45,7 @@ class ChatService:
             raise e
         
 
-    async def get_user_chats(self, user_id: int, context: grpc.aio.ServicerContext) -> list[GetChatData]:
+    async def get_user_chats(self, user_id: int, context: grpc.aio.ServicerContext) -> list[ChatModel]:
         try:
             chats = await self.repo.get_by_user_id(user_id)
             if not chats:
@@ -52,8 +54,8 @@ class ChatService:
                     grpc.StatusCode.NOT_FOUND,
                     details='User chats not found'
                 )
-            result = [GetChatData.model_validate(model) for model in chats]
-            return result
+            # result = [GetChatData.model_validate(model) for model in chats]
+            return chats
         except Exception as e:
             logger.error(f"Ошибка при получении чатов пользователя {user_id=}", e)
             await context.abort(
@@ -64,8 +66,24 @@ class ChatService:
     async def create(self, data: dict, context: grpc.aio.ServicerContext):
         try:
             members = data.pop('members')
+            if not members:
+                logger.warning('Новые пользователи не были переданы')
+                await context.abort(
+                    grpc.StatusCode.DATA_LOSS,
+                    details='Members not added'
+                )
+            users_data = await self.rpc.get_multiple(members)
+            if users_data.status == 'Missed':
+                logger.warning(f"Не найдены пользователи: {users_data.missed=}")
+                await context.abort(
+                    grpc.StatusCode.NOT_FOUND,
+                    details=f"Missed users: {', '.join(str(x.id) for x in users_data.missed)}"
+                )
             chat = await self.repo.create(data, members)
             return chat
+        except grpc.RpcError as e:
+                logger.error(e.details)
+                raise e
         except IntegrityError as e:
             logger.warning(f"Чат уже создан:")
             await context.abort(
@@ -129,18 +147,22 @@ class ChatService:
                 details=e
             )
 
-    async def delete(self, chat_id: int, context: grpc.aio.ServicerContext):
+    async def delete(self, chat_id: int, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
-            await self.repo.delete(chat_id)
+            result = await self.repo.delete(chat_id)
 
-            if await self.repo.get(chat_id):
-                logger.warning(f"Не удалось удалить чат {chat_id=}")
+            if result == 0:
+                logger.warning(f"Попытка удалить несуществующий чат {chat_id=}")
                 await context.abort(
-                    grpc.StatusCode.ABORTED,
-                    details='Failed to delete chat'
+                    grpc.StatusCode.NOT_FOUND,
+                    details='Chat not found'
                 )
 
             logger.info(f"Удален чат {chat_id=}")
+
+            await broker.publish(chat_id, 'ChatDeleted')
+            logger.info(f"Отправлено уведомление об удалении чата {chat_id=}")
+
             return 'Successfully deleted'
         except Exception as e:
             logger.error("Ошибка при удалении пользователя из чата", e)
@@ -149,10 +171,10 @@ class ChatService:
                 details=e
             ) 
 
-    async def delete_user(self, user_id: int):
+    async def delete_user_chats(self, user_id: int):
         try:
-            await self.repo.delete(user_id)
-            logger.info(f"Удален чат {user_id=}")
+            count = await self.repo.delete_user_chats(user_id)
+            logger.info(f"Удалены чаты пользователя {user_id}: {count=}")
             return
         except Exception as e:
             logger.error("Ошибка при удалении пользователя из чата", e)

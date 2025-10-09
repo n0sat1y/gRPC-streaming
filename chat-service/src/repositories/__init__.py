@@ -34,7 +34,7 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e
         
-    async def create(self, chat_data: dict, members: dict) -> GetChatData:
+    async def create(self, chat_data: dict, members: dict) -> ChatModel:
         try:
             async with SessionLocal() as session:
                 chat = ChatModel(
@@ -44,7 +44,7 @@ class ChatRepository:
                 session.add(chat)
                 await session.commit()
                 await session.refresh(chat)
-                return GetChatData.model_validate(chat)
+                return chat
         except IntegrityError as e:
             raise e
         except Exception as e:
@@ -72,21 +72,23 @@ class ChatRepository:
                         ChatModel.id==chat_id
                     )
                 )
-                await session.execute(stmt)
+                result = await session.execute(stmt)
                 await session.commit()
+                return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
             raise e 
         
-    async def delete_user(self, user_id: int) -> None:
+    async def delete_user_chats(self, user_id: int) -> None:
         try:
             async with SessionLocal() as session:
                 stmt = (
                     delete(ChatMemberModel).
                     where(ChatMemberModel.user_id==user_id)
                 )
-                await session.execute(stmt)
+                result = await session.execute(stmt)
                 await session.commit()
+                return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
             raise e 

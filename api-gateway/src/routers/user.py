@@ -9,7 +9,7 @@ router = APIRouter(prefix='/user', tags=['User'])
 @router.get('/{user_id}')
 async def get_user(id: int, _reciever_id = Depends(get_user)):
     response = await RpcUserService().get_user_by_id(id)
-    return {'username': response}
+    return response
 
 @router.delete('/{user_id}')
 async def delete_user(id: int, _reciever_id = Depends(get_user)):
