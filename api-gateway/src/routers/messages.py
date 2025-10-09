@@ -14,7 +14,8 @@ message_grpc_client = RpcMessageService()
 async def message_flow(
     ws: WebSocket, 
     chat_id: int = Query(...),
-    user_id = Depends(get_user)
+    # user_id = Depends(get_user)
+    user_id: int = Query(...)
 ):
     await ws.accept()
 
