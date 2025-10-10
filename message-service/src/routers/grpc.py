@@ -4,12 +4,14 @@ from loguru import logger
 
 from protos import message_pb2_grpc, message_pb2
 from src.services import ConnectionService, MessageService
+from src.routers.kafka import broker
 
 
 class Message(message_pb2_grpc.MessageServiceServicer):
     def __init__(self):
         self.service = MessageService()
         self.manager = ConnectionService()
+        self.broker = broker
 
     async def SubscribeMessages(self, request, context):
         try:
@@ -32,6 +34,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.user_id,
             request.chat_id,
             request.content,
+            self.broker
         )
 
         message_obj = message_pb2.Message()
@@ -64,5 +67,5 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             message_obj.content = message.content
             message_obj.created_at.FromDatetime(message.created_at)
             response.append(message_obj)
-        return message_pb2.GetAllMessagesResponse(messages=response)
+        return message_pb2.AllMessages(messages=response)
     

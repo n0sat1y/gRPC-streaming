@@ -5,7 +5,6 @@ from sqlalchemy.exc import IntegrityError
 
 from src.models import ChatModel, ChatMemberModel
 from src.core.db import SessionLocal
-from src.schemas import *
 
 class ChatRepository:
     async def get(self, id: int) -> ChatModel:
@@ -43,7 +42,7 @@ class ChatRepository:
                 )
                 session.add(chat)
                 await session.commit()
-                await session.refresh(chat)
+                await session.refresh(chat, attribute_names=['members'])
                 return chat
         except IntegrityError as e:
             raise e
@@ -103,8 +102,9 @@ class ChatRepository:
                         ChatMemberModel.chat_id==chat_id
                     )
                 )
-                await session.execute(stmt)
+                result = await session.execute(stmt)
                 await session.commit()
+                return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
             raise e 

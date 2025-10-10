@@ -2,10 +2,12 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
+package message;
+
 service MessageService {
     rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {}
     rpc SubscribeMessages (SubscribeRequest) returns (stream Message) {}
-    rpc GetAllMessages (GetAllMessagesRequest) returns (GetAllMessagesResponse) {}
+    rpc GetAllMessages (GetAllMessagesRequest) returns (AllMessages) {}
 }
 
 message SendMessageRequest {
@@ -39,6 +41,6 @@ message GetAllMessagesRequest {
     int32 chat_id = 1;
 }
 
-message GetAllMessagesResponse {
+message AllMessages {
     repeated Message messages = 1;
 }

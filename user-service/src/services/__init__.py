@@ -1,9 +1,9 @@
 import grpc
 from loguru import logger
+from faststream.kafka import KafkaBroker
 
 from sqlalchemy.exc import IntegrityError
 from src.repositories import UserRepository
-from src.kafka import broker
 
 class UserService:
     def __init__(self):
@@ -44,12 +44,16 @@ class UserService:
         return users, missed
 
     
-    async def create(self, data: dict, context: grpc.aio.ServicerContext):
+    async def create(self, data: dict, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
             username = data['username']
             logger.info(f'Создаем пользователя: {username}')
             new_user = await self.repo.create(data)
             logger.info(f'Создан пользователь: {username}')
+
+            await broker.publish(new_user.__dict__, 'ChatCreated')
+            logger.info(f"Уведомление о создании пользователя {new_user.id} отправлено")
+
             return new_user
         except IntegrityError as e:
             logger.error(f"Попытка повторно создать пользователя: {username}")
@@ -58,7 +62,7 @@ class UserService:
                 'User already exists'
             )
     
-    async def delete(self, user_id: int, context:grpc.aio.ServicerContext):
+    async def delete(self, user_id: int, context:grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
             result = await self.repo.delete(user_id)
 
@@ -78,5 +82,5 @@ class UserService:
             logger.error("Ошибка при удалении пользователя", e)
             await context.abort(
                 grpc.StatusCode.INTERNAL,
-                details=e
+                details=str(e)
             ) 

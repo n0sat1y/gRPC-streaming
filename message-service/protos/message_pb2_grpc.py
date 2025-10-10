@@ -5,7 +5,7 @@ import warnings
 
 import protos.message_pb2 as message__pb2
 
-GRPC_GENERATED_VERSION = '1.75.1'
+GRPC_GENERATED_VERSION = '1.75.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -35,19 +35,19 @@ class MessageServiceStub(object):
             channel: A grpc.Channel.
         """
         self.SendMessage = channel.unary_unary(
-                '/MessageService/SendMessage',
+                '/message.MessageService/SendMessage',
                 request_serializer=message__pb2.SendMessageRequest.SerializeToString,
                 response_deserializer=message__pb2.SendMessageResponse.FromString,
                 _registered_method=True)
         self.SubscribeMessages = channel.unary_stream(
-                '/MessageService/SubscribeMessages',
+                '/message.MessageService/SubscribeMessages',
                 request_serializer=message__pb2.SubscribeRequest.SerializeToString,
                 response_deserializer=message__pb2.Message.FromString,
                 _registered_method=True)
         self.GetAllMessages = channel.unary_unary(
-                '/MessageService/GetAllMessages',
+                '/message.MessageService/GetAllMessages',
                 request_serializer=message__pb2.GetAllMessagesRequest.SerializeToString,
-                response_deserializer=message__pb2.GetAllMessagesResponse.FromString,
+                response_deserializer=message__pb2.AllMessages.FromString,
                 _registered_method=True)
 
 
@@ -88,13 +88,13 @@ def add_MessageServiceServicer_to_server(servicer, server):
             'GetAllMessages': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAllMessages,
                     request_deserializer=message__pb2.GetAllMessagesRequest.FromString,
-                    response_serializer=message__pb2.GetAllMessagesResponse.SerializeToString,
+                    response_serializer=message__pb2.AllMessages.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'MessageService', rpc_method_handlers)
+            'message.MessageService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('MessageService', rpc_method_handlers)
+    server.add_registered_method_handlers('message.MessageService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -115,7 +115,7 @@ class MessageService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/MessageService/SendMessage',
+            '/message.MessageService/SendMessage',
             message__pb2.SendMessageRequest.SerializeToString,
             message__pb2.SendMessageResponse.FromString,
             options,
@@ -142,7 +142,7 @@ class MessageService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/MessageService/SubscribeMessages',
+            '/message.MessageService/SubscribeMessages',
             message__pb2.SubscribeRequest.SerializeToString,
             message__pb2.Message.FromString,
             options,
@@ -169,9 +169,9 @@ class MessageService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/MessageService/GetAllMessages',
+            '/message.MessageService/GetAllMessages',
             message__pb2.GetAllMessagesRequest.SerializeToString,
-            message__pb2.GetAllMessagesResponse.FromString,
+            message__pb2.AllMessages.FromString,
             options,
             channel_credentials,
             insecure,

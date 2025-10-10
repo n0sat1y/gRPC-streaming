@@ -5,7 +5,7 @@ from loguru import logger
 
 from src.services.message import RpcMessageService 
 from src.schemas.message import *
-from src.dependencies import get_user
+from src.dependencies import get_user_id
 
 router = APIRouter(prefix='/message', tags=['Message'])
 message_grpc_client = RpcMessageService()
@@ -15,7 +15,7 @@ async def message_flow(
     ws: WebSocket, 
     chat_id: int = Query(...),
     # user_id = Depends(get_user)
-    user_id: int = Query(...)
+    user_id = Depends(get_user_id)
 ):
     await ws.accept()
 
@@ -44,7 +44,7 @@ async def message_flow(
 
 
 @router.get('/{chat_id}')
-async def get_all_messages(chat_id: int, user_id = Depends(get_user)):
+async def get_all_messages(chat_id: int, user_id = Depends(get_user_id)):
     response = await RpcMessageService().get_all_messages(chat_id)
     return response
 

@@ -35,28 +35,28 @@ class UserStub(object):
             channel: A grpc.Channel.
         """
         self.GetUserById = channel.unary_unary(
-                '/User/GetUserById',
-                request_serializer=user__pb2.GetUserByIdRequest.SerializeToString,
-                response_deserializer=user__pb2.GetUserByIdResponse.FromString,
+                '/user.User/GetUserById',
+                request_serializer=user__pb2.UserId.SerializeToString,
+                response_deserializer=user__pb2.UserData.FromString,
                 _registered_method=True)
-        self.GetUserWithPassword = channel.unary_unary(
-                '/User/GetUserWithPassword',
-                request_serializer=user__pb2.GetUserWithPasswordRequest.SerializeToString,
+        self.GetUserByUsernameWithPassword = channel.unary_unary(
+                '/user.User/GetUserByUsernameWithPassword',
+                request_serializer=user__pb2.UsernameRequest.SerializeToString,
                 response_deserializer=user__pb2.GetUserWithPasswordResponse.FromString,
                 _registered_method=True)
         self.GetMultipleUsers = channel.unary_unary(
-                '/User/GetMultipleUsers',
-                request_serializer=user__pb2.GetMultipleUsersRequest.SerializeToString,
-                response_deserializer=user__pb2.GetMultipleUsersResponse.FromString,
+                '/user.User/GetMultipleUsers',
+                request_serializer=user__pb2.MultipleUsersRequest.SerializeToString,
+                response_deserializer=user__pb2.MultipleUsers.FromString,
                 _registered_method=True)
         self.CreateUser = channel.unary_unary(
-                '/User/CreateUser',
+                '/user.User/CreateUser',
                 request_serializer=user__pb2.CreateUserRequest.SerializeToString,
-                response_deserializer=user__pb2.CreateUserResponse.FromString,
+                response_deserializer=user__pb2.UserId.FromString,
                 _registered_method=True)
         self.DeleteUser = channel.unary_unary(
-                '/User/DeleteUser',
-                request_serializer=user__pb2.DeleteUserRequest.SerializeToString,
+                '/user.User/DeleteUser',
+                request_serializer=user__pb2.UserId.SerializeToString,
                 response_deserializer=user__pb2.DeleteUserResponse.FromString,
                 _registered_method=True)
 
@@ -70,7 +70,7 @@ class UserServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetUserWithPassword(self, request, context):
+    def GetUserByUsernameWithPassword(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -99,34 +99,34 @@ def add_UserServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetUserById': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserById,
-                    request_deserializer=user__pb2.GetUserByIdRequest.FromString,
-                    response_serializer=user__pb2.GetUserByIdResponse.SerializeToString,
+                    request_deserializer=user__pb2.UserId.FromString,
+                    response_serializer=user__pb2.UserData.SerializeToString,
             ),
-            'GetUserWithPassword': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetUserWithPassword,
-                    request_deserializer=user__pb2.GetUserWithPasswordRequest.FromString,
+            'GetUserByUsernameWithPassword': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserByUsernameWithPassword,
+                    request_deserializer=user__pb2.UsernameRequest.FromString,
                     response_serializer=user__pb2.GetUserWithPasswordResponse.SerializeToString,
             ),
             'GetMultipleUsers': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMultipleUsers,
-                    request_deserializer=user__pb2.GetMultipleUsersRequest.FromString,
-                    response_serializer=user__pb2.GetMultipleUsersResponse.SerializeToString,
+                    request_deserializer=user__pb2.MultipleUsersRequest.FromString,
+                    response_serializer=user__pb2.MultipleUsers.SerializeToString,
             ),
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
                     request_deserializer=user__pb2.CreateUserRequest.FromString,
-                    response_serializer=user__pb2.CreateUserResponse.SerializeToString,
+                    response_serializer=user__pb2.UserId.SerializeToString,
             ),
             'DeleteUser': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteUser,
-                    request_deserializer=user__pb2.DeleteUserRequest.FromString,
+                    request_deserializer=user__pb2.UserId.FromString,
                     response_serializer=user__pb2.DeleteUserResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'User', rpc_method_handlers)
+            'user.User', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('User', rpc_method_handlers)
+    server.add_registered_method_handlers('user.User', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -147,9 +147,9 @@ class User(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/User/GetUserById',
-            user__pb2.GetUserByIdRequest.SerializeToString,
-            user__pb2.GetUserByIdResponse.FromString,
+            '/user.User/GetUserById',
+            user__pb2.UserId.SerializeToString,
+            user__pb2.UserData.FromString,
             options,
             channel_credentials,
             insecure,
@@ -161,7 +161,7 @@ class User(object):
             _registered_method=True)
 
     @staticmethod
-    def GetUserWithPassword(request,
+    def GetUserByUsernameWithPassword(request,
             target,
             options=(),
             channel_credentials=None,
@@ -174,8 +174,8 @@ class User(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/User/GetUserWithPassword',
-            user__pb2.GetUserWithPasswordRequest.SerializeToString,
+            '/user.User/GetUserByUsernameWithPassword',
+            user__pb2.UsernameRequest.SerializeToString,
             user__pb2.GetUserWithPasswordResponse.FromString,
             options,
             channel_credentials,
@@ -201,9 +201,9 @@ class User(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/User/GetMultipleUsers',
-            user__pb2.GetMultipleUsersRequest.SerializeToString,
-            user__pb2.GetMultipleUsersResponse.FromString,
+            '/user.User/GetMultipleUsers',
+            user__pb2.MultipleUsersRequest.SerializeToString,
+            user__pb2.MultipleUsers.FromString,
             options,
             channel_credentials,
             insecure,
@@ -228,9 +228,9 @@ class User(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/User/CreateUser',
+            '/user.User/CreateUser',
             user__pb2.CreateUserRequest.SerializeToString,
-            user__pb2.CreateUserResponse.FromString,
+            user__pb2.UserId.FromString,
             options,
             channel_credentials,
             insecure,
@@ -255,8 +255,8 @@ class User(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/User/DeleteUser',
-            user__pb2.DeleteUserRequest.SerializeToString,
+            '/user.User/DeleteUser',
+            user__pb2.UserId.SerializeToString,
             user__pb2.DeleteUserResponse.FromString,
             options,
             channel_credentials,

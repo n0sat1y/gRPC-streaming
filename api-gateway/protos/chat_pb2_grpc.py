@@ -35,33 +35,33 @@ class ChatStub(object):
             channel: A grpc.Channel.
         """
         self.GetUserChats = channel.unary_unary(
-                '/Chat/GetUserChats',
-                request_serializer=chat__pb2.GetUserChatsRequest.SerializeToString,
-                response_deserializer=chat__pb2.MultipleChatsResponse.FromString,
+                '/chat.Chat/GetUserChats',
+                request_serializer=chat__pb2.UserId.SerializeToString,
+                response_deserializer=chat__pb2.MultipleChats.FromString,
                 _registered_method=True)
         self.CreateChat = channel.unary_unary(
-                '/Chat/CreateChat',
+                '/chat.Chat/CreateChat',
                 request_serializer=chat__pb2.CreateChatRequest.SerializeToString,
-                response_deserializer=chat__pb2.ChatResponse.FromString,
+                response_deserializer=chat__pb2.ChatId.FromString,
                 _registered_method=True)
         self.AddMembersToChat = channel.unary_unary(
-                '/Chat/AddMembersToChat',
+                '/chat.Chat/AddMembersToChat',
                 request_serializer=chat__pb2.AddMembersToChatRequest.SerializeToString,
-                response_deserializer=chat__pb2.ChatResponse.FromString,
+                response_deserializer=chat__pb2.ChatId.FromString,
                 _registered_method=True)
         self.GetChatData = channel.unary_unary(
-                '/Chat/GetChatData',
-                request_serializer=chat__pb2.GetChatDataRequest.SerializeToString,
+                '/chat.Chat/GetChatData',
+                request_serializer=chat__pb2.ChatId.SerializeToString,
                 response_deserializer=chat__pb2.ChatData.FromString,
                 _registered_method=True)
         self.DeleteUserChat = channel.unary_unary(
-                '/Chat/DeleteUserChat',
-                request_serializer=chat__pb2.DeleteUserChatRequest.SerializeToString,
+                '/chat.Chat/DeleteUserChat',
+                request_serializer=chat__pb2.DeleteUserFromChatRequest.SerializeToString,
                 response_deserializer=chat__pb2.DeleteResponse.FromString,
                 _registered_method=True)
         self.DeleteChat = channel.unary_unary(
-                '/Chat/DeleteChat',
-                request_serializer=chat__pb2.DeleteChatRequest.SerializeToString,
+                '/chat.Chat/DeleteChat',
+                request_serializer=chat__pb2.ChatId.SerializeToString,
                 response_deserializer=chat__pb2.DeleteResponse.FromString,
                 _registered_method=True)
 
@@ -110,39 +110,39 @@ def add_ChatServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetUserChats': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserChats,
-                    request_deserializer=chat__pb2.GetUserChatsRequest.FromString,
-                    response_serializer=chat__pb2.MultipleChatsResponse.SerializeToString,
+                    request_deserializer=chat__pb2.UserId.FromString,
+                    response_serializer=chat__pb2.MultipleChats.SerializeToString,
             ),
             'CreateChat': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateChat,
                     request_deserializer=chat__pb2.CreateChatRequest.FromString,
-                    response_serializer=chat__pb2.ChatResponse.SerializeToString,
+                    response_serializer=chat__pb2.ChatId.SerializeToString,
             ),
             'AddMembersToChat': grpc.unary_unary_rpc_method_handler(
                     servicer.AddMembersToChat,
                     request_deserializer=chat__pb2.AddMembersToChatRequest.FromString,
-                    response_serializer=chat__pb2.ChatResponse.SerializeToString,
+                    response_serializer=chat__pb2.ChatId.SerializeToString,
             ),
             'GetChatData': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChatData,
-                    request_deserializer=chat__pb2.GetChatDataRequest.FromString,
+                    request_deserializer=chat__pb2.ChatId.FromString,
                     response_serializer=chat__pb2.ChatData.SerializeToString,
             ),
             'DeleteUserChat': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteUserChat,
-                    request_deserializer=chat__pb2.DeleteUserChatRequest.FromString,
+                    request_deserializer=chat__pb2.DeleteUserFromChatRequest.FromString,
                     response_serializer=chat__pb2.DeleteResponse.SerializeToString,
             ),
             'DeleteChat': grpc.unary_unary_rpc_method_handler(
                     servicer.DeleteChat,
-                    request_deserializer=chat__pb2.DeleteChatRequest.FromString,
+                    request_deserializer=chat__pb2.ChatId.FromString,
                     response_serializer=chat__pb2.DeleteResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'Chat', rpc_method_handlers)
+            'chat.Chat', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('Chat', rpc_method_handlers)
+    server.add_registered_method_handlers('chat.Chat', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -163,9 +163,9 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/GetUserChats',
-            chat__pb2.GetUserChatsRequest.SerializeToString,
-            chat__pb2.MultipleChatsResponse.FromString,
+            '/chat.Chat/GetUserChats',
+            chat__pb2.UserId.SerializeToString,
+            chat__pb2.MultipleChats.FromString,
             options,
             channel_credentials,
             insecure,
@@ -190,9 +190,9 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/CreateChat',
+            '/chat.Chat/CreateChat',
             chat__pb2.CreateChatRequest.SerializeToString,
-            chat__pb2.ChatResponse.FromString,
+            chat__pb2.ChatId.FromString,
             options,
             channel_credentials,
             insecure,
@@ -217,9 +217,9 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/AddMembersToChat',
+            '/chat.Chat/AddMembersToChat',
             chat__pb2.AddMembersToChatRequest.SerializeToString,
-            chat__pb2.ChatResponse.FromString,
+            chat__pb2.ChatId.FromString,
             options,
             channel_credentials,
             insecure,
@@ -244,8 +244,8 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/GetChatData',
-            chat__pb2.GetChatDataRequest.SerializeToString,
+            '/chat.Chat/GetChatData',
+            chat__pb2.ChatId.SerializeToString,
             chat__pb2.ChatData.FromString,
             options,
             channel_credentials,
@@ -271,8 +271,8 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/DeleteUserChat',
-            chat__pb2.DeleteUserChatRequest.SerializeToString,
+            '/chat.Chat/DeleteUserChat',
+            chat__pb2.DeleteUserFromChatRequest.SerializeToString,
             chat__pb2.DeleteResponse.FromString,
             options,
             channel_credentials,
@@ -298,8 +298,8 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Chat/DeleteChat',
-            chat__pb2.DeleteChatRequest.SerializeToString,
+            '/chat.Chat/DeleteChat',
+            chat__pb2.ChatId.SerializeToString,
             chat__pb2.DeleteResponse.FromString,
             options,
             channel_credentials,

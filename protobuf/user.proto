@@ -1,42 +1,42 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
+package user;
+
 service User {
-    rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse) {}
-    rpc GetUserWithPassword (GetUserWithPasswordRequest) returns (GetUserWithPasswordResponse) {}
-    rpc GetMultipleUsers (GetMultipleUsersRequest) returns (GetMultipleUsersResponse) {}
-    rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {}
-    rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse) {}
+    rpc GetUserById (UserId) returns (UserData) {}
+    rpc GetUserByUsernameWithPassword (UsernameRequest) returns (GetUserWithPasswordResponse) {}
+    rpc GetMultipleUsers (MultipleUsersRequest) returns (MultipleUsers) {}
+    rpc CreateUser (CreateUserRequest) returns (UserId) {}
+    rpc DeleteUser (UserId) returns (DeleteUserResponse) {}
 }
 
-message GetUserByIdRequest {
+message UserId {
     int32 id = 1;
-}
-
-message GetUserByIdResponse {
-    int32 id = 1;
-    string username = 2;
-}
-
-message GetMultipleUsersRequest {
-    repeated GetUserByIdRequest ids = 1;
 }
 
 message OptionalUserId{
     optional int32 id = 1;
 }
 
+message MultipleUsersRequest {
+    repeated UserId ids = 1;
+}
+
 message UserData {
     int32 id = 1;
     string username = 2;
+    google.protobuf.Timestamp created_at = 3;
 }
 
-message GetMultipleUsersResponse {
+message MultipleUsers {
     string status = 1;
     repeated UserData users = 2;
     repeated OptionalUserId missed = 3;
 }
 
-message GetUserWithPasswordRequest {
+message UsernameRequest {
     string username = 2;
 }
 
@@ -48,14 +48,6 @@ message GetUserWithPasswordResponse {
 message CreateUserRequest {
     string username = 1;
     bytes password = 2;
-}
-
-message CreateUserResponse {
-    int32 id = 1;
-}
-
-message DeleteUserRequest {
-    int32 user_id = 1;
 }
 
 message DeleteUserResponse {

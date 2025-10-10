@@ -6,8 +6,8 @@ from faststream import FastStream
 
 from protos import user_pb2_grpc
 from src.core.config import settings
-from src.routers import User
-from src.kafka import broker
+from src.routers.grpc import User
+from src.routers.kafka import broker
 
 
 app = FastStream(broker)

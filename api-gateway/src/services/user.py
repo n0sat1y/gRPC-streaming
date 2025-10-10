@@ -21,7 +21,7 @@ class RpcUserService:
     @handle_grpc_exceptions
     async def get_user_by_id(self, user_id: int):
         async with self.get_stub() as stub:
-            request = user_pb2.GetUserByIdRequest(id=user_id)
+            request = user_pb2.UserId(id=user_id)
             response = await stub.GetUserById(request)
 
         logger.info(f'Получен пользователь: {response.username}')
@@ -31,8 +31,8 @@ class RpcUserService:
     @handle_grpc_exceptions
     async def get_user_with_password(self, username: str):
         async with self.get_stub() as stub:
-            request = user_pb2.GetUserWithPasswordRequest(username=username)
-            response = await stub.GetUserWithPassword(request)
+            request = user_pb2.UsernameRequest(username=username)
+            response = await stub.GetUserByUsernameWithPassword(request)
 
         logger.info(f'Получен пользователь: {response.user_id}')
         return response
@@ -52,7 +52,7 @@ class RpcUserService:
     @handle_grpc_exceptions
     async def delete_user(self, user_id: int):
         async with self.get_stub() as stub:
-            request = user_pb2.DeleteUserRequest(user_id=user_id)
+            request = user_pb2.UserId(id=user_id)
             response = await stub.DeleteUser(request)
 
         logger.info(f'Удален пользователь: {user_id}')

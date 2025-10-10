@@ -37,6 +37,9 @@ def require_access_token(payload = Depends(get_token)) -> dict:
 	logger.warning('Передан неверный тип токена')
 	raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token type')
 
+async def get_user_id(token_data = Depends(require_access_token)):
+	return int(token_data['sub'])
+
 async def get_user(token_data = Depends(require_access_token)):
 	user = await user_service.get_user_by_id(user_id=int(token_data['sub']))
 	return user

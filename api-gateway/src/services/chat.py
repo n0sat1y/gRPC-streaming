@@ -22,11 +22,12 @@ class RpcChatService:
     @handle_grpc_exceptions
     async def get_chat_by_id(self, chat_id: int):
         async with self.get_stub() as stub:
-            request = chat_pb2.GetChatDataRequest(chat_id=chat_id)
+            request = chat_pb2.ChatId(id=chat_id)
             response = await stub.GetChatData(request)
 
         logger.info(f"Получен чат: {chat_id}")
         data = MessageToDict(response, preserving_proto_field_name=True)
+        print(data)
         return ChatData.model_validate(data)
     
     @handle_grpc_exceptions
@@ -34,18 +35,18 @@ class RpcChatService:
         async with self.get_stub() as stub:
             request = chat_pb2.CreateChatRequest(
                 name=data.name,
-                members=[chat_pb2.ChatMember(id=member.id) for member in data.members]
+                members=[chat_pb2.UserId(id=member.id) for member in data.members]
             )
             response = await stub.CreateChat(request)
 
         logger.info(f"Создан чат: {response.id}")
         response = MessageToDict(response, preserving_proto_field_name=True)
-        return ChatResponse.model_validate(response)
+        return IdSchema.model_validate(response)
 
     @handle_grpc_exceptions
     async def get_chats_by_user_id(self, user_id: int):
         async with self.get_stub() as stub:
-            request = chat_pb2.GetUserChatsRequest(user_id=user_id)
+            request = chat_pb2.UserId(id=user_id)
             response = await stub.GetUserChats(request)
 
         logger.info(f"Получены чаты: {user_id}")
@@ -57,18 +58,20 @@ class RpcChatService:
         async with self.get_stub() as stub:
             request = chat_pb2.AddMembersToChatRequest(
                 chat_id=data.chat_id,
-                members=[chat_pb2.ChatMember(id=member.id) for member in data.members]
+                members=[chat_pb2.UserId(id=member.id) for member in data.members]
             )
             response = await stub.AddMembersToChat(request)
-
         logger.info(f"Добавлены пользователи: {', '.join([str(member.id) for member in data.members])}")
-        response = MessageToDict(response, preserving_proto_field_name=True)
-        return ChatResponse.model_validate(response)
+        print(response)
+        return IdSchema.model_validate(response)
 
     @handle_grpc_exceptions
     async def delete_user_from_chat(self, user_id: int, chat_id: int):
         async with self.get_stub() as stub:
-            request = chat_pb2.DeleteUserChatRequest(user_id=user_id, chat_id=chat_id)
+            request = chat_pb2.DeleteUserFromChatRequest(
+                user_id=user_id, 
+                chat_id=chat_id
+            )
             response = await stub.DeleteUserChat(request)
 
         logger.info(f"Пользователь {user_id=} был удален из чата {chat_id=}")
@@ -77,7 +80,7 @@ class RpcChatService:
     @handle_grpc_exceptions
     async def delete_chat(self, chat_id: int):
         async with self.get_stub() as stub:
-            request = chat_pb2.DeleteChatRequest(chat_id=chat_id)
+            request = chat_pb2.ChatId(id=chat_id)
             response = await stub.DeleteChat(request)
 
         logger.info(f"Чат был удален {chat_id=}")

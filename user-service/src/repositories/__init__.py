@@ -63,7 +63,7 @@ class UserRepository:
                 stmt = (
                     update(UserModel).
                     where(UserModel.id == user_id)
-                    .values(UserModel.is_active == False)
+                    .values(is_active=False)
                 )
                 result = await session.execute(stmt)
                 await session.commit()
