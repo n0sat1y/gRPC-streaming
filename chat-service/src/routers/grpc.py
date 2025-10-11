@@ -2,7 +2,7 @@ import grpc
 from google.protobuf.json_format import MessageToDict
 
 from protos import chat_pb2, chat_pb2_grpc
-from src.services import ChatService
+from src.services.chat import ChatService
 from src.routers.kafka import broker
 
 

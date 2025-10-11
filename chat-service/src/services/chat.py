@@ -3,13 +3,15 @@ from loguru import logger
 from sqlalchemy.exc import IntegrityError
 from faststream.kafka import KafkaBroker
 
-from src.repositories import ChatRepository
+from src.repositories.chat import ChatRepository
+from src.services.user import UserService
 from src.models import ChatModel
-from src.schemas import Chat
+from src.schemas.chat import Chat
 
 class ChatService:
     def __init__(self):
         self.repo = ChatRepository()
+        self.user_service = UserService()
         
     async def get(self, id: int, context: grpc.aio.ServicerContext) -> ChatModel:
         try:
@@ -42,7 +44,17 @@ class ChatService:
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
-            )            
+            )     
+
+    async def get_multiple_users(self, members: list[dict], context: grpc.aio.ServicerContext):
+        ids = [x['id'] for x in members]
+        found, missed = await self.user_service.get_multiple(ids)
+        if missed:
+            await context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                details=f"Missed users: {', '.join(str(i) for i in missed)}"
+            )
+        return found
 
     async def create(self, data: dict, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
@@ -53,9 +65,12 @@ class ChatService:
                     grpc.StatusCode.DATA_LOSS,
                     details='Members not added'
                 )
+
+            logger.info(f"Проверяем наличие пользователей в бд")
+            await self.get_multiple_users(members, context)
+            
             chat = await self.repo.create(data, members)
 
-            print(Chat.model_validate(chat))
             await broker.publish(Chat.model_validate(chat).model_dump(), 'ChatCreated')
             logger.info(f"Уведомление о создании чата {chat.id} отправлено")
 
@@ -83,6 +98,10 @@ class ChatService:
                     details='Chat not found'
                 )
             logger.info(f"Чат найден: {id}")
+
+            if 'members' in data:
+                logger.info(f"Проверяем наличие пользователей в бд")
+                await self.get_multiple_users(data['members'], context)
 
             if not await self.repo.update(chat, data):
                 logger.error(f"Не удалось обновить чат {chat_id}")
@@ -170,7 +189,3 @@ class ChatService:
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
             ) 
-
-    
-        
-

@@ -18,6 +18,7 @@ class ChatRepository:
                 return result
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e
         
     async def get_by_user_id(self, user_id: int) -> ChatModel:
@@ -31,6 +32,7 @@ class ChatRepository:
                 return result
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e
         
     async def create(self, chat_data: dict, members: dict) -> ChatModel:
@@ -45,9 +47,11 @@ class ChatRepository:
                 await session.refresh(chat, attribute_names=['members'])
                 return chat
         except IntegrityError as e:
+            await session.rollback()
             raise e
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e
         
     async def update(self, chat: ChatModel, data: dict) -> ChatModel:
@@ -64,6 +68,7 @@ class ChatRepository:
                 return chat
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e 
         
     async def delete(self, chat_id: int) -> None:
@@ -80,6 +85,7 @@ class ChatRepository:
                 return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e 
         
     async def delete_user_chats(self, user_id: int) -> None:
@@ -94,6 +100,7 @@ class ChatRepository:
                 return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e 
         
     async def delete_user_from_chat(self, user_id: int, chat_id: int) -> None:
@@ -111,5 +118,6 @@ class ChatRepository:
                 return result.rowcount
         except Exception as e:
             logger.error(f'Database Error {e}')
+            await session.rollback()
             raise e 
 

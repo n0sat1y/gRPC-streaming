@@ -44,6 +44,5 @@ class ConnectionService:
         for stream in self.active_connections[chat_id]:
             await stream.write(message)
 
-connection_manager = ConnectionService()
 
 

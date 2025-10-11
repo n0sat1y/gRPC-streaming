@@ -45,13 +45,13 @@ class User(user_pb2_grpc.UserServicer):
             'username': request.username,
             'password': request.password
         }
-        new_user = await self.service.create(data, context)
+        new_user = await self.service.create(data, context, self.broker)
         return user_pb2.UserId(
             id=new_user.id
         )
     
     async def DeleteUser(self, request, context):
-        result = await self.service.delete(request.id, context)
+        result = await self.service.delete(request.id, context, self.broker)
         return user_pb2.DeleteUserResponse(
             status=result
         )

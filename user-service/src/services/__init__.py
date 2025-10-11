@@ -51,7 +51,14 @@ class UserService:
             new_user = await self.repo.create(data)
             logger.info(f'Создан пользователь: {username}')
 
-            await broker.publish(new_user.__dict__, 'ChatCreated')
+            await broker.publish({
+                'event_type': 'UserCreated',
+                'data': {
+                    'id': new_user.id,
+                    'username': new_user.username,
+                    'is_active': new_user.is_active
+                }
+            }, 'user.event')
             logger.info(f"Уведомление о создании пользователя {new_user.id} отправлено")
 
             return new_user
@@ -74,7 +81,10 @@ class UserService:
                 )
             logger.info(f"Удален пользователь {user_id=}")
 
-            await broker.publish(user_id, 'UserDeleted')
+            await broker.publish({
+                'event_type': 'UserDeactivated',
+                'data': {'id': user_id}
+            }, 'user.event')
             logger.info(f'Отправлено уведомление об удалении пользователя {user_id=}')
 
             return 'Successfully deleted'

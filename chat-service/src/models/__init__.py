@@ -24,7 +24,7 @@ class ChatMemberModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey('chats.id', ondelete='CASCADE'))
-    user_id: Mapped[int]
+    user_id: Mapped[int] = mapped_column(ForeignKey('users_replication.id'))
     joined_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     chat: Mapped[list["ChatModel"]] = relationship(
@@ -32,6 +32,19 @@ class ChatMemberModel(Base):
 		back_populates="members"
 	)
 
+    user: Mapped["UserReplicaModel"] = relationship(
+        "UserReplicaModel",
+        primaryjoin="ChatMemberModel.user_id == UserReplicaModel.id",
+        lazy="selectin"
+    )
+
     __table_args__ = (
         UniqueConstraint('chat_id', 'user_id', name='_chat_user_uc'),
     )
+
+class UserReplicaModel(Base):
+    __tablename__ = 'users_replication'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    username: Mapped[str]
+    is_active: Mapped[bool] = mapped_column(default=True)
