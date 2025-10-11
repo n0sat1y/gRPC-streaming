@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from typing import Optional, Self
+from pydantic import BaseModel, ConfigDict, model_validator
 
 class IdSchema(BaseModel):
     id: int
@@ -40,8 +40,16 @@ class CreateChatRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class AddMembersToChatRequest(BaseModel):
+class UpdateChatData(BaseModel):
     chat_id: int
-    members: list[IdSchema]
+    name: Optional[str] = None
+    members: Optional[list[IdSchema]] = None
+    avatar: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='after')
+    def ensure_one_field_is_set(self) -> Self:
+        if not self.name and not self.avatar and not self.members:
+            raise ValueError("At least one value must be provided")
+        return self

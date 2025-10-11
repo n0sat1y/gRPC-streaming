@@ -47,11 +47,10 @@ class Chat(chat_pb2_grpc.ChatServicer):
         return response
         
 
-    async def AddMembersToChat(self, request, context):
-        data_dict = MessageToDict(request, preserving_proto_field_name=True)
-        chat_id = data_dict.pop('chat_id')
-        members = data_dict.pop('members')
-        chat = await self.service.add_members(chat_id, members, context, self.broker)
+    async def UpdateChat(self, request, context):
+        data = MessageToDict(request, preserving_proto_field_name=True)
+        chat_id = data.pop('id')
+        chat = await self.service.update(chat_id, data, context, self.broker)
         return chat_pb2.ChatId(id=chat.id)
 
     async def DeleteUserChat(self, request, context):

@@ -54,15 +54,16 @@ class RpcChatService:
         return MultipleChatsResponse.model_validate(data)
     
     @handle_grpc_exceptions
-    async def add_members_to_chat(self, data: AddMembersToChatRequest):
+    async def update_chat(self, data: UpdateChatData):
         async with self.get_stub() as stub:
-            request = chat_pb2.AddMembersToChatRequest(
-                chat_id=data.chat_id,
-                members=[chat_pb2.UserId(id=member.id) for member in data.members]
+            request = chat_pb2.UpdateChatRequest(
+                id=data.chat_id,
+                name=data.name,
+                avatar=data.avatar,
+                members=[chat_pb2.UserId(id=member.id) for member in data.members] if data.members else None
             )
-            response = await stub.AddMembersToChat(request)
-        logger.info(f"Добавлены пользователи: {', '.join([str(member.id) for member in data.members])}")
-        print(response)
+            response = await stub.UpdateChat(request)
+        logger.info(f"Обновлен чат : {data.chat_id}")
         return IdSchema.model_validate(response)
 
     @handle_grpc_exceptions

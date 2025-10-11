@@ -50,10 +50,14 @@ class ChatRepository:
             logger.error(f'Database Error {e}')
             raise e
         
-    async def add_members(self, chat: ChatModel, new_members: list) -> ChatModel:
+    async def update(self, chat: ChatModel, data: dict) -> ChatModel:
         try:
             async with SessionLocal() as session:
-                chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in new_members]
+                if 'members' in data:
+                    members = data.pop('members')
+                    chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
+                for key, value in data.items():
+                    setattr(chat, key, value)
                 session.add(chat)
                 await session.commit()
                 await session.refresh(chat)

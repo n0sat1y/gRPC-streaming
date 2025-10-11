@@ -7,7 +7,7 @@ package chat;
 service Chat {
     rpc GetUserChats (UserId) returns (MultipleChats) {}
     rpc CreateChat (CreateChatRequest) returns (ChatId) {}
-    rpc AddMembersToChat (AddMembersToChatRequest) returns (ChatId) {}
+    rpc UpdateChat (UpdateChatRequest) returns (ChatId) {}
     rpc GetChatData (ChatId) returns (ChatData) {}
     rpc DeleteUserChat (DeleteUserFromChatRequest) returns (DeleteResponse) {}
     rpc DeleteChat (ChatId) returns (DeleteResponse) {}
@@ -39,9 +39,11 @@ message CreateChatRequest {
     repeated UserId members = 2;
 }
 
-message AddMembersToChatRequest {
-    int32 chat_id = 1;
-    repeated UserId members = 2;
+message UpdateChatRequest {
+    int32 id = 1;
+    optional string name = 2;
+    optional string avatar = 3;
+    repeated UserId members = 4;
 }
 
 message ChatData {

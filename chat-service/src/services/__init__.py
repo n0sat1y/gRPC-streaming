@@ -73,15 +73,8 @@ class ChatService:
                 details=str(e)
             )
 
-    async def add_members(self, chat_id: int, members: list, context: grpc.aio.ServicerContext, broker: KafkaBroker):
+    async def update(self, chat_id: int, data: list, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
-            if not members:
-                logger.warning('Новые пользователи не были переданы')
-                await context.abort(
-                    grpc.StatusCode.DATA_LOSS,
-                    details='Members not added'
-                )
-
             chat = await self.repo.get(chat_id)
             if not chat:
                 logger.warning(f"Не получилось найти чат: {id}")
@@ -91,14 +84,15 @@ class ChatService:
                 )
             logger.info(f"Чат найден: {id}")
 
-            if not await self.repo.add_members(chat, members):
+            if not await self.repo.update(chat, data):
+                logger.error(f"Не удалось обновить чат {chat_id}")
                 await context.abort(
                     grpc.StatusCode.INTERNAL,
-                    details='Failed to add members'
+                    details='Failed to update chat'
                 )
 
-            await broker.publish({'chat_id': chat_id, 'members': members}, 'ChatMembersAdded')
-            logger.info(f"Уведомление о добавлении пользователей в чат {chat.id} отправлено")
+            await broker.publish({'chat_id': chat_id, 'data': data}, 'ChatUpdated')
+            logger.info(f"Уведомление об обновлении чата {chat.id} отправлено")
 
             return chat
         

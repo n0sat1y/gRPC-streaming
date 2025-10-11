@@ -22,9 +22,9 @@ async def get_chat(chat_id: int, user = Depends(get_user_id)) -> ChatData:
     response = await RpcChatService().get_chat_by_id(chat_id)
     return response
 
-@router.post('/add-members')
-async def add_members(data: AddMembersToChatRequest, user = Depends(get_user_id)) -> IdSchema:
-    response = await RpcChatService().add_members_to_chat(data)
+@router.patch('/update')
+async def update_chat(data: UpdateChatData, user = Depends(get_user_id)) -> IdSchema:
+    response = await RpcChatService().update_chat(data)
     return response
 
 @router.delete('/user-chat')
