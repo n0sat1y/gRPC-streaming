@@ -9,7 +9,7 @@ broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 service = UserService()
 
 @broker.subscriber('user.event')
-async def delete_user_chats(data: UserEvent):
+async def user_event(data: UserEvent):
     event = data.event_type
     data = data.data
     logger.info(f"Получено уведомление о собынии в сервисе пользователей {event}")

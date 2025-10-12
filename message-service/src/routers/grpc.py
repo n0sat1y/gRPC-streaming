@@ -3,7 +3,7 @@ import grpc
 from loguru import logger
 
 from protos import message_pb2_grpc, message_pb2
-from src.services import ConnectionService, MessageService
+from src.services.message import ConnectionService, MessageService
 from src.routers.kafka import broker
 
 

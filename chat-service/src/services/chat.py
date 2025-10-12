@@ -59,19 +59,19 @@ class ChatService:
     async def create(self, data: dict, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
             members = data.pop('members')
-            if not members:
-                logger.warning('Новые пользователи не были переданы')
-                await context.abort(
-                    grpc.StatusCode.DATA_LOSS,
-                    details='Members not added'
-                )
-
             logger.info(f"Проверяем наличие пользователей в бд")
             await self.get_multiple_users(members, context)
             
             chat = await self.repo.create(data, members)
-
-            await broker.publish(Chat.model_validate(chat).model_dump(), 'ChatCreated')
+            
+            members = [c.user_id for c in chat.members]
+            await broker.publish({
+                'event_type': 'ChatCreated',
+                'data': {
+                    'id': chat.id,
+                    'members': members
+                }
+            }, 'chat.events')
             logger.info(f"Уведомление о создании чата {chat.id} отправлено")
 
             return chat
@@ -82,48 +82,66 @@ class ChatService:
                 details='Chat already exists'
             )
         except Exception as e:
-            logger.error("Ошибка при создании чата", e)
+            logger.error("Ошибка при создании чата")
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
             )
 
-    async def update(self, chat_id: int, data: list, context: grpc.aio.ServicerContext, broker: KafkaBroker):
+    async def update(self, chat_id: int, data: dict, context: grpc.aio.ServicerContext):
         try:
-            chat = await self.repo.get(chat_id)
-            if not chat:
-                logger.warning(f"Не получилось найти чат: {id}")
-                await context.abort(
-                    code=grpc.StatusCode.NOT_FOUND,
-                    details='Chat not found'
-                )
-            logger.info(f"Чат найден: {id}")
+            chat = await self.get(chat_id, context)
 
-            if 'members' in data:
-                logger.info(f"Проверяем наличие пользователей в бд")
-                await self.get_multiple_users(data['members'], context)
-
-            if not await self.repo.update(chat, data):
+            if not (chat := await self.repo.update(chat, data)):
                 logger.error(f"Не удалось обновить чат {chat_id}")
                 await context.abort(
                     grpc.StatusCode.INTERNAL,
                     details='Failed to update chat'
                 )
 
-            await broker.publish({'chat_id': chat_id, 'data': data}, 'ChatUpdated')
-            logger.info(f"Уведомление об обновлении чата {chat.id} отправлено")
+            return chat
+
+        except Exception as e:
+            logger.error("Ошибка при создании чата", e)
+            await context.abort(
+                grpc.StatusCode.INTERNAL,
+                details=str(e)
+            )
+
+    async def add_members(self, chat_id: int, members: list[dict], context: grpc.aio.ServicerContext, broker: KafkaBroker):
+        try:
+            chat = await self.get(chat_id, context)
+        
+            logger.info(f"Проверяем наличие пользователей в бд")
+            await self.get_multiple_users(members, context)
+                
+            if not (chat := await self.repo.add_members(chat, members)):
+                logger.error(f"Не удалось добваить пользователей в чат {chat_id}")
+                await context.abort(
+                    grpc.StatusCode.INTERNAL,
+                    details='Failed to add members to chat'
+                )
+            members = [c.user_id for c in chat.members]
+            await broker.publish({
+                'event_type': 'ChatUpdated',
+                'data': {
+                    'id': chat.id,
+                    'members': members
+                }
+            }, 'chat.events')
+            logger.info(f"Уведомление об обновлении чата {chat_id} отправлено")
 
             return chat
         
         except IntegrityError as e:
-            logger.warning(f"Чат уже создан:")
+            logger.warning(f"Участники уже добавлены: {e}")
             await context.abort(
                 grpc.StatusCode.ALREADY_EXISTS,
-                details='Members already added'
+                details=f'Members already added'
             ) 
 
         except Exception as e:
-            logger.error("Ошибка при создании чата", e)
+            logger.error(f"Ошибка при создании чата, {e}")
             await context.abort(
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
@@ -142,10 +160,15 @@ class ChatService:
 
             logger.info(f"Удален чат {chat_id=}")
 
-            await broker.publish(chat_id, 'ChatDeleted')
+            await broker.publish({
+                'event_type': 'ChatDeleted',
+                'data': {
+                    'id': chat_id
+                }
+            }, 'chat.events')
             logger.info(f"Отправлено уведомление об удалении чата {chat_id=}")
 
-            return 'Successfully deleted'
+            return 'Success'
         except Exception as e:
             logger.error("Ошибка при удалении пользователя из чата", e)
             await context.abort(
@@ -153,14 +176,13 @@ class ChatService:
                 details=str(e)
             ) 
 
-    async def delete_user_chats(self, user_id: int):
-        try:
-            count = await self.repo.delete_user_chats(user_id)
-            logger.info(f"Удалены чаты пользователя {user_id}: {count=}")
-
-            return
-        except Exception as e:
-            logger.error("Ошибка при удалении пользователя из чата", e)
+    # async def delete_user_chats(self, user_id: int, broker: KafkaBroker):
+    #     try:
+    #         count = await self.repo.delete_user_chats(user_id)
+    #         logger.info(f"Удалены чаты пользователя {user_id}: {count=}")
+    #         return
+    #     except Exception as e:
+    #         logger.error("Ошибка при удалении пользователя из чата", e)
 
     async def delete_user_from_chat(self, user_id: int, chat_id: int, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
@@ -177,12 +199,19 @@ class ChatService:
             chat = await self.get(chat_id, context)
             if not chat.members:
                 logger.info(f"Был удален последний пользователь. Удаление чата {chat_id=}")
-                await self.delete(chat_id, context)
+                await self.delete(chat_id, context, broker)
+            else:
+                members = [c.user_id for c in chat.members]
+                await broker.publish({
+                    'event_type': 'ChatUpdated',
+                    'data': {
+                        'id': chat.id,
+                        'members': members
+                    }
+                }, 'chat.events')
+                logger.info(f"Уведомление об обновлении чата {chat.id} отправлено")
 
-            await broker.publish({'user_id': user_id, 'chat_id': user_id}, 'UserFromChatDeleted')
-            logger.info(f"Уведомление о создании чата {chat.id} отправлено")
-
-            return 'Successfully deleted'
+            return 'Success'
         except Exception as e:
             logger.error("Ошибка при удалении пользователя из чата", e)
             await context.abort(

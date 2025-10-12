@@ -2,7 +2,7 @@ from collections import defaultdict
 from loguru import logger
 from faststream.kafka import KafkaBroker
 
-from src.repositories import MessageRepository
+from src.repositories.message import MessageRepository
 from src.models import Message
 
 

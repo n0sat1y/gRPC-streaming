@@ -11,6 +11,7 @@ from src.core.config import settings
 from src.routers.grpc import Message as MessageRouter
 from src.routers.kafka import broker
 from src.models import Message as MessageModel
+from src.models.replications import UserReplica, ChatReplica
 
 app = FastStream(broker)
 server: grpc.aio.Server | None = None
@@ -23,6 +24,8 @@ async def startup():
         database=motor_client['messages'], 
         document_models=[
             MessageModel,
+            UserReplica, 
+            ChatReplica,
         ]
     )
 

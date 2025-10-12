@@ -57,15 +57,31 @@ class ChatRepository:
     async def update(self, chat: ChatModel, data: dict) -> ChatModel:
         try:
             async with SessionLocal() as session:
-                if 'members' in data:
-                    members = data.pop('members')
-                    chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
                 for key, value in data.items():
                     setattr(chat, key, value)
                 session.add(chat)
                 await session.commit()
                 await session.refresh(chat)
                 return chat
+        except IntegrityError as e:
+            logger.error(f"Failed to add members: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            await session.rollback()
+            raise e 
+        
+    async def add_members(self, chat: ChatModel, members: list[dict]) -> ChatModel:
+        try:
+            async with SessionLocal() as session:
+                chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
+                session.add(chat)
+                await session.commit()
+                await session.refresh(chat, attribute_names=['members'])
+                return chat
+        except IntegrityError as e:
+            logger.error(f"Failed to add members: {e}")
+            raise e
         except Exception as e:
             logger.error(f'Database Error {e}')
             await session.rollback()

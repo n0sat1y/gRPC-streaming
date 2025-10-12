@@ -71,14 +71,9 @@ class UserService:
     
     async def delete(self, user_id: int, context:grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
-            result = await self.repo.delete(user_id)
-
-            if result == 0:
-                logger.warning(f"Не удалось удалить пользователя {user_id=}")
-                await context.abort(
-                    grpc.StatusCode.ABORTED,
-                    details='Failed to delete user'
-                )
+            await self.get_by_id(user_id, context)
+            
+            await self.repo.delete(user_id)
             logger.info(f"Удален пользователь {user_id=}")
 
             await broker.publish({

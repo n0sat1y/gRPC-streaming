@@ -49,6 +49,11 @@ class ChatStub(object):
                 request_serializer=chat__pb2.UpdateChatRequest.SerializeToString,
                 response_deserializer=chat__pb2.ChatId.FromString,
                 _registered_method=True)
+        self.AddMembersToChat = channel.unary_unary(
+                '/chat.Chat/AddMembersToChat',
+                request_serializer=chat__pb2.AddMembersRequest.SerializeToString,
+                response_deserializer=chat__pb2.ChatId.FromString,
+                _registered_method=True)
         self.GetChatData = channel.unary_unary(
                 '/chat.Chat/GetChatData',
                 request_serializer=chat__pb2.ChatId.SerializeToString,
@@ -82,6 +87,12 @@ class ChatServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def UpdateChat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddMembersToChat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -121,6 +132,11 @@ def add_ChatServicer_to_server(servicer, server):
             'UpdateChat': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateChat,
                     request_deserializer=chat__pb2.UpdateChatRequest.FromString,
+                    response_serializer=chat__pb2.ChatId.SerializeToString,
+            ),
+            'AddMembersToChat': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddMembersToChat,
+                    request_deserializer=chat__pb2.AddMembersRequest.FromString,
                     response_serializer=chat__pb2.ChatId.SerializeToString,
             ),
             'GetChatData': grpc.unary_unary_rpc_method_handler(
@@ -219,6 +235,33 @@ class Chat(object):
             target,
             '/chat.Chat/UpdateChat',
             chat__pb2.UpdateChatRequest.SerializeToString,
+            chat__pb2.ChatId.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddMembersToChat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/chat.Chat/AddMembersToChat',
+            chat__pb2.AddMembersRequest.SerializeToString,
             chat__pb2.ChatId.FromString,
             options,
             channel_credentials,

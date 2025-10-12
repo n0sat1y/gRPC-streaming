@@ -43,13 +43,17 @@ class CreateChatRequest(BaseModel):
 class UpdateChatData(BaseModel):
     chat_id: int
     name: Optional[str] = None
-    members: Optional[list[IdSchema]] = None
     avatar: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode='after')
     def ensure_one_field_is_set(self) -> Self:
-        if not self.name and not self.avatar and not self.members:
+        if not self.name and not self.avatar:
             raise ValueError("At least one value must be provided")
         return self
+    
+class AddMembersRequest(IdSchema):
+    members: Optional[list[IdSchema]] = None
+
+    model_config = ConfigDict(from_attributes=True)
