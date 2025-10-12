@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import UniqueConstraint, func, ForeignKey
+from sqlalchemy import DateTime, UniqueConstraint, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.db import Base
@@ -11,7 +11,7 @@ class ChatModel(Base):
     name: Mapped[str] = mapped_column(unique=True)
     avatar: Mapped[str] = mapped_column(nullable=True)
     last_message: Mapped[str] = mapped_column(nullable=True)
-    last_message_at: Mapped[datetime] = mapped_column(nullable=True)
+    last_message_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     members: Mapped[list["ChatMemberModel"]] = relationship(

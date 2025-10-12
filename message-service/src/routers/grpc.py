@@ -34,6 +34,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.user_id,
             request.chat_id,
             request.content,
+            context,
             self.broker
         )
 
@@ -56,14 +57,14 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         return response
     
     async def GetAllMessages(self, request, context):
-        messages = await self.service.get_all(request.chat_id)
+        messages, users = await self.service.get_all(request.chat_id)
         response = []
         for message in messages:
             message_obj = message_pb2.Message()
             message_obj.message_id = str(message.id)
             message_obj.chat_id = message.chat_id
             message_obj.user_id = message.user_id
-            message_obj.username = ')))'
+            message_obj.username = users[message.user_id]
             message_obj.content = message.content
             message_obj.created_at.FromDatetime(message.created_at)
             response.append(message_obj)

@@ -2,6 +2,7 @@ from loguru import logger
 from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 
 from src.models import ChatModel, ChatMemberModel
 from src.core.db import SessionLocal
@@ -82,6 +83,22 @@ class ChatRepository:
         except IntegrityError as e:
             logger.error(f"Failed to add members: {e}")
             raise e
+        except Exception as e:
+            logger.error(f'Database Error {e}')
+            await session.rollback()
+            raise e 
+        
+    async def update_chat_last_message(
+            self, 
+            chat: ChatModel, 
+            last_message: str, 
+            last_message_at: datetime) -> None:
+        try:
+            async with SessionLocal() as session:
+                chat.last_message = last_message
+                chat.last_message_at = last_message_at
+                session.add(chat)
+                await session.commit()
         except Exception as e:
             logger.error(f'Database Error {e}')
             await session.rollback()

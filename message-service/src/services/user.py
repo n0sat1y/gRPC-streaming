@@ -9,6 +9,19 @@ class UserService():
     def __init__(self):
         self.repo = UserRepository()
 
+    async def get(self, user_id: int) -> UserReplica:
+        logger.info(f'Получаем пользователя {user_id}')
+        user = await self.repo.get(user_id)
+        logger.info(f'Получен пользователь {user_id}')
+        return user
+    
+    async def get_multiple(self, ids: list[int]) -> list[UserReplica]:
+        str_list = ', '.join(str(x) for x in ids)
+        logger.info(f'Получаем пользователей {str_list}')
+        users = await self.repo.get_multiple(ids)
+        logger.info(f'Получены пользователи {str_list}')
+        return users
+
     async def create(self, data: UserData):
         logger.info(f"Создаем пользователя {data.id}")
         

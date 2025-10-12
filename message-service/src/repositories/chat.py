@@ -4,6 +4,13 @@ from src.models.replications import ChatReplica
 
 
 class ChatRepository:
+    async def get(self, chat_id: int):
+        try:
+            return await ChatReplica.find_one(ChatReplica.chat_id == chat_id)
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+
     async def upsert_data(self, data: dict):
         try:
             chat_id = data.pop('id')

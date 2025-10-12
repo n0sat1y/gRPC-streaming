@@ -6,10 +6,12 @@ from src.services.user import UserService
 from src.schemas.user import UserEvent
 from src.services.chat import ChatService
 from src.schemas.chat import ChatEvent
+from src.services.message import MessageService
 
 broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 user_service = UserService()
 chat_service = ChatService()
+message_service = MessageService()
 
 @broker.subscriber(
         'user.event',
@@ -38,5 +40,6 @@ async def chat_event(data: ChatEvent):
         await chat_service.upset(data)
     elif event == 'ChatDeleted':
         await chat_service.delete(data)
+        await message_service.delete_chat_messages(data.id)
     
     

@@ -1,3 +1,4 @@
+from datetime import datetime
 import grpc
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
@@ -7,6 +8,7 @@ from src.repositories.chat import ChatRepository
 from src.services.user import UserService
 from src.models import ChatModel
 from src.schemas.chat import Chat
+from src.schemas.message import MessageData
 
 class ChatService:
     def __init__(self):
@@ -26,8 +28,7 @@ class ChatService:
 
             return chat
         except Exception as e:
-            raise e
-        
+            raise e        
 
     async def get_user_chats(self, user_id: int, context: grpc.aio.ServicerContext) -> list[ChatModel]:
         try:
@@ -146,6 +147,14 @@ class ChatService:
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
             )
+
+    async def update_chat_last_message(self, data: MessageData):
+        chat = await self.repo.get(data.chat_id)
+        if not chat:
+            logger.error(f"Не удалось найти чат: {data.chat_id}")
+        logger.info(f"Обновляем чат: {data.chat_id}")
+        await self.repo.update_chat_last_message(chat, data.content, data.created_at)
+        logger.info(f"Чат обновлен: {data.chat_id}")
 
     async def delete(self, chat_id: int, context: grpc.aio.ServicerContext, broker: KafkaBroker):
         try:
