@@ -8,7 +8,11 @@ from src.schemas.user import UserEvent
 broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 service = UserService()
 
-@broker.subscriber('user.event')
+@broker.subscriber(
+        'user.event',
+        group_id='chat_service',
+        auto_offset_reset='earliest'
+    )
 async def user_event(data: UserEvent):
     event = data.event_type
     data = data.data

@@ -11,7 +11,11 @@ broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 user_service = UserService()
 chat_service = ChatService()
 
-@broker.subscriber('user.event')
+@broker.subscriber(
+        'user.event',
+        group_id='message_service',
+        auto_offset_reset='earliest'
+    )
 async def user_event(data: UserEvent):
     event = data.event_type
     data = data.data
@@ -21,7 +25,11 @@ async def user_event(data: UserEvent):
     elif event == 'UserDeactivated':
         await user_service.deactivate(data)
 
-@broker.subscriber('chat.events')
+@broker.subscriber(
+        'chat.events',
+        group_id='message_service',
+        auto_offset_reset='earliest' 
+    )
 async def chat_event(data: ChatEvent):
     event = data.event_type
     data = data.data
