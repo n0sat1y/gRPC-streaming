@@ -31,7 +31,7 @@ class MessageService:
         errors = []
         if not (chat := await self.chat_service.get(chat_id)):
             errors.append('chat_id')
-        if not (user := await self.user_service.get(user_id)):
+        if not (user := await self.user_service.get(user_id) or user.is_active):
             errors.append('user_id')
         elif not user.user_id in chat.members:
             print(chat.members)

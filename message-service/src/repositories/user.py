@@ -38,7 +38,11 @@ class UserRepository:
     async def deactivate(self, user_id: int): 
         try:
             user = await UserReplica.find(UserReplica.user_id == user_id).update(
-                {"$set": {'is_active': False}}
+                {"$set": {
+                    'username': 'Удаленный пользователь',
+                    'is_active': False
+                    }
+                }
             )
             return user
         except Exception as e:
