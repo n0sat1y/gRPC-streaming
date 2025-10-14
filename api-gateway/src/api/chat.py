@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.services.chat import RpcChatService
+from src.services.grpc.chat import RpcChatService
 from src.schemas.chat import *
 from src.dependencies import get_user_id
 

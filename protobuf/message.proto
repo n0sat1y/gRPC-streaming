@@ -6,7 +6,6 @@ package message;
 
 service MessageService {
     rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {}
-    rpc SubscribeMessages (SubscribeRequest) returns (stream Message) {}
     rpc GetAllMessages (GetAllMessagesRequest) returns (AllMessages) {}
 }
 
@@ -17,15 +16,8 @@ message SendMessageRequest {
 }
 
 message SendMessageResponse {
-    bool status = 1;    
     string message_id = 2;
     google.protobuf.Timestamp created_at = 3;
-}
-
-
-message SubscribeRequest {
-    int32 chat_id = 1;
-    int32 user_id = 2;
 }
 
 message Message {

@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\x12\x07message\x1a\x1fgoogle/protobuf/timestamp.proto\"G\n\x12SendMessageRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"i\n\x13SendMessageResponse\x12\x0e\n\x06status\x18\x01 \x01(\x08\x12\x12\n\nmessage_id\x18\x02 \x01(\t\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"4\n\x10SubscribeRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\"\x92\x01\n\x07Message\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x0f\n\x07user_id\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\t\x12.\n\ncreated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"(\n\x15GetAllMessagesRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\"1\n\x0b\x41llMessages\x12\"\n\x08messages\x18\x01 \x03(\x0b\x32\x10.message.Message2\xec\x01\n\x0eMessageService\x12J\n\x0bSendMessage\x12\x1b.message.SendMessageRequest\x1a\x1c.message.SendMessageResponse\"\x00\x12\x44\n\x11SubscribeMessages\x12\x19.message.SubscribeRequest\x1a\x10.message.Message\"\x00\x30\x01\x12H\n\x0eGetAllMessages\x12\x1e.message.GetAllMessagesRequest\x1a\x14.message.AllMessages\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\x12\x07message\x1a\x1fgoogle/protobuf/timestamp.proto\"G\n\x12SendMessageRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"Y\n\x13SendMessageResponse\x12\x12\n\nmessage_id\x18\x02 \x01(\t\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x92\x01\n\x07Message\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x0f\n\x07user_id\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\t\x12.\n\ncreated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"(\n\x15GetAllMessagesRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\"1\n\x0b\x41llMessages\x12\"\n\x08messages\x18\x01 \x03(\x0b\x32\x10.message.Message2\xa6\x01\n\x0eMessageService\x12J\n\x0bSendMessage\x12\x1b.message.SendMessageRequest\x1a\x1c.message.SendMessageResponse\"\x00\x12H\n\x0eGetAllMessages\x12\x1e.message.GetAllMessagesRequest\x1a\x14.message.AllMessages\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,15 +35,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SENDMESSAGEREQUEST']._serialized_start=59
   _globals['_SENDMESSAGEREQUEST']._serialized_end=130
   _globals['_SENDMESSAGERESPONSE']._serialized_start=132
-  _globals['_SENDMESSAGERESPONSE']._serialized_end=237
-  _globals['_SUBSCRIBEREQUEST']._serialized_start=239
-  _globals['_SUBSCRIBEREQUEST']._serialized_end=291
-  _globals['_MESSAGE']._serialized_start=294
-  _globals['_MESSAGE']._serialized_end=440
-  _globals['_GETALLMESSAGESREQUEST']._serialized_start=442
-  _globals['_GETALLMESSAGESREQUEST']._serialized_end=482
-  _globals['_ALLMESSAGES']._serialized_start=484
-  _globals['_ALLMESSAGES']._serialized_end=533
-  _globals['_MESSAGESERVICE']._serialized_start=536
-  _globals['_MESSAGESERVICE']._serialized_end=772
+  _globals['_SENDMESSAGERESPONSE']._serialized_end=221
+  _globals['_MESSAGE']._serialized_start=224
+  _globals['_MESSAGE']._serialized_end=370
+  _globals['_GETALLMESSAGESREQUEST']._serialized_start=372
+  _globals['_GETALLMESSAGESREQUEST']._serialized_end=412
+  _globals['_ALLMESSAGES']._serialized_start=414
+  _globals['_ALLMESSAGES']._serialized_end=463
+  _globals['_MESSAGESERVICE']._serialized_start=466
+  _globals['_MESSAGESERVICE']._serialized_end=632
 # @@protoc_insertion_point(module_scope)

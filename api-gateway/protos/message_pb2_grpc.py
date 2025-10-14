@@ -39,11 +39,6 @@ class MessageServiceStub(object):
                 request_serializer=message__pb2.SendMessageRequest.SerializeToString,
                 response_deserializer=message__pb2.SendMessageResponse.FromString,
                 _registered_method=True)
-        self.SubscribeMessages = channel.unary_stream(
-                '/message.MessageService/SubscribeMessages',
-                request_serializer=message__pb2.SubscribeRequest.SerializeToString,
-                response_deserializer=message__pb2.Message.FromString,
-                _registered_method=True)
         self.GetAllMessages = channel.unary_unary(
                 '/message.MessageService/GetAllMessages',
                 request_serializer=message__pb2.GetAllMessagesRequest.SerializeToString,
@@ -55,12 +50,6 @@ class MessageServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendMessage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def SubscribeMessages(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -79,11 +68,6 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     servicer.SendMessage,
                     request_deserializer=message__pb2.SendMessageRequest.FromString,
                     response_serializer=message__pb2.SendMessageResponse.SerializeToString,
-            ),
-            'SubscribeMessages': grpc.unary_stream_rpc_method_handler(
-                    servicer.SubscribeMessages,
-                    request_deserializer=message__pb2.SubscribeRequest.FromString,
-                    response_serializer=message__pb2.Message.SerializeToString,
             ),
             'GetAllMessages': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAllMessages,
@@ -118,33 +102,6 @@ class MessageService(object):
             '/message.MessageService/SendMessage',
             message__pb2.SendMessageRequest.SerializeToString,
             message__pb2.SendMessageResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
-    def SubscribeMessages(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(
-            request,
-            target,
-            '/message.MessageService/SubscribeMessages',
-            message__pb2.SubscribeRequest.SerializeToString,
-            message__pb2.Message.FromString,
             options,
             channel_credentials,
             insecure,

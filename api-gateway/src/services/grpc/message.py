@@ -65,8 +65,8 @@ class RpcMessageService:
     async def forward_websocket_message(self, user_id: int, chat_id: int, ws: WebSocket):
         try:
             while True:
-                content = await ws.receive_text()
-                await self.send_message(user_id, chat_id, content)
+                content = await ws.receive_json()
+                await self.send_message(user_id, content)
         except WebSocketDisconnect as e:
             print(f"WebSocket для чата {chat_id} закрыт.")
     

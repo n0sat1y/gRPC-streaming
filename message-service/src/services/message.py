@@ -40,7 +40,7 @@ class MessageService:
         if errors:
             logger.warning(f"Неверные данные: {', '.join(errors)}")
             await context.abort(
-                grpc.StatusCode.NOT_FOUND,
+                grpc.StatusCode.PERMISSION_DENIED,
                 details=f"Wrong data: {', '.join(errors)}"
             )
 
@@ -55,6 +55,11 @@ class MessageService:
                 'id': str(message.id),
                 'chat_id': message.chat_id,
                 'content': message.content,
+                'sender': {
+                    'id': user.user_id,
+                    'username': user.username,
+                },
+                'recievers': chat.members,
                 'created_at': message.created_at
             }
         }, 'message.event')
@@ -66,20 +71,6 @@ class MessageService:
         logger.info(f"Удаляем сообщения чата {chat_id}")
         deleted_count = await self.repo.delete_chat_messages(chat_id)
         logger.info(f"Удалены {deleted_count} сообщения чата: {chat_id=}")
-
-class ConnectionService:
-    def __init__(self):
-        self.active_connections = defaultdict(list)
-        
-    def connect(self, chat_id: int, stream):
-        self.active_connections[chat_id].append(stream)
-    
-    def disconnect(self, chat_id: int, stream):
-        self.active_connections[chat_id].remove(stream)
-
-    async def broabcast(self, chat_id: int, message):
-        for stream in self.active_connections[chat_id]:
-            await stream.write(message)
 
 
 

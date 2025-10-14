@@ -1,18 +1,15 @@
 import jwt
 from typing import Annotated
 from loguru import logger
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.utils import decode_jwt
-from src.services.user import RpcUserService
 
 bearer_scheme = HTTPBearer()
-user_service = RpcUserService()
 
-def get_token(creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)]):
+def decode_token(token: str):
     try:
-        token = creds.credentials
         return decode_jwt(token)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail='Not authenticated')
@@ -23,6 +20,11 @@ def get_token(creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_sche
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+def get_token(creds: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)]):
+    token = creds.credentials
+    return decode_token(token)
+	
 
 def require_refresh_token(payload = Depends(get_token)) -> dict:
 	if payload['type'] == 'refresh':
@@ -37,9 +39,12 @@ def require_access_token(payload = Depends(get_token)) -> dict:
 	logger.warning('Передан неверный тип токена')
 	raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token type')
 
-async def get_user_id(token_data = Depends(require_access_token)):
+def get_user_id(token_data = Depends(require_access_token)):
 	return int(token_data['sub'])
 
-async def get_user(token_data = Depends(require_access_token)):
-	user = await user_service.get_user_by_id(user_id=int(token_data['sub']))
-	return user
+def get_user_id_for_websocket(token: str = Query(...)):
+    payload = decode_token(token)
+    if not payload['type'] == 'access':
+        logger.warning('Передан неверный тип токена')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token type')
+    return int(payload['sub'])

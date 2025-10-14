@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from src.routers import router
+from src.services.kafka import router as kafka_router
+from src.api import router
 
 
 
@@ -20,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(router)
+app.include_router(kafka_router)
 
 if __name__ == '__main__':
     uvicorn.run(

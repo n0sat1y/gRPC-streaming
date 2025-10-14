@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.services import AuthService
+from src.services.auth import AuthService
 from src.schemas.auth import TokenResponse
 from src.dependencies import require_refresh_token
 

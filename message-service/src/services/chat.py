@@ -9,7 +9,7 @@ class ChatService():
     def __init__(self):
         self.repo = ChatRepository()
 
-    async def get(self, chat_id: int):
+    async def get(self, chat_id: int) -> ChatReplica:
         logger.info(f"Получаем чат {chat_id}")
         chat = await self.repo.get(chat_id)
         logger.info(f"Чат полчен: {chat_id}")
