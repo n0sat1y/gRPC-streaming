@@ -51,6 +51,7 @@ class MessageService:
         print(message.__dict__)
         await broker.publish({
             'event_type': 'MessageCreated',
+            'recievers': [x for x in chat.members if x != user_id],
             'data': {
                 'id': str(message.id),
                 'chat_id': message.chat_id,
@@ -59,7 +60,6 @@ class MessageService:
                     'id': user.user_id,
                     'username': user.username,
                 },
-                'recievers': chat.members,
                 'created_at': message.created_at
             }
         }, 'message.event')
