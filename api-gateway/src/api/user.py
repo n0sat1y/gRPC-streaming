@@ -1,7 +1,7 @@
 import grpc
 from fastapi import APIRouter, Depends
 
-from src.services.grpc.user import RpcUserService
+from src.handlers.grpc.user import RpcUserService
 from src.dependencies import get_user_id
 
 router = APIRouter(prefix='/user', tags=['User'])

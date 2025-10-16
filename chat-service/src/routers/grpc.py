@@ -1,9 +1,10 @@
-import grpc
 from google.protobuf.json_format import MessageToDict
+from loguru import logger
 
 from protos import chat_pb2, chat_pb2_grpc
 from src.services.chat import ChatService
 from src.routers.kafka import broker
+from src.decorators import handle_exceptions
 
 
 class Chat(chat_pb2_grpc.ChatServicer):
@@ -11,8 +12,10 @@ class Chat(chat_pb2_grpc.ChatServicer):
         self.service = ChatService()
         self.broker = broker
 
+    @handle_exceptions
     async def GetUserChats(self, request, context):
-        chats = await self.service.get_user_chats(request.id, context)
+        logger.info("Поступил запрос на получение чатов пользователя {request.id}")
+        chats = await self.service.get_user_chats(request.id)
         return chat_pb2.MultipleChats(
             chats=[chat_pb2.ChatResponse(
                 id=model.id, 
@@ -24,13 +27,17 @@ class Chat(chat_pb2_grpc.ChatServicer):
             ]
         )
     
+    @handle_exceptions
     async def CreateChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
-        chat = await self.service.create(data, context, self.broker)
+        logger.info("Поступил запрос на создание чата")
+        chat = await self.service.create(data, self.broker)
         return chat_pb2.ChatId(id=chat.id)
     
+    @handle_exceptions
     async def GetChatData(self, request, context):
-        chat = await self.service.get(request.id, context)
+        logger.info("Поступил запрос на получение данных чата {request.id}")
+        chat = await self.service.get(request.id)
 
         response =  chat_pb2.ChatData()
         response.id = chat.id
@@ -46,25 +53,32 @@ class Chat(chat_pb2_grpc.ChatServicer):
 
         return response
         
-
+    @handle_exceptions
     async def UpdateChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         chat_id = data.pop('id')
-        chat = await self.service.update(chat_id, data, context)
+        logger.info(f"Поступил запрос на обновление чата {chat_id}")
+        chat = await self.service.update(chat_id, data)
         return chat_pb2.ChatId(id=chat.id)
     
+    @handle_exceptions
     async def AddMembersToChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         print(data)
         chat_id = data.pop('id')
         members = data.pop('members')
-        chat = await self.service.add_members(chat_id, members, context, self.broker)
+        logger.info(f"Поступил запрос на добавление участников в чат {chat_id}")
+        chat = await self.service.add_members(chat_id, members, self.broker)
         return chat_pb2.ChatId(id=chat.id)
 
+    @handle_exceptions
     async def DeleteUserChat(self, request, context):
-        response = await self.service.delete_user_from_chat(request.user_id, request.chat_id, context, self.broker)
+        logger.info(f"Поступил запрос на удаление пользователя {request.user_id} из чата {request.chat_id}")
+        response = await self.service.delete_user_from_chat(request.user_id, request.chat_id, self.broker)
         return chat_pb2.DeleteResponse(status=response)
     
+    @handle_exceptions
     async def DeleteChat(self, request, context):
-        response = await self.service.delete(request.id, context, self.broker)
+        logger.info(f"Поступил запрос на удаление чата {request.id}")
+        response = await self.service.delete(request.id, self.broker)
         return chat_pb2.DeleteResponse(status=response)

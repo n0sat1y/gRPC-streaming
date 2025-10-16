@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from src.services.kafka import router as kafka_router
+from src.handlers.kafka import router as kafka_router
 from src.api import router
 
 

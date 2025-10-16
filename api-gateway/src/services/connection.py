@@ -17,6 +17,12 @@ class ConnectionManager:
             del self.active_connections[user_id]
         logger.info(f"Пользователь {user_id} отключился.")
 
+    async def send_personal_message(self, user_id: int, data: dict):
+        if user_id in self.active_connections:
+            for ws in self.active_connections[user_id]:
+                await ws.send_json(data)
+            logger.info(f"Отправлено сообщение пользователю {user_id}")
+
     async def broadcast(self, recievers: list[int], data: dict):
         for reciever in recievers:
             for ws in self.active_connections[reciever]:

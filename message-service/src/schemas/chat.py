@@ -16,7 +16,7 @@ class ChatEvent(BaseModel):
         event_type = self.event_type
         data = self.data
 
-        if event_type == 'UserCreated' or event_type == 'ChatUpdated':
+        if event_type == 'ChatCreated' or event_type == 'ChatUpdated':
             if not isinstance(data, ChatData):
                 raise ValueError("Data must be Chatdata for ChatUpdated or ChatUpdated event")
             

@@ -15,7 +15,7 @@ class ChatService():
         logger.info(f"Чат полчен: {chat_id}")
         return chat
 
-    async def upset(self, data: ChatData):
+    async def upsert(self, data: ChatData):
         logger.info(f"Создаем (или обновляем чат) чат {data.id}")
         print(data.model_dump())
         new_chat = await self.repo.upsert_data(data.model_dump())

@@ -7,6 +7,8 @@ from src.repositories.message import MessageRepository
 from src.services.user import UserService
 from src.services.chat import ChatService
 from src.models import Message
+from src.exceptions.message import *
+from src.schemas.message import *
 
 
 class MessageService:
@@ -27,42 +29,55 @@ class MessageService:
 
         return result, user_dict
     
-    async def insert(self, user_id: int, chat_id: int, content: str, context: grpc.aio.ServicerContext,  broker: KafkaBroker):
+    async def insert(
+            self, 
+            user_id: int, 
+            chat_id: int, 
+            content: str, 
+            tmp_message_id: str, 
+            broker: KafkaBroker
+        ):
         errors = []
         if not (chat := await self.chat_service.get(chat_id)):
             errors.append('chat_id')
-        if not (user := await self.user_service.get(user_id) or user.is_active):
+        user = await self.user_service.get(user_id)
+        if not user or not user.is_active:
             errors.append('user_id')
         elif not user.user_id in chat.members:
-            print(chat.members)
+            print(chat.members)            
             errors.append('user not is chat member')
 
         if errors:
-            logger.warning(f"Неверные данные: {', '.join(errors)}")
-            await context.abort(
-                grpc.StatusCode.PERMISSION_DENIED,
-                details=f"Wrong data: {', '.join(errors)}"
-            )
+            err_str = ', '.join(errors)
+            logger.warning(f"Неверные данные: {err_str}")
+            raise DataLossError(err_str)
 
         message = Message(user_id=user_id, chat_id=chat_id, content=content)
         message = await self.repo.insert(message)
         logger.info(f"Добавлено сообщение {message.id=} в {chat_id=}")
 
-        print(message.__dict__)
-        await broker.publish({
-            'event_type': 'MessageCreated',
-            'recievers': [x for x in chat.members if x != user_id],
-            'data': {
-                'id': str(message.id),
-                'chat_id': message.chat_id,
-                'content': message.content,
-                'sender': {
-                    'id': user.user_id,
-                    'username': user.username,
-                },
-                'created_at': message.created_at
-            }
-        }, 'message.event')
+        users = await self.user_service.get_multiple(chat.members)
+        active_recievers = [
+            member.user_id for member in users 
+            if member.is_active == True and member.user_id != user_id
+        ]
+
+        event_data = MessageData(
+            id=str(message.id),
+            chat_id= message.chat_id,
+            content=message.content,
+            sender=UserData(
+                id=user.user_id,
+                username=user.username
+            ),
+            tmp_message_id=tmp_message_id,
+            created_at=message.created_at
+        )
+        await broker.publish(
+            CreatedMessageEvent(
+                recievers=active_recievers,
+                data=event_data
+            ), 'message.event')
         logger.info(f"Уведомление о создании сообщения {message.id} отправлено")
 
         return message

@@ -3,8 +3,7 @@ import grpc
 from fastapi import APIRouter, Query, WebSocket, Depends
 from loguru import logger
 
-from src.services.grpc.message import RpcMessageService 
-from src.schemas.message import *
+from src.handlers.grpc.message import RpcMessageService
 from src.dependencies import get_user_id
 
 router = APIRouter(prefix='/message', tags=['Message'])

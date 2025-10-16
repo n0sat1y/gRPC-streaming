@@ -4,7 +4,7 @@ from src.utils import (
     hash_password, validate_password, 
     encode_access_jwt, encode_refresh_jwt, decode_jwt
 )
-from src.services.grpc.user import RpcUserService
+from src.handlers.grpc.user import RpcUserService
 from src.schemas.auth import TokenResponse
 
 class AuthService:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from src.services.grpc.chat import RpcChatService
+from src.handlers.grpc.chat import RpcChatService
 from src.schemas.chat import *
 from src.dependencies import get_user_id
 
@@ -28,7 +28,7 @@ async def update_chat(data: UpdateChatData, user = Depends(get_user_id)) -> IdSc
     return response
 
 @router.patch('/add-members')
-async def update_chat(data: AddMembersRequest, user = Depends(get_user_id)) -> IdSchema:
+async def add_members(data: AddMembersRequest, user = Depends(get_user_id)) -> IdSchema:
     response = await RpcChatService().add_members(data)
     return response
 

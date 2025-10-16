@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional, List
@@ -48,3 +49,23 @@ class Chat(ChatBase):
     members: List[ChatMember] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+# --- EVENTS ---
+
+class ChatIdBase(BaseModel):
+    id: int
+
+class ChatDataBase(ChatIdBase):
+    members: list[int]
+
+class CreateChatEvent(BaseModel):
+    event_type: Literal['ChatCreated'] = 'ChatCreated'
+    data: ChatDataBase
+
+class UpdateChatEvent(BaseModel):
+    event_type: Literal['ChatUpdated'] = 'ChatUpdated'
+    data: ChatDataBase
+
+class DeleteChatEvent(BaseModel):
+    event_type: Literal['ChatDeleted'] = 'ChatDeleted'
+    data: ChatIdBase

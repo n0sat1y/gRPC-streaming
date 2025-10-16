@@ -14,7 +14,7 @@ class UserService:
             logger.info(f"Пользователь получен {user.username}")
             return user
         except Exception as e:
-            logger.error(f"Ошибка во время получения пользователея {user_id}")
+            logger.error(f"Ошибка во время получения пользователея {user_id}: {e}")
 
     async def get_multiple(self, ids: list[int]):
         users = await self.repo.get_multiple(ids)
@@ -33,7 +33,7 @@ class UserService:
             await self.repo.upsert(data.model_dump())
             logger.info(f"Пользователь создан {data.username}")
         except Exception as e:
-            logger.error(f"Ошибка во время изменения реплики пользователей")
+            logger.error(f"Ошибка во время изменения реплики пользователей: {e}")
 
     async def deactivate(self, id: int):
         try:
@@ -41,5 +41,5 @@ class UserService:
             await self.repo.deactivate(id)
             logger.info(f"Пользователь деактивирован {id}")
         except Exception as e:
-            logger.error(f"Ошибка во время удаления пользователя {id}")
+            logger.error(f"Ошибка во время удаления пользователя {id}: {e}")
 

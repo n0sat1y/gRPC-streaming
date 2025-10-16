@@ -37,7 +37,7 @@ async def chat_event(data: ChatEvent):
     data = data.data
     logger.info(f"Получено уведомление о собынии в сервисе чатов {event}")
     if event == "ChatCreated" or event == "ChatUpdated":
-        await chat_service.upset(data)
+        await chat_service.upsert(data)
     elif event == 'ChatDeleted':
         await chat_service.delete(data)
         await message_service.delete_chat_messages(data.id)

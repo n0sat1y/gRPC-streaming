@@ -6,6 +6,7 @@ from protos import message_pb2_grpc, message_pb2
 from src.services.message import MessageService
 from src.services.chat import ChatService
 from src.routers.kafka import broker
+from src.decorators import handle_exceptions
 
 
 class Message(message_pb2_grpc.MessageServiceServicer):
@@ -14,12 +15,14 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         self.chat_service = ChatService()
         self.broker = broker
     
+    @handle_exceptions
     async def SendMessage(self, request, context):
+        print(request.tmp_message_id)
         message = await self.service.insert(
             request.user_id,
             request.chat_id,
             request.content,
-            context,
+            request.tmp_message_id,
             self.broker
         )
         response = message_pb2.SendMessageResponse()
@@ -28,6 +31,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
 
         return response
     
+    @handle_exceptions
     async def GetAllMessages(self, request, context):
         messages, users = await self.service.get_all(request.chat_id)
         response = []

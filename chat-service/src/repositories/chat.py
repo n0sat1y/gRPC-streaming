@@ -1,156 +1,113 @@
 from loguru import logger
 from sqlalchemy import select, delete
 from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
 from src.models import ChatModel, ChatMemberModel
-from src.core.db import SessionLocal
+from src.decorators import with_session
 
 class ChatRepository:
-    async def get(self, id: int) -> ChatModel:
-        try:
-            async with SessionLocal() as session:
-                stmt = await session.execute(
-                    select(ChatModel).
-                    where(ChatModel.id==id).
-                    options(selectinload(ChatModel.members)))
-                result = stmt.scalar_one_or_none()
-                return result
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e
+    @with_session
+    async def get(self, id: int, session: AsyncSession) -> ChatModel:
+        stmt = await session.execute(
+            select(ChatModel).
+            where(ChatModel.id==id).
+            options(selectinload(ChatModel.members)))
+        result = stmt.scalar_one_or_none()
+        return result
         
-    async def get_by_user_id(self, user_id: int) -> ChatModel:
-        try:
-            async with SessionLocal() as session:
-                stmt = await session.execute(
-                    select(ChatModel).
-                    join(ChatMemberModel).
-                    where(ChatMemberModel.user_id==user_id))
-                result = stmt.scalars().all()
-                return result
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e
+    @with_session
+    async def get_by_user_id(self, user_id: int, session: AsyncSession) -> ChatModel:
+        stmt = await session.execute(
+            select(ChatModel).
+            join(ChatMemberModel).
+            where(ChatMemberModel.user_id==user_id))
+        result = stmt.scalars().all()
+        return result
         
-    async def create(self, chat_data: dict, members: dict) -> ChatModel:
+    @with_session
+    async def create(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
         try:
-            async with SessionLocal() as session:
-                chat = ChatModel(
-                    **chat_data,
-                    members=[ChatMemberModel(user_id=user['id']) for user in members]
-                )
-                session.add(chat)
-                await session.commit()
-                await session.refresh(chat, attribute_names=['members'])
-                return chat
+            chat = ChatModel(
+                **chat_data,
+                members=[ChatMemberModel(user_id=user['id']) for user in members]
+            )
+            session.add(chat)
+            await session.commit()
+            await session.refresh(chat, attribute_names=['members'])
+            return chat
         except IntegrityError as e:
             await session.rollback()
             raise e
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e
         
-    async def update(self, chat: ChatModel, data: dict) -> ChatModel:
+    @with_session
+    async def update(self, chat: ChatModel, data: dict, session: AsyncSession) -> ChatModel:
+        for key, value in data.items():
+            setattr(chat, key, value)
+        session.add(chat)
+        await session.commit()
+        await session.refresh(chat)
+        return chat
+        
+    @with_session
+    async def add_members(self, chat: ChatModel, members: list[dict], session: AsyncSession) -> ChatModel:
         try:
-            async with SessionLocal() as session:
-                for key, value in data.items():
-                    setattr(chat, key, value)
-                session.add(chat)
-                await session.commit()
-                await session.refresh(chat)
-                return chat
+            chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
+            session.add(chat)
+            await session.commit()
+            await session.refresh(chat, attribute_names=['members'])
+            return chat
         except IntegrityError as e:
-            logger.error(f"Failed to add members: {e}")
+            logger.error(f"Members already added")
             raise e
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
         
-    async def add_members(self, chat: ChatModel, members: list[dict]) -> ChatModel:
-        try:
-            async with SessionLocal() as session:
-                chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
-                session.add(chat)
-                await session.commit()
-                await session.refresh(chat, attribute_names=['members'])
-                return chat
-        except IntegrityError as e:
-            logger.error(f"Failed to add members: {e}")
-            raise e
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
-        
+    @with_session
     async def update_chat_last_message(
-            self, 
-            chat: ChatModel, 
-            last_message: str, 
-            last_message_at: datetime) -> None:
-        try:
-            async with SessionLocal() as session:
-                chat.last_message = last_message
-                chat.last_message_at = last_message_at
-                session.add(chat)
-                await session.commit()
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
+        self, 
+        chat: ChatModel, 
+        last_message: str, 
+        last_message_at: datetime,
+        session: AsyncSession
+    ) -> None:
+        chat.last_message = last_message
+        chat.last_message_at = last_message_at
+        session.add(chat)
+        await session.commit() 
         
-    async def delete(self, chat_id: int) -> None:
-        try:
-            async with SessionLocal() as session:
-                stmt = (
-                    delete(ChatModel).
-                    where(
-                        ChatModel.id==chat_id
-                    )
-                )
-                result = await session.execute(stmt)
-                await session.commit()
-                return result.rowcount
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
+    @with_session
+    async def delete(self, chat_id: int, session: AsyncSession) -> None:
+        stmt = (
+            delete(ChatModel).
+            where(
+                ChatModel.id==chat_id
+            )
+        )
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.rowcount
         
-    async def delete_user_chats(self, user_id: int) -> None:
-        try:
-            async with SessionLocal() as session:
-                stmt = (
-                    delete(ChatMemberModel).
-                    where(ChatMemberModel.user_id==user_id)
-                )
-                result = await session.execute(stmt)
-                await session.commit()
-                return result.rowcount
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
+    @with_session
+    async def delete_user_chats(self, user_id: int, session: AsyncSession) -> None:
+        stmt = (
+            delete(ChatMemberModel).
+            where(ChatMemberModel.user_id==user_id)
+        )
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.rowcount
         
-    async def delete_user_from_chat(self, user_id: int, chat_id: int) -> None:
-        try:
-            async with SessionLocal() as session:
-                stmt = (
-                    delete(ChatMemberModel).
-                    where(
-                        ChatMemberModel.user_id==user_id, 
-                        ChatMemberModel.chat_id==chat_id
-                    )
-                )
-                result = await session.execute(stmt)
-                await session.commit()
-                return result.rowcount
-        except Exception as e:
-            logger.error(f'Database Error {e}')
-            await session.rollback()
-            raise e 
+    @with_session
+    async def delete_user_from_chat(self, user_id: int, chat_id: int, session: AsyncSession) -> None:
+        stmt = (
+            delete(ChatMemberModel).
+            where(
+                ChatMemberModel.user_id==user_id, 
+                ChatMemberModel.chat_id==chat_id
+            )
+        )
+        result = await session.execute(stmt)
+        await session.commit()
+        return result.rowcount
 
