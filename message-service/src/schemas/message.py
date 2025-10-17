@@ -1,3 +1,4 @@
+from typing import Union
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -12,10 +13,35 @@ class MessageData(BaseModel):
     chat_id: int
     content: str
     sender: UserData
-    tmp_message_id: str
     created_at: datetime
+
+class UpdateMessagePayload(BaseModel):
+    id: str
+    content: str
+
+class MessageIdPayload(BaseModel):
+    id: str
 
 class CreatedMessageEvent(BaseModel):
     event_type: str = 'MessageCreated'
     recievers: list[int]
     data: MessageData
+    request_id: str
+    event_id: str
+    sender_id: int
+
+class UpdateMessageEvent(BaseModel):
+    event_type: str = 'MessageUpdated'
+    recievers: list[int]
+    data: UpdateMessagePayload
+    request_id: str
+    event_id: str
+    sender_id: int
+
+class DeleteMessageEvent(BaseModel):
+    event_type: str = 'MessageDeleted'
+    recievers: list[int]
+    data: MessageIdPayload
+    request_id: str
+    event_id: str
+    sender_id: int

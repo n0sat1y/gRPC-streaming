@@ -22,6 +22,7 @@ async def connection(
             recieve_data = await ws.receive_json()
             try:
                 message: IncomingMessage = TypeAdapter(IncomingMessage).validate_python(recieve_data)
+                print(message)
             except ValidationError as e:
                 await ws.send_json(ErrorResponse(
                     payload=ErrorPayload(

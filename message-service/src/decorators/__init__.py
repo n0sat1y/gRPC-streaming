@@ -14,6 +14,11 @@ def handle_exceptions(func):
                 grpc.StatusCode.DATA_LOSS,
                 details=str(e)
             )
+        except MessageNotFoundError as e:
+            await context.abort(
+                grpc.StatusCode.NOT_FOUND,
+                details=str(e)
+            )
         except Exception as e:
             logger.error(e)
             await context.abort(

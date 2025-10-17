@@ -39,6 +39,16 @@ class MessageServiceStub(object):
                 request_serializer=message__pb2.SendMessageRequest.SerializeToString,
                 response_deserializer=message__pb2.SendMessageResponse.FromString,
                 _registered_method=True)
+        self.UpdateMessage = channel.unary_unary(
+                '/message.MessageService/UpdateMessage',
+                request_serializer=message__pb2.UpdateMessageRequest.SerializeToString,
+                response_deserializer=message__pb2.MessageId.FromString,
+                _registered_method=True)
+        self.DeleteMessage = channel.unary_unary(
+                '/message.MessageService/DeleteMessage',
+                request_serializer=message__pb2.DeleteMessageRequest.SerializeToString,
+                response_deserializer=message__pb2.DeleteMessageResponse.FromString,
+                _registered_method=True)
         self.GetAllMessages = channel.unary_unary(
                 '/message.MessageService/GetAllMessages',
                 request_serializer=message__pb2.GetAllMessagesRequest.SerializeToString,
@@ -50,6 +60,18 @@ class MessageServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UpdateMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteMessage(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -68,6 +90,16 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     servicer.SendMessage,
                     request_deserializer=message__pb2.SendMessageRequest.FromString,
                     response_serializer=message__pb2.SendMessageResponse.SerializeToString,
+            ),
+            'UpdateMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateMessage,
+                    request_deserializer=message__pb2.UpdateMessageRequest.FromString,
+                    response_serializer=message__pb2.MessageId.SerializeToString,
+            ),
+            'DeleteMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteMessage,
+                    request_deserializer=message__pb2.DeleteMessageRequest.FromString,
+                    response_serializer=message__pb2.DeleteMessageResponse.SerializeToString,
             ),
             'GetAllMessages': grpc.unary_unary_rpc_method_handler(
                     servicer.GetAllMessages,
@@ -102,6 +134,60 @@ class MessageService(object):
             '/message.MessageService/SendMessage',
             message__pb2.SendMessageRequest.SerializeToString,
             message__pb2.SendMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/message.MessageService/UpdateMessage',
+            message__pb2.UpdateMessageRequest.SerializeToString,
+            message__pb2.MessageId.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeleteMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/message.MessageService/DeleteMessage',
+            message__pb2.DeleteMessageRequest.SerializeToString,
+            message__pb2.DeleteMessageResponse.FromString,
             options,
             channel_credentials,
             insecure,

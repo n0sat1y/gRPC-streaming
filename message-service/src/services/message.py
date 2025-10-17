@@ -1,4 +1,5 @@
 import grpc
+import uuid
 from collections import defaultdict
 from loguru import logger
 from faststream.kafka import KafkaBroker
@@ -17,6 +18,14 @@ class MessageService:
         self.user_service = UserService()
         self.chat_service = ChatService()
 
+    async def get(self, message_id: str) -> Message:
+        logger.info(f"Получаем сообщение {message_id}")
+        message = await self.repo.get(message_id)
+        if not message:
+            logger.warning(f"Не найдено сообщение {message_id}")
+            raise MessageNotFoundError(message_id=message_id)
+        return message
+
     async def get_all(self, chat_id: int):
         result = await self.repo.get_all(chat_id)
         logger.info(f"Получено {len(result)} сообщений из чата {chat_id=}")
@@ -34,7 +43,8 @@ class MessageService:
             user_id: int, 
             chat_id: int, 
             content: str, 
-            tmp_message_id: str, 
+            request_id: str, 
+            sender_id: int,
             broker: KafkaBroker
         ):
         errors = []
@@ -59,7 +69,7 @@ class MessageService:
         users = await self.user_service.get_multiple(chat.members)
         active_recievers = [
             member.user_id for member in users 
-            if member.is_active == True and member.user_id != user_id
+            if member.is_active == True
         ]
 
         event_data = MessageData(
@@ -70,17 +80,71 @@ class MessageService:
                 id=user.user_id,
                 username=user.username
             ),
-            tmp_message_id=tmp_message_id,
             created_at=message.created_at
         )
         await broker.publish(
             CreatedMessageEvent(
                 recievers=active_recievers,
-                data=event_data
+                data=event_data,
+                request_id=request_id,
+                event_id=str(uuid.uuid4()),
+                sender_id=sender_id,
             ), 'message.event')
         logger.info(f"Уведомление о создании сообщения {message.id} отправлено")
 
         return message
+    
+    async def update(
+        self, 
+        message_id: str, 
+        new_content: str, 
+        request_id: str, 
+        sender_id: int,
+        broker: KafkaBroker
+    ) -> Message:
+        logger.info(f"Обновляем сообщение {message_id}")
+
+        message = await self.get(message_id)
+        message = await self.repo.update(message, new_content)
+        logger.info(f"Обновлено сообщение: {message_id}")
+
+        active_recievers = await self.chat_service.get_active_members(chat_id=message.chat_id)
+        event_data = UpdateMessagePayload(id=str(message.id), content=message.content)
+        await broker.publish(
+            UpdateMessageEvent(
+                recievers=active_recievers,
+                data=event_data,
+                request_id=request_id,
+                event_id=str(uuid.uuid4()),
+                sender_id=sender_id,
+            ), 'message.event'
+        )
+        logger.info(f"Уведомление об обновлении сообщения {message.id} отправлено")
+        return message
+    
+    async def delete(
+        self, 
+        message_id: str, 
+        request_id: str, 
+        sender_id: int,
+        broker: KafkaBroker
+    ):
+        logger.info(f"Удаляем сообщение {message_id}")
+        message = await self.get(message_id)
+        await self.repo.delete(message)
+        logger.info(f"Удалено сообщение {message_id}")
+
+        recievers = await self.chat_service.get_active_members(message.chat_id)
+        await broker.publish(
+            DeleteMessageEvent(
+                recievers=recievers,
+                data=MessageIdPayload(id=str(message_id)),
+                request_id=request_id,
+                event_id=str(uuid.uuid4()),
+                sender_id=sender_id,
+            ), 'message.event'
+        )
+        logger.info(f"Уведомление об удалении сообщения {message.id} отправлено")
     
     async def delete_chat_messages(self, chat_id: int):
         logger.info(f"Удаляем сообщения чата {chat_id}")

@@ -10,27 +10,30 @@ class ErrorResponse(BaseModel):
     payload: ErrorPayload
 
 class SendMessagePayload(BaseModel):
-    tmp_message_id: str
     chat_id: int
     content: str
 
 class DeleteMessagePayload(BaseModel):
-    message_id: int
+    message_id: str
 
 class EditMessagePayload(DeleteMessagePayload):
     new_content: str
 
+
 class SendMessageEvent(BaseModel):
     event_type: Literal['send_message']
     payload: SendMessagePayload
+    request_id: str
 
 class DeleteMessageEvent(BaseModel):
     event_type: Literal['delete_message']
     payload: DeleteMessagePayload
+    request_id: str
 
 class EditMessageEvent(BaseModel):
     event_type: Literal['edit_message']
     payload: EditMessagePayload
+    request_id: str
 
 
 IncomingMessage = Union[SendMessageEvent, DeleteMessageEvent, EditMessageEvent]

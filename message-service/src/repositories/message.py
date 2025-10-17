@@ -1,8 +1,17 @@
 from loguru import logger
+from beanie.operators import Set
 
 from src.models import Message
 
 class MessageRepository:
+    async def get(self, message_id: str):
+        try:
+            message = await Message.get(message_id)
+            return message
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+        
     async def get_all(self, chat_id: int):
         try:
             messages = await Message.find_many(Message.chat_id == chat_id).to_list()
@@ -14,6 +23,23 @@ class MessageRepository:
     async def insert(self, message: Message):
         try:
             await message.insert()
+            return message
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+        
+    async def delete(self, message: Message):
+        try:
+            await message.delete()
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+        
+    async def update(self, message: Message, new_content: str):
+        try:
+            message = await message.update(
+                Set({Message.content: new_content})
+            )
             return message
         except Exception as e:
             logger.error(f'Database Error', e)

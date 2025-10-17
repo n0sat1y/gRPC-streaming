@@ -17,12 +17,12 @@ class Message(message_pb2_grpc.MessageServiceServicer):
     
     @handle_exceptions
     async def SendMessage(self, request, context):
-        print(request.tmp_message_id)
         message = await self.service.insert(
             request.user_id,
             request.chat_id,
             request.content,
-            request.tmp_message_id,
+            request.request_id,
+            request.sender_id,
             self.broker
         )
         response = message_pb2.SendMessageResponse()
@@ -45,4 +45,27 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             message_obj.created_at.FromDatetime(message.created_at)
             response.append(message_obj)
         return message_pb2.AllMessages(messages=response)
+    
+    @handle_exceptions
+    async def UpdateMessage(self, request, context):
+        message = await self.service.update(
+            request.message_id,
+            request.new_content,
+            request.request_id,
+            request.sender_id,
+            self.broker
+        )
+        return message_pb2.MessageId(message_id=str(message.id))
+
+    @handle_exceptions
+    async def DeleteMessage(self, request, context):
+        await self.service.delete(
+            request.message_id,
+            request.request_id,
+            request.sender_id,
+            self.broker
+        )
+        return message_pb2.DeleteMessageResponse(
+            status='Success'
+        )
     

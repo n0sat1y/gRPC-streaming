@@ -3,11 +3,13 @@ from loguru import logger
 from src.repositories.chat import ChatRepository
 from src.models.replications import ChatReplica
 from src.schemas.chat import ChatData, IdSchema
+from src.services.user import UserService
 
 
 class ChatService():
     def __init__(self):
         self.repo = ChatRepository()
+        self.user_service = UserService()
 
     async def get(self, chat_id: int) -> ChatReplica:
         logger.info(f"Получаем чат {chat_id}")
@@ -25,4 +27,17 @@ class ChatService():
         logger.info(f"Удаляем чат {data.id}")
         chat = await self.repo.delete(data.id)
         logger.info(f"Чат удален: {chat}")
+
+    async def get_active_members(self, chat_id: int):
+        logger.info(f"Получаем активных участников чата {chat_id}")
+
+        chat = await self.get(chat_id)
+
+        users = await self.user_service.get_multiple(chat.members)
+        active_recievers = [
+            member.user_id for member in users 
+            if member.is_active == True
+        ]
+
+        return active_recievers
 
