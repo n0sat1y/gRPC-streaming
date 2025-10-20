@@ -54,6 +54,15 @@ class RpcChatService:
         return MultipleChatsResponse.model_validate(data)
     
     @handle_grpc_exceptions
+    async def get_last_read_message(self, chat_id: int, user_id: int):
+        async with self.get_stub() as stub:
+            request = chat_pb2.GetLastReadMessageRequest(chat_id=chat_id, user_id=user_id)
+            response = await stub.GetLastReadMessage(request)
+
+        logger.info(f"Получено сообщение: {response.message_id}")
+        return response.message_id
+    
+    @handle_grpc_exceptions
     async def update_chat(self, data: UpdateChatData):
         async with self.get_stub() as stub:
             request = chat_pb2.UpdateChatRequest(

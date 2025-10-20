@@ -1,7 +1,7 @@
 from loguru import logger
 from beanie.operators import Set
 
-from src.models import Message
+from src.models import Message, ReadProgress, ReadStatus
 
 class MessageRepository:
     async def get(self, message_id: str):
@@ -61,6 +61,37 @@ class MessageRepository:
             count = await messages.count()
             await messages.delete()
             return count
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+
+    async def mark_as_read(last_message_id: str):
+        try:
+            pass
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+        
+    async def set_last_read_message(self, chat_id: int, user_id: int) -> str | None:
+        try:
+            message_id = await ReadProgress.find_one(
+                ReadProgress.chat_id == chat_id,
+                ReadProgress.user_id == user_id
+            )
+            return message_id.last_read_message_id
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+        
+    async def set_last_read_message(self, chat_id: int, user_id: int, message_id: int) -> None:
+        try:
+            await ReadProgress.find_one(
+                ReadProgress.chat_id == chat_id,
+                ReadProgress.user_id == user_id
+            ).upsert(
+                Set({ReadProgress.last_read_message_id: message_id}),
+                on_insert=ReadProgress(user_id=user_id, chat_id=chat_id, last_read_message_id=message_id)
+            )
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e

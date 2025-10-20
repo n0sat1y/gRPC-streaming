@@ -25,6 +25,7 @@ class ChatMemberModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(ForeignKey('chats.id', ondelete='CASCADE'))
     user_id: Mapped[int] = mapped_column(ForeignKey('users_replication.id'))
+    last_read_message_id: Mapped[str] = mapped_column(nullable=True)
     joined_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     chat: Mapped[list["ChatModel"]] = relationship(

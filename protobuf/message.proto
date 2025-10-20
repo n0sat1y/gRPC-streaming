@@ -46,7 +46,7 @@ message DeleteMessageResponse {
 }
 
 message Message {
-    string message_id = 1;
+    string id = 1;
     int32 chat_id = 2;
     int32 user_id = 3;
     string username = 4;

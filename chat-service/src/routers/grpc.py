@@ -82,3 +82,11 @@ class Chat(chat_pb2_grpc.ChatServicer):
         logger.info(f"Поступил запрос на удаление чата {request.id}")
         response = await self.service.delete(request.id, self.broker)
         return chat_pb2.DeleteResponse(status=response)
+
+    @handle_exceptions
+    async def GetLastReadMessage(self, request, context):
+        chat_id = request.chat_id
+        user_id = request.user_id
+        logger.info(f"Получен запрос на просмотр последнего прочитанного сообщения чата {chat_id} ползователем {user_id}")
+        chat_member = await self.service.get_chat_member(chat_id, user_id)
+        return chat_pb2.MessageId(message_id=chat_member.last_read_message_id)

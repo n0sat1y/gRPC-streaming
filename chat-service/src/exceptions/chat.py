@@ -23,3 +23,7 @@ class MembersAlreadyAdded(Exception):
 class UserChatNotFound(Exception):
     def __init__(self):
         super().__init__(f"This chat not found in user chats")
+
+class ChatMemberNotFound(Exception):
+    def __init__(self):
+        super().__init__(f"User not found in chat members")

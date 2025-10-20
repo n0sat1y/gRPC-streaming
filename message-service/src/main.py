@@ -10,7 +10,7 @@ from protos import message_pb2, message_pb2_grpc
 from src.core.config import settings
 from src.routers.grpc import Message as MessageRouter
 from src.routers.kafka import broker
-from src.models import Message as MessageModel
+from src.models import Message as MessageModel, ReadProgress, ReadStatus
 from src.models.replications import UserReplica, ChatReplica
 
 app = FastStream(broker)
@@ -26,6 +26,8 @@ async def startup():
             MessageModel,
             UserReplica, 
             ChatReplica,
+            ReadStatus,
+            ReadStatus,
         ]
     )
 

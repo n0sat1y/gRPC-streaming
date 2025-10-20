@@ -24,7 +24,8 @@ def handle_exceptions(func):
     async def wrapper(self, request, context: grpc.aio.ServicerContext):
         try:
             return await func(self, request, context)
-        except (ChatNotFoundError, UserChatNotFound, UsersNotFoundError) as e:
+        except (ChatNotFoundError, UserChatNotFound, 
+                UsersNotFoundError, ChatMemberNotFound) as e:
             await context.abort(
                 grpc.StatusCode.NOT_FOUND,
                 details=str(e)

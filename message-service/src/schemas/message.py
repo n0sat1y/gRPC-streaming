@@ -45,3 +45,8 @@ class DeleteMessageEvent(BaseModel):
     request_id: str
     event_id: str
     sender_id: int
+
+class MarkAsReadedEvent(BaseModel):
+    user_id: int
+    chat_id: int
+    last_read_message_id: str

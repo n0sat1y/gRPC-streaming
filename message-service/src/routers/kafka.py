@@ -6,7 +6,7 @@ from src.services.user import UserService
 from src.schemas.user import UserEvent
 from src.services.chat import ChatService
 from src.schemas.chat import ChatEvent
-from src.services.message import MessageService
+from src.services.message import *
 
 broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 user_service = UserService()
@@ -43,3 +43,12 @@ async def chat_event(data: ChatEvent):
         await message_service.delete_chat_messages(data.id)
     
     
+@broker.subscriber(
+    'messages.readed.incoming',
+    group_id='message_service',
+    auto_offset_reset='earliest' 
+)
+async def handle_readed_messages(data: MarkAsReadedEvent):
+    pass
+
+

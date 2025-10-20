@@ -57,3 +57,8 @@ class AddMembersRequest(IdSchema):
     members: Optional[list[IdSchema]] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class MessageIdSchema(IdSchema):
+    message_id: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)

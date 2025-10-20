@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from src.core.config import settings
 from src.decorators.grpc import handle_grpc_exceptions, handle_websocket_grpc_exceptions
-
+from src.schemas.message import GetAllMessagesSchema
 
 class RpcMessageService:
     def __init__(self):
@@ -59,7 +59,7 @@ class RpcMessageService:
         return response.status
     
     @handle_grpc_exceptions
-    async def get_all_messages(self, chat_id: int) -> dict:
+    async def get_all_messages(self, chat_id: int) -> GetAllMessagesSchema:
         async with self.get_stub() as stub:
             request = message_pb2.GetAllMessagesRequest(
                 chat_id=chat_id
@@ -68,7 +68,7 @@ class RpcMessageService:
 
         logger.info(f'Получено сообщений: {len(response.messages)}')
         data = MessageToDict(response, preserving_proto_field_name=True)
-        return data
+        return GetAllMessagesSchema.model_validate(data)
     
 
     

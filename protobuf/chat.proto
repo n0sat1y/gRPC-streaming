@@ -12,6 +12,7 @@ service Chat {
     rpc GetChatData (ChatId) returns (ChatData) {}
     rpc DeleteUserChat (DeleteUserFromChatRequest) returns (DeleteResponse) {}
     rpc DeleteChat (ChatId) returns (DeleteResponse) {}
+    rpc GetLastReadMessage (GetLastReadMessageRequest) returns (MessageId) {}
 
 }
 
@@ -68,4 +69,13 @@ message DeleteUserFromChatRequest {
 
 message DeleteResponse {
     string status = 1;
+}
+
+message GetLastReadMessageRequest {
+    int32 user_id = 1;
+    int32 chat_id = 2;
+}
+
+message MessageId {
+    optional string message_id = 1;
 }

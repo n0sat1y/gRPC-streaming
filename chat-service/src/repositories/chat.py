@@ -26,7 +26,18 @@ class ChatRepository:
             where(ChatMemberModel.user_id==user_id))
         result = stmt.scalars().all()
         return result
+    
+    @with_session
+    async def get_chat_member(self, chat_id: int, user_id: int, session: AsyncSession):
+        stmt = await session.execute(
+            select(ChatMemberModel).
+            where(
+                ChatMemberModel.user_id==user_id, 
+                ChatMemberModel.chat_id==chat_id
+            )
+        )
         
+        return stmt.scalar_one_or_none()
     @with_session
     async def create(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
         try:
@@ -110,4 +121,7 @@ class ChatRepository:
         result = await session.execute(stmt)
         await session.commit()
         return result.rowcount
+    
+    
+
 

@@ -6,7 +6,7 @@ from faststream.kafka import KafkaBroker
 
 from src.repositories.chat import ChatRepository
 from src.services.user import UserService
-from src.models import ChatModel
+from src.models import ChatModel, ChatMemberModel
 from src.schemas.chat import *
 from src.schemas.message import MessageData
 from src.exceptions.chat import *
@@ -39,6 +39,14 @@ class ChatService:
         if missed:
             raise UsersNotFoundError(missed)
         return found
+    
+    async def get_chat_member(self, chat_id: int, user_id: int) -> ChatMemberModel:
+        chat_member = await self.repo.get_chat_member(chat_id, user_id)
+        if not chat_member:
+            logger.warning(f"Пользователь {user_id} не найден в участниках чата {chat_id}")
+            raise ChatMemberNotFound()
+        logger.info(f"Найден пользователь {user_id}")
+        return chat_member
 
     async def create(self, data: dict, broker: KafkaBroker):
         try:

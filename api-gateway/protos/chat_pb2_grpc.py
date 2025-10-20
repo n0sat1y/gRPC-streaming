@@ -69,6 +69,11 @@ class ChatStub(object):
                 request_serializer=chat__pb2.ChatId.SerializeToString,
                 response_deserializer=chat__pb2.DeleteResponse.FromString,
                 _registered_method=True)
+        self.GetLastReadMessage = channel.unary_unary(
+                '/chat.Chat/GetLastReadMessage',
+                request_serializer=chat__pb2.GetLastReadMessageRequest.SerializeToString,
+                response_deserializer=chat__pb2.MessageId.FromString,
+                _registered_method=True)
 
 
 class ChatServicer(object):
@@ -116,6 +121,12 @@ class ChatServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetLastReadMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ChatServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -153,6 +164,11 @@ def add_ChatServicer_to_server(servicer, server):
                     servicer.DeleteChat,
                     request_deserializer=chat__pb2.ChatId.FromString,
                     response_serializer=chat__pb2.DeleteResponse.SerializeToString,
+            ),
+            'GetLastReadMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLastReadMessage,
+                    request_deserializer=chat__pb2.GetLastReadMessageRequest.FromString,
+                    response_serializer=chat__pb2.MessageId.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -344,6 +360,33 @@ class Chat(object):
             '/chat.Chat/DeleteChat',
             chat__pb2.ChatId.SerializeToString,
             chat__pb2.DeleteResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetLastReadMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/chat.Chat/GetLastReadMessage',
+            chat__pb2.GetLastReadMessageRequest.SerializeToString,
+            chat__pb2.MessageId.FromString,
             options,
             channel_credentials,
             insecure,

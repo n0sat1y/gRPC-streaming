@@ -37,7 +37,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         response = []
         for message in messages:
             message_obj = message_pb2.Message()
-            message_obj.message_id = str(message.id)
+            message_obj.id = str(message.id)
             message_obj.chat_id = message.chat_id
             message_obj.user_id = message.user_id
             message_obj.username = users[message.user_id]

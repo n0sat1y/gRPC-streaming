@@ -1,5 +1,5 @@
 from typing import Literal, Union
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 class IdBase(BaseModel):
@@ -14,6 +14,22 @@ class MessageData(BaseModel):
     content: str
     sender: UserData
     created_at: datetime
+
+class MessageResponseData(BaseModel):
+    id: str
+    chat_id: int
+    user_id: int
+    username: str
+    content: str
+    is_read: bool = False
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class GetAllMessagesSchema(BaseModel):
+    messages: list[MessageResponseData]
+
+    model_config = ConfigDict(from_attributes=True)
 
 class UpdateMessagePayload(BaseModel):
     id: str
