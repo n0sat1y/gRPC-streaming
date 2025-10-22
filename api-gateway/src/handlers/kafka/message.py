@@ -7,6 +7,8 @@ from src.schemas.message import *
 
 router = KafkaRouter()
 
+read_message_pub = router.publisher('api_gateway.messages_read')
+
 @router.subscriber(
     'message.event',
     group_id='api-gateway',

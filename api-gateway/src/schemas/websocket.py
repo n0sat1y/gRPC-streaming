@@ -19,6 +19,10 @@ class DeleteMessagePayload(BaseModel):
 class EditMessagePayload(DeleteMessagePayload):
     new_content: str
 
+class ReadMessagesPayload(BaseModel):
+    chat_id: int
+    last_read_message: str
+
 
 class SendMessageEvent(BaseModel):
     event_type: Literal['send_message']
@@ -35,5 +39,9 @@ class EditMessageEvent(BaseModel):
     payload: EditMessagePayload
     request_id: str
 
+class ReadMessagesEvent(BaseModel):
+    event_type: Literal['messages_read']
+    payload: ReadMessagesPayload
 
-IncomingMessage = Union[SendMessageEvent, DeleteMessageEvent, EditMessageEvent]
+
+IncomingMessage = Union[SendMessageEvent, DeleteMessageEvent, EditMessageEvent, ReadMessagesEvent]

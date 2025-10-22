@@ -1,10 +1,13 @@
 import grpc
 from src.schemas.websocket import *
+from src.schemas.message import ApiGatewayReadEvent
 from src.handlers.grpc.message import RpcMessageService
+from src.handlers.kafka.message import router
 
 class WebsocketHandler:
     def __init__(self):
         self.rpc_message_service = RpcMessageService()
+        self.kafka_router = router
 
     async def handle_incoming_message(self, user_id: int, message: IncomingMessage):
         try:
@@ -21,6 +24,11 @@ class WebsocketHandler:
                 )
             elif message.event_type == 'delete_message':
                 await self.delete_message(
+                    user_id=user_id,
+                    message=message
+                )
+            elif message.event_type == 'messages_read':
+                await self.read_messages(
                     user_id=user_id,
                     message=message
                 )
@@ -55,3 +63,13 @@ class WebsocketHandler:
             message_id=message.payload.message_id,
             request_id=message.request_id
         )
+
+    async def read_messages(self, user_id: int, message: ReadMessagesEvent):
+        await self.kafka_router.publisher('api_gateway.messages_read').publish(
+            ApiGatewayReadEvent(
+                user_id=user_id,
+                chat_id=message.payload.chat_id,
+                last_read_message_id=message.payload.last_read_message
+            )
+        )
+        print(message)

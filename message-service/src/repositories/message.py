@@ -1,5 +1,6 @@
 from loguru import logger
 from beanie.operators import Set
+from bson import ObjectId
 
 from src.models import Message, ReadProgress, ReadStatus
 
@@ -64,33 +65,60 @@ class MessageRepository:
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e
+        
+    async def mark_as_read(
+            self, 
+            previous_message_read: str | None, 
+            last_read_message: str,
+            read_by: int
+        ) -> list[Message]:
+        try:
+            request_stmt = [Message.id <= ObjectId(last_read_message)]
+            if previous_message_read:
+                request_stmt.append(Message.id > ObjectId(previous_message_read))
 
-    async def mark_as_read(last_message_id: str):
-        try:
-            pass
+            messages = await Message.find(*request_stmt).to_list()
+            changed_messages = []
+
+            for message in messages:
+                await ReadStatus(message_id=message.id, read_by=read_by).insert()
+                if not message.is_read:
+                    message.is_read = True
+                    await message.save()
+                    changed_messages.append(message)
+
+            return changed_messages
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e
         
-    async def set_last_read_message(self, chat_id: int, user_id: int) -> str | None:
+    async def get_last_read_message(self, chat_id: int, user_id: int):
         try:
-            message_id = await ReadProgress.find_one(
+            progress = await ReadProgress.find_one(
                 ReadProgress.chat_id == chat_id,
-                ReadProgress.user_id == user_id
+                ReadProgress.user_id == user_id,
             )
-            return message_id.last_read_message_id
+            return str(progress.last_read_message_id.ref.id) if progress and progress.last_read_message_id else None
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f'Database Error: {e}')
             raise e
         
-    async def set_last_read_message(self, chat_id: int, user_id: int, message_id: int) -> None:
+    async def set_last_read_message(self, chat_id: int, user_id: int, message_id: str) -> None:
         try:
+            message_obj = await Message.get(ObjectId(message_id))
+            if not message_obj:
+                raise ValueError(f"Message with id {message_id} not found")
+                
             await ReadProgress.find_one(
                 ReadProgress.chat_id == chat_id,
                 ReadProgress.user_id == user_id
             ).upsert(
-                Set({ReadProgress.last_read_message_id: message_id}),
-                on_insert=ReadProgress(user_id=user_id, chat_id=chat_id, last_read_message_id=message_id)
+                Set({ReadProgress.last_read_message_id: message_obj.id}),
+                on_insert=ReadProgress(
+                    user_id=user_id, 
+                    chat_id=chat_id, 
+                    last_read_message_id=message_obj.id
+                )
             )
         except Exception as e:
             logger.error(f'Database Error', e)

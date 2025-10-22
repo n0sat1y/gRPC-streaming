@@ -63,3 +63,8 @@ class DeleteMessageEvent(BaseModel):
     sender_id: int
 
 IncomingMessage = Union[CreatedMessageEvent, UpdateMessageEvent, DeleteMessageEvent]
+
+class ApiGatewayReadEvent(BaseModel):
+    user_id: int
+    chat_id: int
+    last_read_message_id: str

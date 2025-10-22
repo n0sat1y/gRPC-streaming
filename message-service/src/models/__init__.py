@@ -1,6 +1,6 @@
 from typing import Optional, List
 from datetime import datetime, timezone
-from beanie import Document, Indexed, Link
+from beanie import Document, Indexed, Link, BackLink
 from pydantic import Field
 
 from src.models.replications import UserReplica
@@ -9,8 +9,10 @@ class Message(Document):
     chat_id: Indexed(int)
     user_id: Indexed(int)
     content: str
-    is_readed: bool = False
+    is_read: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    # readed_by: List[BackLink["ReadStatus"]]
 
     class Settings:
         name = "messages"
@@ -20,7 +22,13 @@ class ReadStatus(Document):
     read_by: int
     read_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+    class Settings:
+        name = "read_status"
+
 class ReadProgress(Document):
-    user_id: int
-    chat_id: int
+    chat_id: Indexed(int)
+    user_id: Indexed(int)
     last_read_message_id: Link[Message]
+
+    class Settings:
+        name = "read_progress"

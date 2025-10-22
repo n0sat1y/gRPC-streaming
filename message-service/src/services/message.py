@@ -152,4 +152,33 @@ class MessageService:
         logger.info(f"Удалены {deleted_count} сообщения чата: {chat_id=}")
 
 
+    async def mark_as_read(
+            self, 
+            chat_id: int, 
+            user_id: int, 
+            message_id: str,
+            broker: KafkaBroker
+        ):
+        logger.info(f"Обновляем последнее прочитанное сообщение")
 
+        previous_read_message = await self.repo.get_last_read_message(chat_id=chat_id, user_id=user_id)
+        print(previous_read_message)
+        await self.repo.set_last_read_message(chat_id, user_id, message_id)
+        logger.info(f"Обновили счетчик последнего прочитанного сообщения")
+
+        changed_messages = await self.repo.mark_as_read(
+            previous_message_read=previous_read_message,
+            last_read_message=message_id,
+            read_by=user_id
+        )
+        if changed_messages:
+            event_data = [SlimMessageData(id=str(message.id), sender_id=message.user_id) for message in changed_messages]
+            await broker.publish(
+                MessagesReadedEvent(
+                    data=event_data,
+                    event_id=str(uuid.uuid4())
+                ), 'message.was_read'
+            )
+            logger.info(f"Уведомление о прочтении сообщений отправлено")
+
+        logger.info(f"Последнее прочитанное сообщение пользователя {user_id} обновлено")

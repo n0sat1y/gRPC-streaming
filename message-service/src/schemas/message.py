@@ -46,7 +46,16 @@ class DeleteMessageEvent(BaseModel):
     event_id: str
     sender_id: int
 
-class MarkAsReadedEvent(BaseModel):
+class ApiGatewayReadEvent(BaseModel):
     user_id: int
     chat_id: int
     last_read_message_id: str
+
+class SlimMessageData(BaseModel):
+    id: str
+    sender_id: int
+
+class MessagesReadedEvent(BaseModel):
+    event_type: str = 'MessagesReaded'
+    data: list[SlimMessageData]
+    event_id: str

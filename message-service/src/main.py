@@ -27,7 +27,7 @@ async def startup():
             UserReplica, 
             ChatReplica,
             ReadStatus,
-            ReadStatus,
+            ReadProgress,
         ]
     )
 

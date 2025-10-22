@@ -44,11 +44,17 @@ async def chat_event(data: ChatEvent):
     
     
 @broker.subscriber(
-    'messages.readed.incoming',
+    'api_gateway.messages_read',
     group_id='message_service',
     auto_offset_reset='earliest' 
 )
-async def handle_readed_messages(data: MarkAsReadedEvent):
-    pass
-
+async def handle_readed_messages(data: ApiGatewayReadEvent):
+    await message_service.mark_as_read(
+        chat_id=data.chat_id,
+        user_id=data.user_id,
+        message_id=data.last_read_message_id,
+        broker=broker
+    )
+    logger.info(f"{data}")
+    
 
