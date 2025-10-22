@@ -40,7 +40,7 @@ class EditMessageEvent(BaseModel):
     request_id: str
 
 class ReadMessagesEvent(BaseModel):
-    event_type: Literal['messages_read']
+    event_type: Literal['mark_as_read']
     payload: ReadMessagesPayload
 
 

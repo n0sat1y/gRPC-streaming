@@ -6,6 +6,7 @@ from loguru import logger
 from src.handlers.grpc.message import RpcMessageService
 from src.handlers.grpc.chat import RpcChatService
 from src.dependencies import get_user_id
+from src.schemas.message import GetAllMessagesResponse
 
 router = APIRouter(prefix='/message', tags=['Message'])
 message_grpc_client = RpcMessageService()
@@ -16,11 +17,16 @@ chat_grpc_client = RpcChatService()
 async def get_all_messages(chat_id: int, user_id = Depends(get_user_id)):
     messages = await message_grpc_client.get_all_messages(chat_id)
     last_read_message = await chat_grpc_client.get_last_read_message(chat_id, user_id)
-    
-    for msg in messages.messages:
-        msg.is_read = (last_read_message is not None and msg.id <= last_read_message)
-    
-    return messages
+    unread_count = 0
+    for message in messages.messages:
+        if message.id > last_read_message: unread_count += 1
+
+    return GetAllMessagesResponse(
+        count=len(messages.messages),
+        last_read_message_id=last_read_message if last_read_message else None,
+        unread_count=unread_count,
+        messages=messages.messages
+    )
 
 @router.post('/{chat_id}')
 async def send_message(chat_id: int, content: str, user_id = Depends(get_user_id)):

@@ -18,8 +18,7 @@ class MessageData(BaseModel):
 class MessageResponseData(BaseModel):
     id: str
     chat_id: int
-    user_id: int
-    username: str
+    sender: UserData
     content: str
     is_read: bool = False
     created_at: datetime
@@ -68,3 +67,10 @@ class ApiGatewayReadEvent(BaseModel):
     user_id: int
     chat_id: int
     last_read_message_id: str
+
+
+class GetAllMessagesResponse(BaseModel):
+    count: int
+    last_read_message_id: str | None
+    unread_count: int
+    messages: list[MessageResponseData]

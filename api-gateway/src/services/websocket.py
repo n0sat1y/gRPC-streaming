@@ -27,11 +27,12 @@ class WebsocketHandler:
                     user_id=user_id,
                     message=message
                 )
-            elif message.event_type == 'messages_read':
+            elif message.event_type == 'mark_as_read':
                 await self.read_messages(
                     user_id=user_id,
                     message=message
                 )
+                print('new_message_read')
         except grpc.RpcError as e:
             return ErrorResponse(
                 payload=ErrorPayload(

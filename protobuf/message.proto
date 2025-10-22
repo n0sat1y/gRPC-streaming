@@ -45,12 +45,17 @@ message DeleteMessageResponse {
     string status = 1;
 }
 
+message SenderData {
+    int32 id = 3;
+    string username = 4;
+}
+
 message Message {
     string id = 1;
     int32 chat_id = 2;
-    int32 user_id = 3;
-    string username = 4;
-    string content = 5;
+    SenderData sender = 3;
+    string content = 4;
+    bool is_read = 5;
     google.protobuf.Timestamp created_at = 6;
 }
 

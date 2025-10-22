@@ -81,11 +81,12 @@ class MessageRepository:
             changed_messages = []
 
             for message in messages:
-                await ReadStatus(message_id=message.id, read_by=read_by).insert()
-                if not message.is_read:
-                    message.is_read = True
-                    await message.save()
-                    changed_messages.append(message)
+                if not message.user_id == read_by:
+                    await ReadStatus(message_id=message.id, read_by=read_by).insert()
+                    if not message.is_read:
+                        message.is_read = True
+                        await message.save()
+                        changed_messages.append(message)
 
             return changed_messages
         except Exception as e:

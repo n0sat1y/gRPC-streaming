@@ -36,12 +36,16 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         messages, users = await self.service.get_all(request.chat_id)
         response = []
         for message in messages:
-            message_obj = message_pb2.Message()
-            message_obj.id = str(message.id)
-            message_obj.chat_id = message.chat_id
-            message_obj.user_id = message.user_id
-            message_obj.username = users[message.user_id]
-            message_obj.content = message.content
+            message_obj = message_pb2.Message(
+            id=str(message.id),
+            chat_id=message.chat_id,
+            sender=message_pb2.SenderData(
+                id=message.user_id,
+                username=users[message.user_id]
+            ),
+            content=message.content,
+            is_read=message.is_read
+        )
             message_obj.created_at.FromDatetime(message.created_at)
             response.append(message_obj)
         return message_pb2.AllMessages(messages=response)
