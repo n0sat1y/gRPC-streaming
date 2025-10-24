@@ -54,6 +54,11 @@ class MessageServiceStub(object):
                 request_serializer=message__pb2.GetAllMessagesRequest.SerializeToString,
                 response_deserializer=message__pb2.AllMessages.FromString,
                 _registered_method=True)
+        self.GetMessageData = channel.unary_unary(
+                '/message.MessageService/GetMessageData',
+                request_serializer=message__pb2.MessageId.SerializeToString,
+                response_deserializer=message__pb2.FullMessageData.FromString,
+                _registered_method=True)
 
 
 class MessageServiceServicer(object):
@@ -83,6 +88,12 @@ class MessageServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetMessageData(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MessageServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -105,6 +116,11 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     servicer.GetAllMessages,
                     request_deserializer=message__pb2.GetAllMessagesRequest.FromString,
                     response_serializer=message__pb2.AllMessages.SerializeToString,
+            ),
+            'GetMessageData': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetMessageData,
+                    request_deserializer=message__pb2.MessageId.FromString,
+                    response_serializer=message__pb2.FullMessageData.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -215,6 +231,33 @@ class MessageService(object):
             '/message.MessageService/GetAllMessages',
             message__pb2.GetAllMessagesRequest.SerializeToString,
             message__pb2.AllMessages.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetMessageData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/message.MessageService/GetMessageData',
+            message__pb2.MessageId.SerializeToString,
+            message__pb2.FullMessageData.FromString,
             options,
             channel_credentials,
             insecure,

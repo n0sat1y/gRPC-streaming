@@ -55,7 +55,7 @@ class SlimMessageData(BaseModel):
     id: str
     sender_id: int
 
-class MessagesReadedEvent(BaseModel):
-    event_type: str = 'MessagesReaded'
+class MessagesReadEvent(BaseModel):
+    event_type: str = 'MessagesRead'
     data: list[SlimMessageData]
     event_id: str

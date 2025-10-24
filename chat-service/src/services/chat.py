@@ -75,6 +75,18 @@ class ChatService:
             logger.error(f"Не удалось обновить чат {chat_id}")
             raise ChatUpdateFailed()
         return chat
+    
+    async def update_last_read_message(
+            self, 
+            chat_id: int, 
+            user_id: int, 
+            last_read_message_id: str
+        ):
+        chat_member = await self.get_chat_member(chat_id, user_id)
+        if not (chat_member := await self.repo.update_last_read_message(chat_member, last_read_message_id)):
+            logger.error(f"Не удалось обновить чат {chat_id}")
+            raise ChatMemberUpdateFailed()
+        return chat_member
 
     async def add_members(self, chat_id: int, members: list[dict], broker: KafkaBroker):
         try:

@@ -5,13 +5,20 @@ from bson import ObjectId
 from src.models import Message, ReadProgress, ReadStatus
 
 class MessageRepository:
-    async def get(self, message_id: str):
+    async def get(self, message_id: str, get_full: bool = False):
         try:
-            message = await Message.get(message_id)
+            message = await Message.get(message_id, fetch_links=get_full)
+            if get_full and message:
+                await message.fetch_all_links()
+                # # Преобразуем все бэклинки в реальные документы
+                # if hasattr(message, 'read_by') and message.read_by:
+                #     message.read_by = [await backlink.fetch() for backlink in message.read_by]
+            print(message)
             return message
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f'Database Error {e}')
             raise e
+
         
     async def get_all(self, chat_id: int):
         try:

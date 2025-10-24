@@ -61,6 +61,19 @@ class ChatRepository:
         await session.commit()
         await session.refresh(chat)
         return chat
+    
+    @with_session
+    async def update_last_read_message(
+        self, 
+        chat_member: ChatMemberModel, 
+        last_read_message_id: str, 
+        session: AsyncSession
+    ) -> ChatModel:
+        chat_member.last_read_message_id = last_read_message_id
+        session.add(chat_member)
+        await session.commit()
+        await session.refresh(chat_member)
+        return chat_member
         
     @with_session
     async def add_members(self, chat: ChatModel, members: list[dict], session: AsyncSession) -> ChatModel:

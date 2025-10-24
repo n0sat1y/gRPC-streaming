@@ -9,6 +9,7 @@ service MessageService {
     rpc UpdateMessage (UpdateMessageRequest) returns (MessageId) {}
     rpc DeleteMessage (DeleteMessageRequest) returns (DeleteMessageResponse) {}
     rpc GetAllMessages (GetAllMessagesRequest) returns (AllMessages) {}
+    rpc GetMessageData (MessageId) returns (FullMessageData) {}
 }
 
 message MessageId {
@@ -65,4 +66,19 @@ message GetAllMessagesRequest {
 
 message AllMessages {
     repeated Message messages = 1;
+}
+
+message ReadBy {
+    int32 id = 1;
+    google.protobuf.Timestamp read_at = 2;
+}
+
+message FullMessageData {
+    string id = 1;
+    int32 chat_id = 2;
+    int32 user_id = 3;
+    string content = 4;
+    bool is_read = 5;
+    repeated ReadBy read_by = 6;
+    google.protobuf.Timestamp created_at = 7;
 }

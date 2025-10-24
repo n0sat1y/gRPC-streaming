@@ -51,6 +51,26 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         return message_pb2.AllMessages(messages=response)
     
     @handle_exceptions
+    async def GetMessageData(self, request, context):
+        message = await self.service.get(request.message_id, get_full=True)
+        response_obj = message_pb2.FullMessageData(
+            id=str(message.id),
+            chat_id=message.chat_id,
+            user_id=message.user_id,
+            content=message.content,
+            is_read=message.is_read
+        )
+        read_by_list = []
+        for data in message.read_by:
+            read_by_obj = message_pb2.ReadBy(id=data.read_by)
+            read_by_obj.read_at.FromDatetime(data.read_at)
+            read_by_list.append(read_by_obj)
+
+        response_obj.created_at.FromDatetime(message.created_at)
+        
+        return response_obj
+    
+    @handle_exceptions
     async def UpdateMessage(self, request, context):
         message = await self.service.update(
             request.message_id,

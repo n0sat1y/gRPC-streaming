@@ -12,7 +12,7 @@ class Message(Document):
     is_read: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    # readed_by: List[BackLink["ReadStatus"]]
+    read_by: List[BackLink["ReadStatus"]] = Field(json_schema_extra={"original_field": "message"})
 
     class Settings:
         name = "messages"

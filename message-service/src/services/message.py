@@ -18,9 +18,9 @@ class MessageService:
         self.user_service = UserService()
         self.chat_service = ChatService()
 
-    async def get(self, message_id: str) -> Message:
+    async def get(self, message_id: str, get_full: bool = False) -> Message:
         logger.info(f"Получаем сообщение {message_id}")
-        message = await self.repo.get(message_id)
+        message = await self.repo.get(message_id, get_full=get_full)
         if not message:
             logger.warning(f"Не найдено сообщение {message_id}")
             raise MessageNotFoundError(message_id=message_id)
@@ -171,13 +171,14 @@ class MessageService:
             last_read_message=message_id,
             read_by=user_id
         )
+        print(changed_messages)
         if changed_messages:
             event_data = [SlimMessageData(id=str(message.id), sender_id=message.user_id) for message in changed_messages]
             await broker.publish(
-                MessagesReadedEvent(
+                MessagesReadEvent(
                     data=event_data,
                     event_id=str(uuid.uuid4())
-                ), 'message.was_read'
+                ), 'message.read_messages'
             )
             logger.info(f"Уведомление о прочтении сообщений отправлено")
 

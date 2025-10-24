@@ -66,7 +66,7 @@ class WebsocketHandler:
         )
 
     async def read_messages(self, user_id: int, message: ReadMessagesEvent):
-        await self.kafka_router.publisher('api_gateway.messages_read').publish(
+        await self.kafka_router.publisher('api_gateway.mark_as_read').publish(
             ApiGatewayReadEvent(
                 user_id=user_id,
                 chat_id=message.payload.chat_id,

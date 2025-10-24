@@ -9,12 +9,12 @@ python -m grpc_tools.protoc -I ../protobuf --python_out=./protos --grpc_python_o
 ## Send Message Event
 ```
 {
-  "event_type": "send_message",
-  "request_id": "req_12345",
-  "payload": {
+"event_type": "send_message",
+"request_id": "req_12345",
+"payload": {
     "chat_id": 123456,
     "content": "Hello, this is a test message"
-  }
+}
 }
 ```
 ## Delete Message Event

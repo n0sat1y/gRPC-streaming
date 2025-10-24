@@ -44,7 +44,7 @@ async def chat_event(data: ChatEvent):
     
     
 @broker.subscriber(
-    'api_gateway.messages_read',
+    'api_gateway.mark_as_read',
     group_id='message_service',
     auto_offset_reset='earliest' 
 )

@@ -12,6 +12,10 @@ class ChatUpdateFailed(Exception):
     def __init__(self):
         super().__init__(f"Failed to update chat")
 
+class ChatMemberUpdateFailed(Exception):
+    def __init__(self):
+        super().__init__(f"Failed to update member")
+
 class AddMembersFailed(Exception):
     def __init__(self):
         super().__init__(f"Failed to add members to chat")

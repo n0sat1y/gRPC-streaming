@@ -69,3 +69,8 @@ class UpdateChatEvent(BaseModel):
 class DeleteChatEvent(BaseModel):
     event_type: Literal['ChatDeleted'] = 'ChatDeleted'
     data: ChatIdBase
+
+class ApiGatewayReadEvent(BaseModel):
+    user_id: int
+    chat_id: int
+    last_read_message_id: str

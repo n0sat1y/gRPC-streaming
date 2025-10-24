@@ -28,9 +28,7 @@ async def get_all_messages(chat_id: int, user_id = Depends(get_user_id)):
         messages=messages.messages
     )
 
-@router.post('/{chat_id}')
-async def send_message(chat_id: int, content: str, user_id = Depends(get_user_id)):
-    response = await message_grpc_client.send_message(user_id, chat_id, content)
-    return response
-
-
+@router.get('/{message_id}')
+async def get_message_data(message_id: str):
+    message = await message_grpc_client.get_message_data(message_id)
+    return message

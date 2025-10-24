@@ -5,6 +5,7 @@ from src.core.config import settings
 from src.services.user import UserService
 from src.services.chat import ChatService
 from src.schemas.user import UserEvent
+from src.schemas.chat import ApiGatewayReadEvent
 from src.schemas.message import MessageEvent
 
 broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
@@ -37,5 +38,16 @@ async def message_event(data: MessageEvent):
     if event == "MessageCreated":
         await chat_service.update_chat_last_message(data)
 
-    
+@broker.subscriber(
+    'api_gateway.mark_as_read',
+    group_id='chat_service',
+    auto_offset_reset='earliest' 
+)
+async def handle_readed_messages(data: ApiGatewayReadEvent):
+    await chat_service.update_last_read_message(
+        chat_id=data.chat_id,
+        user_id=data.user_id,
+        last_read_message_id=data.last_read_message_id
+    )
+    logger.info(f"{data}")
     
