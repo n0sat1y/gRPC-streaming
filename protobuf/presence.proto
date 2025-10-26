@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package presence;
+
+import "google/protobuf/empty.proto";
+
+service Presence {
+    rpc SetOnline (SetOnlineRequest) returns (google.protobuf.Empty) {}
+    rpc SetOffline (Id) returns (google.protobuf.Empty) {}
+    rpc RefreshOnline (RefreshOnlineRequest) returns (google.protobuf.Empty) {}
+    rpc GetUserStatus (Id) returns (UserStatus) {}
+}
+
+message Id {
+    int32 id = 1;
+}
+
+message SetOnlineRequest {
+    int32 id = 1;
+    optional int32 ttl = 2;
+}
+
+message RefreshOnlineRequest {
+    int32 id = 1;
+    optional int32 ttl = 2;
+}
+
+message UserStatus {
+    string status = 1;
+}

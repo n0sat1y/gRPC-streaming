@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     GRPC_USER_PORT: int = 50051
     GRPC_CHAT_PORT: int = 50052
     GRPC_MESSAGE_PORT: int = 50053
+    GRPC_PRESENCE_PORT: int = 50054
 
     #--- JWT ---
     SECRET_KEY: str = 'Secret key'

@@ -1,8 +1,6 @@
-from loguru import logger
 from faststream.kafka import KafkaRouter
 from pydantic import TypeAdapter
 
-from src.services.connection import manager
 from src.schemas.message import *
 from src.services.message import MessageService
 
