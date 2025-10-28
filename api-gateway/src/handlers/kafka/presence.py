@@ -11,15 +11,20 @@ router = KafkaRouter()
     auto_offset_reset='earliest'
 )
 async def handle_presence_event(event: PresenceEvent):
+    status = event.status
+    user_id = event.user_id
+
     await manager.broadcast(
         recievers=event.recievers,
         data={
             'event_type': 'update_user_status',
             'payload': {
-                'user_id': event.user_id,
-                'status': event.status
+                'user_id': user_id,
+                'status': status
             }
         }
     )
+    if event.status == 'offline':
+        await manager.kill(user_id, set_offline=False)
 
 

@@ -13,7 +13,7 @@ router = APIRouter(prefix='/ws', tags=['Websockets'])
 websocket_manager = WebsocketHandler()
 presence_service = RpcPresenceService()
 
-PING_INTERVAL = 40
+PING_INTERVAL = 30
 
 @router.websocket('')
 async def connection(
@@ -21,12 +21,15 @@ async def connection(
     user_id = Depends(get_user_id_for_websocket)
 ):
     await manager.connect(user_id, ws)
-    await presence_service.set_online(user_id)
 
     try:
         while True:
             try:
-                recieve_data = await ws.receive_json()
+                recieve_data = await asyncio.wait_for(ws.receive_json(), timeout=PING_INTERVAL)
+                await presence_service.refresh_online(user_id)
+                if recieve_data == {'type': 'pong'}:
+                    continue
+
                 try:
                     message: IncomingMessage = TypeAdapter(IncomingMessage).validate_python(recieve_data)
                     print(message)
@@ -43,16 +46,12 @@ async def connection(
                     await ws.send_json(response_data)
 
             except asyncio.TimeoutError:
-                await presence_service.refresh_online(user_id)
                 await ws.send_json({"type": "ping"})
 
     except WebSocketDisconnect:
         logger.info(f"User {user_id} disconnected.")
-        await presence_service.set_offline(user_id)
-        manager.disconnect(user_id, ws)
-    # finally:
-    #     logger.info(f"Cleaning up for user {user_id}...")
-    #     await presence_service.set_offline(user_id)
-    #     manager.disconnect(user_id, ws)
-    #     logger.info(f"Cleanup for user {user_id} complete.")
+    finally:
+        logger.info(f"Cleaning up for user {user_id}...")
+        await manager.disconnect(user_id, ws)
+        logger.info(f"Cleanup for user {user_id} complete.")
     

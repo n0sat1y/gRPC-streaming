@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     #--- JWT ---
     SECRET_KEY: str = 'Secret key'
     JWT_ALGORITHM: str = 'HS256'
-    JWT_ACCESS_LIFESPAN_MINUTES: int = 15
+    JWT_ACCESS_LIFESPAN_MINUTES: int = 150
     JWT_REFRESH_LIFESPAN_DAYS: int = 10
 
 settings = Settings()
