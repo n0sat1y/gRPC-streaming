@@ -9,10 +9,12 @@ class IdSchema(BaseModel):
 
 class ChatResponse(BaseModel):
     id: int
-    name: str
+    type: int
+    title: str
     avatar: Optional[str] = None
     last_message: Optional[str] = None
     last_message_at: Optional[datetime] = None
+    interlocutor_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -24,17 +26,19 @@ class MultipleChatsResponse(BaseModel):
 
 class ChatData(BaseModel):
     id: int
-    name: str
+    type: str
+    title: str
     avatar: Optional[str] = None
     last_message: Optional[str] = None
     last_message_at: Optional[datetime] = None
     members: list[IdSchema] = []
     created_at: datetime
+    interlocutor_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class CreateChatRequest(BaseModel):
+class CreateGroupChatRequest(BaseModel):
     name: str
     members: list[IdSchema]
 

@@ -31,13 +31,13 @@ class RpcChatService:
         return ChatData.model_validate(data)
     
     @handle_grpc_exceptions
-    async def create_chat(self, data: CreateChatRequest):
+    async def create_group_chat(self, data: CreateGroupChatRequest):
         async with self.get_stub() as stub:
-            request = chat_pb2.CreateChatRequest(
+            request = chat_pb2.CreateGroupChatRequest(
                 name=data.name,
                 members=[chat_pb2.UserId(id=member.id) for member in data.members]
             )
-            response = await stub.CreateChat(request)
+            response = await stub.CreateGroupChat(request)
 
         logger.info(f"Создан чат: {response.id}")
         response = MessageToDict(response, preserving_proto_field_name=True)
@@ -51,6 +51,7 @@ class RpcChatService:
 
         logger.info(f"Получены чаты: {user_id}")
         data = MessageToDict(response, preserving_proto_field_name=True)
+        print(data)
         return MultipleChatsResponse.model_validate(data)
     
     @handle_grpc_exceptions

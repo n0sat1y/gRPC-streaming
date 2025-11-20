@@ -8,7 +8,8 @@ class ChatModel(Base):
     __tablename__ = 'chats'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
+    type: Mapped[str]
+    name: Mapped[str] = mapped_column(nullable=True)
     avatar: Mapped[str] = mapped_column(nullable=True)
     last_message: Mapped[str] = mapped_column(nullable=True)
     last_message_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

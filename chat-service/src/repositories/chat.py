@@ -38,11 +38,13 @@ class ChatRepository:
         )
         
         return stmt.scalar_one_or_none()
+    
     @with_session
-    async def create(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
+    async def create_group(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
         try:
             chat = ChatModel(
                 **chat_data,
+                type='group',
                 members=[ChatMemberModel(user_id=user['id']) for user in members]
             )
             session.add(chat)

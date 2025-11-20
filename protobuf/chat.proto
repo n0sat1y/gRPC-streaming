@@ -6,14 +6,21 @@ package chat;
 
 service Chat {
     rpc GetUserChats (UserId) returns (MultipleChats) {}
-    rpc CreateChat (CreateChatRequest) returns (ChatId) {}
+    rpc CreateGroupChat (CreateGroupChatRequest) returns (ChatId) {}
+    rpc GetOrCreatePrivateChat (CreatePrivateChatRequest) returns (ChatId) {}
     rpc UpdateChat (UpdateChatRequest) returns (ChatId) {}
     rpc AddMembersToChat (AddMembersRequest) returns (ChatId) {}
     rpc GetChatData (ChatId) returns (ChatData) {}
     rpc DeleteUserChat (DeleteUserFromChatRequest) returns (DeleteResponse) {}
     rpc DeleteChat (ChatId) returns (DeleteResponse) {}
     rpc GetLastReadMessage (GetLastReadMessageRequest) returns (MessageId) {}
+}
 
+enum ChatType {
+  GROUP = 0;           
+  PRIVATE = 1;        
+  CHANNEL = 2;         
+  SAVED_MESSAGES = 3;   
 }
 
 message ChatId {
@@ -25,20 +32,27 @@ message UserId {
 }
 
 message ChatResponse {
-    int32 id = 1;
-    string name = 2;
-    optional string avatar = 3;
-    optional string last_message = 4;
-    optional google.protobuf.Timestamp last_message_at = 5;
+  int32 id = 1;
+  ChatType type = 2;          
+  string title = 3;           
+  optional string avatar = 4;
+  optional string last_message = 5;
+  optional google.protobuf.Timestamp last_message_at = 6;
+  optional int32 interlocutor_id = 7;  
 }
 
 message MultipleChats {
     repeated ChatResponse chats = 1;
 }
 
-message CreateChatRequest {
+message CreateGroupChatRequest {
     string name = 1;
     repeated UserId members = 2;
+    optional string avatar = 3;
+}
+
+message CreatePrivateChatRequest {
+  int32 target_user_id = 1;
 }
 
 message UpdateChatRequest {
@@ -54,12 +68,14 @@ message AddMembersRequest {
 
 message ChatData {
     int32 id = 1;
-    string name = 2;
-    optional string avatar = 3;
-    optional string last_message = 4;
-    optional google.protobuf.Timestamp last_message_at = 5;
-    repeated UserId members = 6;
-    google.protobuf.Timestamp created_at = 7;
+    ChatType type = 2;
+    string title = 3;          
+    optional string avatar = 4;
+    optional string last_message = 5;
+    optional google.protobuf.Timestamp last_message_at = 6;
+    repeated UserId members = 7; 
+    google.protobuf.Timestamp created_at = 8;
+    optional int32 interlocutor_id = 9; 
 }
 
 message DeleteUserFromChatRequest {

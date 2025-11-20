@@ -39,9 +39,14 @@ class ChatStub(object):
                 request_serializer=chat__pb2.UserId.SerializeToString,
                 response_deserializer=chat__pb2.MultipleChats.FromString,
                 _registered_method=True)
-        self.CreateChat = channel.unary_unary(
-                '/chat.Chat/CreateChat',
-                request_serializer=chat__pb2.CreateChatRequest.SerializeToString,
+        self.CreateGroupChat = channel.unary_unary(
+                '/chat.Chat/CreateGroupChat',
+                request_serializer=chat__pb2.CreateGroupChatRequest.SerializeToString,
+                response_deserializer=chat__pb2.ChatId.FromString,
+                _registered_method=True)
+        self.GetOrCreatePrivateChat = channel.unary_unary(
+                '/chat.Chat/GetOrCreatePrivateChat',
+                request_serializer=chat__pb2.CreatePrivateChatRequest.SerializeToString,
                 response_deserializer=chat__pb2.ChatId.FromString,
                 _registered_method=True)
         self.UpdateChat = channel.unary_unary(
@@ -85,7 +90,13 @@ class ChatServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def CreateChat(self, request, context):
+    def CreateGroupChat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetOrCreatePrivateChat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -135,9 +146,14 @@ def add_ChatServicer_to_server(servicer, server):
                     request_deserializer=chat__pb2.UserId.FromString,
                     response_serializer=chat__pb2.MultipleChats.SerializeToString,
             ),
-            'CreateChat': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateChat,
-                    request_deserializer=chat__pb2.CreateChatRequest.FromString,
+            'CreateGroupChat': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateGroupChat,
+                    request_deserializer=chat__pb2.CreateGroupChatRequest.FromString,
+                    response_serializer=chat__pb2.ChatId.SerializeToString,
+            ),
+            'GetOrCreatePrivateChat': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetOrCreatePrivateChat,
+                    request_deserializer=chat__pb2.CreatePrivateChatRequest.FromString,
                     response_serializer=chat__pb2.ChatId.SerializeToString,
             ),
             'UpdateChat': grpc.unary_unary_rpc_method_handler(
@@ -209,7 +225,7 @@ class Chat(object):
             _registered_method=True)
 
     @staticmethod
-    def CreateChat(request,
+    def CreateGroupChat(request,
             target,
             options=(),
             channel_credentials=None,
@@ -222,8 +238,35 @@ class Chat(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/chat.Chat/CreateChat',
-            chat__pb2.CreateChatRequest.SerializeToString,
+            '/chat.Chat/CreateGroupChat',
+            chat__pb2.CreateGroupChatRequest.SerializeToString,
+            chat__pb2.ChatId.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetOrCreatePrivateChat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/chat.Chat/GetOrCreatePrivateChat',
+            chat__pb2.CreatePrivateChatRequest.SerializeToString,
             chat__pb2.ChatId.FromString,
             options,
             channel_credentials,

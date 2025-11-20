@@ -14,40 +14,76 @@ class Chat(chat_pb2_grpc.ChatServicer):
 
     @handle_exceptions
     async def GetUserChats(self, request, context):
-        logger.info("Поступил запрос на получение чатов пользователя {request.id}")
-        chats = await self.service.get_user_chats(request.id)
-        return chat_pb2.MultipleChats(
-            chats=[chat_pb2.ChatResponse(
-                id=model.id, 
-                name=model.name,
-                avatar=model.avatar,
-                last_message=model.last_message,
-                last_message_at=model.last_message_at
-                ) for model in chats
-            ]
-        )
+        current_user_id = request.id
+        logger.info(f"Поступил запрос на получение чатов пользователя {current_user_id}")
+        
+        chats = await self.service.get_user_chats(current_user_id)
+        response_chats = []
+
+        for model in chats:
+            chat_response = chat_pb2.ChatResponse()
+            chat_response.id = model.id
+            
+            if model.last_message:
+                chat_response.last_message = model.last_message
+            if model.last_message_at:
+                chat_response.last_message_at.FromDatetime(model.last_message_at)
+
+            if model.type == 'private':
+                chat_response.type = chat_pb2.PRIVATE
+                
+                interlocutor = next(
+                    (m for m in model.members if m.user_id != current_user_id), 
+                    None
+                )
+
+                if interlocutor:
+                    chat_response.interlocutor_id = interlocutor.user_id
+                    chat_response.title = interlocutor.user.username
+                else:
+                    chat_response.interlocutor_id = current_user_id
+                    chat_response.title = "Saved Messages"
+                    chat_response.type = chat_pb2.SAVED_MESSAGES 
+
+            else:
+                chat_response.type = chat_pb2.GROUP
+                chat_response.title = model.name
+                if model.avatar:
+                    chat_response.avatar = model.avatar
+
+            response_chats.append(chat_response)
+
+        return chat_pb2.MultipleChats(chats=response_chats)
     
     @handle_exceptions
-    async def CreateChat(self, request, context):
+    async def CreateGroupChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         logger.info("Поступил запрос на создание чата")
-        chat = await self.service.create(data, self.broker)
+        chat = await self.service.create_group(data, self.broker)
         return chat_pb2.ChatId(id=chat.id)
     
     @handle_exceptions
     async def GetChatData(self, request, context):
-        logger.info("Поступил запрос на получение данных чата {request.id}")
+        logger.info(f"Поступил запрос на получение данных чата {request.id}")
         chat = await self.service.get(request.id)
 
-        response =  chat_pb2.ChatData()
+        response = chat_pb2.ChatData()
         response.id = chat.id
-        response.name = chat.name
+        
+        if chat.type == 'private':
+            response.type = chat_pb2.PRIVATE
+            response.title = "Private Chat" 
+        else:
+            response.type = chat_pb2.GROUP
+            response.title = chat.name
+
         if chat.avatar:
             response.avatar = chat.avatar
         if chat.last_message:
             response.last_message = chat.last_message
         if chat.last_message_at:
             response.last_message_at.FromDatetime(chat.last_message_at)
+            
         response.members.extend([chat_pb2.UserId(id=member.user_id) for member in chat.members])
         response.created_at.FromDatetime(chat.created_at)
 

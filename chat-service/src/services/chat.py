@@ -23,7 +23,6 @@ class ChatService:
             logger.warning(f"Не получилось найти чат: {id}")
             raise ChatNotFoundError(id)
         logger.info(f"Чат найден: {id}")
-
         return chat       
 
     async def get_user_chats(self, user_id: int) -> list[ChatModel]:
@@ -48,13 +47,13 @@ class ChatService:
         logger.info(f"Найден пользователь {user_id}")
         return chat_member
 
-    async def create(self, data: dict, broker: KafkaBroker):
+    async def create_group(self, data: dict, broker: KafkaBroker):
         try:
             members = data.pop('members')
             logger.info(f"Проверяем наличие пользователей в бд")
             await self.get_multiple_users(members)
             
-            chat = await self.repo.create(data, members)
+            chat = await self.repo.create_group(data, members)
             
             members = [c.user_id for c in chat.members]
             event_data = ChatDataBase(id=chat.id, members=members)

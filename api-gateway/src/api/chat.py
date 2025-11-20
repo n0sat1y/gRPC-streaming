@@ -7,9 +7,9 @@ from src.dependencies import get_user_id
 router = APIRouter(prefix='/chat', tags=['Chat'])
 
 
-@router.post('/')
-async def create_chat(data: CreateChatRequest, user = Depends(get_user_id)) -> IdSchema:
-    response = await RpcChatService().create_chat(data)
+@router.post('/group/')
+async def create_group_chat(data: CreateGroupChatRequest, user = Depends(get_user_id)) -> IdSchema:
+    response = await RpcChatService().create_group_chat(data)
     return response
 
 @router.get('/me')
