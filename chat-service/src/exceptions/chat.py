@@ -20,6 +20,10 @@ class AddMembersFailed(Exception):
     def __init__(self):
         super().__init__(f"Failed to add members to chat")
 
+class AddMembersAborted(Exception):
+    def __init__(self):
+        super().__init__(f"The process of adding members to the chat has been interrupted")
+
 class MembersAlreadyAdded(Exception):
     def __init__(self):
         super().__init__(f"Members already added to chat")

@@ -1,5 +1,5 @@
 from loguru import logger
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
@@ -7,6 +7,7 @@ from datetime import datetime
 
 from src.models import ChatModel, ChatMemberModel
 from src.decorators import with_session
+from src.enums.enums import ChatTypeEnum
 
 class ChatRepository:
     @with_session
@@ -40,16 +41,48 @@ class ChatRepository:
         return stmt.scalar_one_or_none()
     
     @with_session
+    async def get_private(self, current_user: int, target_user: int, session: AsyncSession) -> ChatModel:
+        stmt = await session.execute(
+            select(ChatModel)
+            .join(ChatMemberModel)
+            .where(
+                ChatModel.chat_type == ChatTypeEnum.PRIVATE,
+                ChatMemberModel.user_id.in_([current_user, target_user])
+            )
+            .group_by(ChatModel.id)
+            .having(func.count(ChatMemberModel.user_id) == 2)
+        )
+        return stmt.scalar_one_or_none()
+    
+    @with_session
     async def create_group(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
         try:
             chat = ChatModel(
                 **chat_data,
-                type='group',
+                chat_type=ChatTypeEnum.GROUP,
                 members=[ChatMemberModel(user_id=user['id']) for user in members]
             )
             session.add(chat)
             await session.commit()
             await session.refresh(chat, attribute_names=['members'])
+            return chat
+        except IntegrityError as e:
+            await session.rollback()
+            raise e
+        
+    @with_session
+    async def create_private(self, current_user: int, target_user: int, session: AsyncSession) -> ChatModel:
+        try:
+            chat = ChatModel(
+                chat_type=ChatTypeEnum.PRIVATE,
+                members=[
+                    ChatMemberModel(user_id=current_user),
+                    ChatMemberModel(user_id=target_user)
+                ]
+            )
+            session.add(chat)
+            await session.commit()
+            await session.refresh(chat)
             return chat
         except IntegrityError as e:
             await session.rollback()

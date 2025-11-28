@@ -17,10 +17,11 @@ service Chat {
 }
 
 enum ChatType {
-  GROUP = 0;           
-  PRIVATE = 1;        
-  CHANNEL = 2;         
-  SAVED_MESSAGES = 3;   
+  UNKNOWN = 0;
+  GROUP = 1;           
+  PRIVATE = 2;        
+  CHANNEL = 3;         
+  SAVED_MESSAGES = 4;   
 }
 
 message ChatId {
@@ -52,7 +53,8 @@ message CreateGroupChatRequest {
 }
 
 message CreatePrivateChatRequest {
-  int32 target_user_id = 1;
+  int32 current_user_id = 1;
+  int32 target_user_id = 2;
 }
 
 message UpdateChatRequest {

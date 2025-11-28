@@ -11,6 +11,7 @@ from src.schemas.chat import *
 from src.schemas.message import MessageData
 from src.exceptions.chat import *
 from src.exceptions.user import *
+from src.enums.enums import ChatTypeEnum
 
 class ChatService:
     def __init__(self):
@@ -46,6 +47,23 @@ class ChatService:
             raise ChatMemberNotFound()
         logger.info(f"Найден пользователь {user_id}")
         return chat_member
+    
+    async def get_or_create_private(self, current_user: int, target_user: int, broker: KafkaBroker):
+        logger.info(f"Проверяем наличие чата в бд: {current_user=}, {target_user=}")
+        if chat := await self.repo.get_private(current_user, target_user):
+            logger.info(f"Чат найден: {chat.id}")
+            return chat
+        logger.info(f"Чат не найден, создаем новый")
+
+        chat = await self.repo.create_private(current_user, target_user)
+        logger.info(f"Чат создан: {chat.id}")
+
+        members = [current_user, target_user]
+        event_data = ChatDataBase(id=chat.id, members=members)
+        await broker.publish(CreateChatEvent(data=event_data), 'chat.events')
+        logger.info(f"Уведомление о создании чата {chat.id} отправлено")
+
+        return chat
 
     async def create_group(self, data: dict, broker: KafkaBroker):
         try:
@@ -64,9 +82,6 @@ class ChatService:
         except IntegrityError as e:
             logger.warning(f"Чат уже создан:")
             raise ChatAlreadyExistsError(data['name'])
-        except Exception as e:
-            logger.opt(exception=True).error(f"Ошибка при создании чата, {e}")
-            raise e
 
     async def update(self, chat_id: int, data: dict):
         chat = await self.get(chat_id)
@@ -94,6 +109,9 @@ class ChatService:
             logger.info(f"Проверяем наличие пользователей в бд")
             await self.get_multiple_users(members)
                 
+            if chat.chat_type != ChatTypeEnum.GROUP:
+                logger.warning(f"Попытка добавить пользователей в личный чат")
+                raise AddMembersAborted()
             if not (chat := await self.repo.add_members(chat, members)):
                 logger.error(f"Не удалось добваить пользователей в чат {chat_id}")
                 raise AddMembersFailed()
@@ -108,7 +126,6 @@ class ChatService:
         except IntegrityError as e:
             logger.warning(f"Участники уже добавлены: {e}")
             raise MembersAlreadyAdded()
-
 
     async def update_chat_last_message(self, data: MessageData):
         chat = await self.repo.get(data.chat_id)

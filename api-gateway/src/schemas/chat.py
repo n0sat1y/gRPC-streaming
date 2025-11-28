@@ -9,7 +9,7 @@ class IdSchema(BaseModel):
 
 class ChatResponse(BaseModel):
     id: int
-    type: int
+    type: str
     title: str
     avatar: Optional[str] = None
     last_message: Optional[str] = None

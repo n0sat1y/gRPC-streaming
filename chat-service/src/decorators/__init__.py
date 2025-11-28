@@ -40,10 +40,10 @@ def handle_exceptions(func):
                 grpc.StatusCode.INTERNAL,
                 details=str(e)
             )
-        except Exception as e:
-            logger.error(e)
-            await context.abort(
-                grpc.StatusCode.INTERNAL,
-                details="An internal error occured"
-            )
+        # except Exception as e:
+        #     logger.error(e)
+        #     await context.abort(
+        #         grpc.StatusCode.INTERNAL,
+        #         details="An internal error occured"
+        #     )
     return wrapper

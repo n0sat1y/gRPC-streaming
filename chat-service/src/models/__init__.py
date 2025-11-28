@@ -3,12 +3,14 @@ from sqlalchemy import DateTime, UniqueConstraint, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.core.db import Base
+from src.enums.enums import ChatTypeEnum
+from src.enums.adapter import IntEnumType
 
 class ChatModel(Base):
     __tablename__ = 'chats'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    type: Mapped[str]
+    chat_type: Mapped[ChatTypeEnum] = mapped_column(IntEnumType(ChatTypeEnum), default=ChatTypeEnum.GROUP)
     name: Mapped[str] = mapped_column(nullable=True)
     avatar: Mapped[str] = mapped_column(nullable=True)
     last_message: Mapped[str] = mapped_column(nullable=True)
