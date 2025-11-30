@@ -5,8 +5,9 @@ from sqlalchemy.dialects.postgresql import insert
 
 from src.models import UserReplicaModel
 from src.decorators import with_session
+from src.core.interfaces.repositories import IUserRepository
 
-class UserRepository:
+class UserRepository(IUserRepository):
     @with_session
     async def get(self, id: int, session: AsyncSession, is_active: bool = True) -> UserReplicaModel:
         result = await session.execute(

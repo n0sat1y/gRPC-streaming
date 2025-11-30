@@ -1,17 +1,21 @@
 from google.protobuf.json_format import MessageToDict
 from loguru import logger
+from faststream.kafka import KafkaBroker
 
 from protos import chat_pb2, chat_pb2_grpc
-from src.services.chat import ChatService
+from src.core.interfaces.services import IChatService
 from src.routers.kafka import broker
 from src.decorators import handle_exceptions
 from src.enums.enums import ChatTypeEnum
+from src.dto.chat import *
 
 
 class Chat(chat_pb2_grpc.ChatServicer):
-    def __init__(self):
-        self.service = ChatService()
-        self.broker = broker
+    def __init__(
+        self,
+        service: IChatService
+    ):
+        self.service = service
 
     @handle_exceptions
     async def GetUserChats(self, request, context):
@@ -47,18 +51,18 @@ class Chat(chat_pb2_grpc.ChatServicer):
     async def CreateGroupChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
         logger.info("Поступил запрос на создание группового чата")
-        chat = await self.service.create_group(data, self.broker)
+        members_dto = [Id(id=x.id) for x in request.members]
+        data_dto = CreateGroupDTO(
+            name=request.name,
+            members=members_dto,
+            avatar=request.avatar
+        )
+        chat = await self.service.create_group(data_dto)
         return chat_pb2.ChatId(id=chat.id)
     
     @handle_exceptions
     async def GetOrCreatePrivateChat(self, request, context):
-        logger.info("Поступил запрос на получение или создания личного чата")
-        chat = await self.service.create_group(
-            request.current_user_id, 
-            request.target_user_id, 
-            self.broker
-        )
-        return chat_pb2.ChatId(id=chat.id)
+        pass
     
     @handle_exceptions
     async def GetChatData(self, request, context):
@@ -91,31 +95,29 @@ class Chat(chat_pb2_grpc.ChatServicer):
     @handle_exceptions
     async def UpdateChat(self, request, context):
         data = MessageToDict(request, preserving_proto_field_name=True)
-        chat_id = data.pop('id')
-        logger.info(f"Поступил запрос на обновление чата {chat_id}")
-        chat = await self.service.update(chat_id, data)
+        data_dto = UpdateGroupDTO(**data)
+        logger.info(f"Поступил запрос на обновление чата {data_dto.id}")
+        chat = await self.service.update(data_dto)
         return chat_pb2.ChatId(id=chat.id)
     
     @handle_exceptions
     async def AddMembersToChat(self, request, context):
-        data = MessageToDict(request, preserving_proto_field_name=True)
-        print(data)
-        chat_id = data.pop('id')
-        members = data.pop('members')
+        chat_id = request.id
+        members = [member.id for member in request.members]
         logger.info(f"Поступил запрос на добавление участников в чат {chat_id}")
-        chat = await self.service.add_members(chat_id, members, self.broker)
+        chat = await self.service.add_members(chat_id, members)
         return chat_pb2.ChatId(id=chat.id)
 
     @handle_exceptions
     async def DeleteUserChat(self, request, context):
         logger.info(f"Поступил запрос на удаление пользователя {request.user_id} из чата {request.chat_id}")
-        response = await self.service.delete_user_from_chat(request.user_id, request.chat_id, self.broker)
+        response = await self.service.delete_user_from_chat(request.user_id, request.chat_id)
         return chat_pb2.DeleteResponse(status=response)
     
     @handle_exceptions
     async def DeleteChat(self, request, context):
         logger.info(f"Поступил запрос на удаление чата {request.id}")
-        response = await self.service.delete(request.id, self.broker)
+        response = await self.service.delete(request.id)
         return chat_pb2.DeleteResponse(status=response)
 
     @handle_exceptions

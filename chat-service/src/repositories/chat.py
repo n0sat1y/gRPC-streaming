@@ -1,15 +1,17 @@
 from loguru import logger
-from sqlalchemy import select, delete, func
+from sqlalchemy import select, delete, func, and_
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
-from src.models import ChatModel, ChatMemberModel
+from src.models import ChatModel, ChatMemberModel, UserReplicaModel
 from src.decorators import with_session
 from src.enums.enums import ChatTypeEnum
+from src.dto.chat import *
+from src.core.interfaces.repositories import IChatRepository
 
-class ChatRepository:
+class ChatRepository(IChatRepository):
     @with_session
     async def get(self, id: int, session: AsyncSession) -> ChatModel:
         stmt = await session.execute(
@@ -24,8 +26,10 @@ class ChatRepository:
         stmt = await session.execute(
             select(ChatModel).
             join(ChatMemberModel).
-            where(ChatMemberModel.user_id==user_id))
+            where(ChatMemberModel.user_id==user_id)
+        )
         result = stmt.scalars().all()
+        print(result[0].__dict__)
         return result
     
     @with_session
@@ -55,12 +59,13 @@ class ChatRepository:
         return stmt.scalar_one_or_none()
     
     @with_session
-    async def create_group(self, chat_data: dict, members: dict, session: AsyncSession) -> ChatModel:
+    async def create_group(self, data: CreateGroupDTO, session: AsyncSession) -> ChatModel:
         try:
             chat = ChatModel(
-                **chat_data,
+                name=data.name,
+                avatar=data.avatar,
                 chat_type=ChatTypeEnum.GROUP,
-                members=[ChatMemberModel(user_id=user['id']) for user in members]
+                members=[ChatMemberModel(user_id=user.id) for user in data.members]
             )
             session.add(chat)
             await session.commit()
@@ -89,9 +94,9 @@ class ChatRepository:
             raise e
         
     @with_session
-    async def update(self, chat: ChatModel, data: dict, session: AsyncSession) -> ChatModel:
-        for key, value in data.items():
-            setattr(chat, key, value)
+    async def update(self, chat: ChatModel, data: UpdateGroupDTO, session: AsyncSession) -> ChatModel:
+        chat.avatar = data.avatar
+        chat.name = data.name
         session.add(chat)
         await session.commit()
         await session.refresh(chat)
@@ -103,7 +108,7 @@ class ChatRepository:
         chat_member: ChatMemberModel, 
         last_read_message_id: str, 
         session: AsyncSession
-    ) -> ChatModel:
+    ) -> ChatMemberModel:
         chat_member.last_read_message_id = last_read_message_id
         session.add(chat_member)
         await session.commit()
@@ -111,9 +116,9 @@ class ChatRepository:
         return chat_member
         
     @with_session
-    async def add_members(self, chat: ChatModel, members: list[dict], session: AsyncSession) -> ChatModel:
+    async def add_members(self, chat: ChatModel, members: list, session: AsyncSession) -> ChatModel:
         try:
-            chat.members += [ChatMemberModel(user_id=member_data['id']) for member_data in members]
+            chat.members += [ChatMemberModel(user_id=id) for id in members]
             session.add(chat)
             await session.commit()
             await session.refresh(chat, attribute_names=['members'])
@@ -136,7 +141,7 @@ class ChatRepository:
         await session.commit() 
         
     @with_session
-    async def delete(self, chat_id: int, session: AsyncSession) -> None:
+    async def delete(self, chat_id: int, session: AsyncSession) -> int:
         stmt = (
             delete(ChatModel).
             where(
@@ -148,7 +153,7 @@ class ChatRepository:
         return result.rowcount
         
     @with_session
-    async def delete_user_chats(self, user_id: int, session: AsyncSession) -> None:
+    async def delete_user_chats(self, user_id: int, session: AsyncSession) -> int:
         stmt = (
             delete(ChatMemberModel).
             where(ChatMemberModel.user_id==user_id)
@@ -158,7 +163,7 @@ class ChatRepository:
         return result.rowcount
         
     @with_session
-    async def delete_user_from_chat(self, user_id: int, chat_id: int, session: AsyncSession) -> None:
+    async def delete_user_from_chat(self, user_id: int, chat_id: int, session: AsyncSession) -> int:
         stmt = (
             delete(ChatMemberModel).
             where(

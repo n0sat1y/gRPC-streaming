@@ -1,12 +1,17 @@
 from loguru import logger
+from typing import List
 
-from src.repositories.user import UserRepository
+from src.core.interfaces.repositories import IUserRepository
 from src.models import UserReplicaModel
 from src.schemas.user import UserData
+from src.core.interfaces.services import IUserService
 
-class UserService:
-    def __init__(self):
-        self.repo = UserRepository()
+class UserService(IUserService):
+    def __init__(
+        self,
+        repo: IUserRepository
+    ):
+        self.repo = repo
 
     async def get(self, user_id: int):
         try:
@@ -16,7 +21,7 @@ class UserService:
         except Exception as e:
             logger.error(f"Ошибка во время получения пользователея {user_id}: {e}")
 
-    async def get_multiple(self, ids: list[int]):
+    async def get_multiple(self, ids: list[int]) -> tuple[list[UserReplicaModel], list[UserReplicaModel]]:
         users = await self.repo.get_multiple(ids)
         missed = []
         if not len(users) == len(ids):

@@ -6,17 +6,25 @@ from faststream.kafka import KafkaBroker
 
 from src.repositories.chat import ChatRepository
 from src.services.user import UserService
-from src.models import ChatModel, ChatMemberModel
+from src.core.interfaces.services import IChatService
+from src.models import ChatModel, ChatMemberModel, UserReplicaModel
 from src.schemas.chat import *
 from src.schemas.message import MessageData
 from src.exceptions.chat import *
 from src.exceptions.user import *
 from src.enums.enums import ChatTypeEnum
+from src.dto.chat import *
 
-class ChatService:
-    def __init__(self):
-        self.repo = ChatRepository()
-        self.user_service = UserService()
+class ChatService(IChatService):
+    def __init__(
+        self,
+        broker: KafkaBroker,
+        repo: ChatRepository,
+        user_service: UserService,
+    ):
+        self.repo = repo
+        self.user_service = user_service
+        self.broker = broker
         
     async def get(self, id: int) -> ChatModel:
         chat = await self.repo.get(id)
@@ -33,9 +41,8 @@ class ChatService:
             raise ChatNotFoundError(user_id)
         return chats
 
-    async def get_multiple_users(self, members: list[dict]):
-        ids = [x['id'] for x in members]
-        found, missed = await self.user_service.get_multiple(ids)
+    async def get_multiple_users(self, members: list) -> List[UserReplicaModel]:
+        found, missed = await self.user_service.get_multiple(members)
         if missed:
             raise UsersNotFoundError(missed)
         return found
@@ -48,7 +55,7 @@ class ChatService:
         logger.info(f"Найден пользователь {user_id}")
         return chat_member
     
-    async def get_or_create_private(self, current_user: int, target_user: int, broker: KafkaBroker):
+    async def get_or_create_private(self, current_user: int, target_user: int) -> ChatModel:
         logger.info(f"Проверяем наличие чата в бд: {current_user=}, {target_user=}")
         if chat := await self.repo.get_private(current_user, target_user):
             logger.info(f"Чат найден: {chat.id}")
@@ -60,22 +67,21 @@ class ChatService:
 
         members = [current_user, target_user]
         event_data = ChatDataBase(id=chat.id, members=members)
-        await broker.publish(CreateChatEvent(data=event_data), 'chat.events')
+        await self.broker.publish(CreateChatEvent(data=event_data), 'chat.events')
         logger.info(f"Уведомление о создании чата {chat.id} отправлено")
 
         return chat
 
-    async def create_group(self, data: dict, broker: KafkaBroker):
+    async def create_group(self, data: CreateGroupDTO):
         try:
-            members = data.pop('members')
             logger.info(f"Проверяем наличие пользователей в бд")
+            members = [x.id for x in data.members]
             await self.get_multiple_users(members)
             
-            chat = await self.repo.create_group(data, members)
+            chat = await self.repo.create_group(data)
             
-            members = [c.user_id for c in chat.members]
             event_data = ChatDataBase(id=chat.id, members=members)
-            await broker.publish(CreateChatEvent(data=event_data), 'chat.events')
+            await self.broker.publish(CreateChatEvent(data=event_data), 'chat.events')
             logger.info(f"Уведомление о создании чата {chat.id} отправлено")
 
             return chat
@@ -83,10 +89,10 @@ class ChatService:
             logger.warning(f"Чат уже создан:")
             raise ChatAlreadyExistsError(data['name'])
 
-    async def update(self, chat_id: int, data: dict):
-        chat = await self.get(chat_id)
+    async def update(self, data: UpdateGroupDTO):
+        chat = await self.get(data.id)
         if not (chat := await self.repo.update(chat, data)):
-            logger.error(f"Не удалось обновить чат {chat_id}")
+            logger.error(f"Не удалось обновить чат {data.id}")
             raise ChatUpdateFailed()
         return chat
     
@@ -102,7 +108,7 @@ class ChatService:
             raise ChatMemberUpdateFailed()
         return chat_member
 
-    async def add_members(self, chat_id: int, members: list[dict], broker: KafkaBroker):
+    async def add_members(self, chat_id: int, members: list):
         try:
             chat = await self.get(chat_id)
         
@@ -118,7 +124,7 @@ class ChatService:
             members = [c.user_id for c in chat.members]
 
             event_data = ChatDataBase(id=chat.id, members=members)
-            await broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
+            await self.broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
             logger.info(f"Уведомление об обновлении чата {chat_id} отправлено")
 
             return chat
@@ -135,7 +141,7 @@ class ChatService:
         await self.repo.update_chat_last_message(chat, data.content, data.created_at)
         logger.info(f"Чат обновлен: {data.chat_id}")
 
-    async def delete(self, chat_id: int, broker: KafkaBroker):
+    async def delete(self, chat_id: int):
         result = await self.repo.delete(chat_id)
 
         if result == 0:
@@ -144,7 +150,7 @@ class ChatService:
 
         logger.info(f"Удален чат {chat_id=}")
 
-        await broker.publish(DeleteChatEvent(
+        await self.broker.publish(DeleteChatEvent(
             data=ChatIdBase(id=chat_id)), 
             'chat.events'
         )
@@ -152,7 +158,7 @@ class ChatService:
 
         return 'Success'
 
-    # async def delete_user_chats(self, user_id: int, broker: KafkaBroker):
+    # async def delete_user_chats(self, user_id: int):
     #     try:
     #         count = await self.repo.delete_user_chats(user_id)
     #         logger.info(f"Удалены чаты пользователя {user_id}: {count=}")
@@ -160,7 +166,7 @@ class ChatService:
     #     except Exception as e:
     #         logger.error("Ошибка при удалении пользователя из чата", e)
 
-    async def delete_user_from_chat(self, user_id: int, chat_id: int, broker: KafkaBroker):
+    async def delete_user_from_chat(self, user_id: int, chat_id: int):
         user_chats = await self.get_user_chats(user_id)
         if not chat_id in [chat.id for chat in user_chats]:
             logger.warning(f'Чат {chat_id=} не найден в существующих чатах пользователя {user_id=}')
@@ -172,11 +178,11 @@ class ChatService:
         chat = await self.get(chat_id)
         if not chat.members:
             logger.info(f"Был удален последний пользователь. Удаление чата {chat_id=}")
-            await self.delete(chat_id, broker)
+            await self.delete(chat_id, self.broker)
         else:
             members = [c.user_id for c in chat.members]
             event_data = ChatDataBase(id=chat.id, members=members)
-            await broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
+            await self.broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
             logger.info(f"Уведомление об обновлении чата {chat.id} отправлено")
 
         return 'Success'

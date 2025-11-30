@@ -7,10 +7,20 @@ from src.services.chat import ChatService
 from src.schemas.user import UserEvent
 from src.schemas.chat import ApiGatewayReadEvent
 from src.schemas.message import MessageEvent
+from src.repositories.chat import ChatRepository
+from src.repositories.user import UserRepository
 
 broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
-user_service = UserService()
-chat_service = ChatService()
+
+chat_repo = ChatRepository()
+user_repo = UserRepository()
+user_service = UserService(user_repo)
+chat_service = ChatService(
+    broker=broker,
+    repo=chat_repo,
+    user_service=user_service
+)
+
 
 @broker.subscriber(
         'user.event',
