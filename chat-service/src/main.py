@@ -10,6 +10,7 @@ from src.core.config import settings
 from src.routers.grpc import Chat
 from src.routers.kafka import broker
 from src.core.deps import chat_service
+import src.routers.kafka.consumer 
 
 app = FastStream(broker)
 server: grpc.aio.Server | None = None

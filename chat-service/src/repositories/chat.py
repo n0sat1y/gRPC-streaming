@@ -24,12 +24,14 @@ class ChatRepository(IChatRepository):
     @with_session
     async def get_by_user_id(self, user_id: int, session: AsyncSession) -> ChatModel:
         stmt = await session.execute(
-            select(ChatModel).
-            join(ChatMemberModel).
-            where(ChatMemberModel.user_id==user_id)
+            select(ChatModel)
+            .join(ChatMemberModel)
+            .where(ChatMemberModel.user_id==user_id)
+            .options(
+                selectinload(ChatModel.members).selectinload(ChatMemberModel.user)
+            )
         )
         result = stmt.scalars().all()
-        print(result[0].__dict__)
         return result
     
     @with_session

@@ -1,25 +1,10 @@
-from faststream.kafka import KafkaBroker
 from loguru import logger
-from src.core.config import settings
 
-from src.services.user import UserService
-from src.services.chat import ChatService
 from src.schemas.user import UserEvent
 from src.schemas.chat import ApiGatewayReadEvent
 from src.schemas.message import MessageEvent
-from src.repositories.chat import ChatRepository
-from src.repositories.user import UserRepository
-
-broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
-
-chat_repo = ChatRepository()
-user_repo = UserRepository()
-user_service = UserService(user_repo)
-chat_service = ChatService(
-    broker=broker,
-    repo=chat_repo,
-    user_service=user_service
-)
+from src.routers.kafka import broker
+from src.core.deps import user_service, chat_service
 
 
 @broker.subscriber(

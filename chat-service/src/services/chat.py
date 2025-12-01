@@ -14,17 +14,19 @@ from src.exceptions.chat import *
 from src.exceptions.user import *
 from src.enums.enums import ChatTypeEnum
 from src.dto.chat import *
+from src.routers.kafka.producer import KafkaPublisher
+
 
 class ChatService(IChatService):
     def __init__(
         self,
-        broker: KafkaBroker,
+        producer: KafkaPublisher,
         repo: ChatRepository,
         user_service: UserService,
     ):
         self.repo = repo
         self.user_service = user_service
-        self.broker = broker
+        self.producer = producer
         
     async def get(self, id: int) -> ChatModel:
         chat = await self.repo.get(id)
@@ -66,9 +68,9 @@ class ChatService(IChatService):
         logger.info(f"Чат создан: {chat.id}")
 
         members = [current_user, target_user]
+        
         event_data = ChatDataBase(id=chat.id, members=members)
-        await self.broker.publish(CreateChatEvent(data=event_data), 'chat.events')
-        logger.info(f"Уведомление о создании чата {chat.id} отправлено")
+        await self.producer.create(event_data)
 
         return chat
 
@@ -81,8 +83,7 @@ class ChatService(IChatService):
             chat = await self.repo.create_group(data)
             
             event_data = ChatDataBase(id=chat.id, members=members)
-            await self.broker.publish(CreateChatEvent(data=event_data), 'chat.events')
-            logger.info(f"Уведомление о создании чата {chat.id} отправлено")
+            await self.producer.create(data=event_data)
 
             return chat
         except IntegrityError as e:
@@ -124,9 +125,8 @@ class ChatService(IChatService):
             members = [c.user_id for c in chat.members]
 
             event_data = ChatDataBase(id=chat.id, members=members)
-            await self.broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
-            logger.info(f"Уведомление об обновлении чата {chat_id} отправлено")
-
+            await self.producer.update(data=event_data)
+            
             return chat
         
         except IntegrityError as e:
@@ -150,12 +150,8 @@ class ChatService(IChatService):
 
         logger.info(f"Удален чат {chat_id=}")
 
-        await self.broker.publish(DeleteChatEvent(
-            data=ChatIdBase(id=chat_id)), 
-            'chat.events'
-        )
-        logger.info(f"Отправлено уведомление об удалении чата {chat_id=}")
-
+        await self.producer.delete(chat_id=chat_id)
+        
         return 'Success'
 
     # async def delete_user_chats(self, user_id: int):
@@ -182,7 +178,5 @@ class ChatService(IChatService):
         else:
             members = [c.user_id for c in chat.members]
             event_data = ChatDataBase(id=chat.id, members=members)
-            await self.broker.publish(UpdateChatEvent(data=event_data), 'chat.events')
-            logger.info(f"Уведомление об обновлении чата {chat.id} отправлено")
-
+            await self.producer.update(data=event_data)
         return 'Success'

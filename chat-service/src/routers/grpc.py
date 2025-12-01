@@ -36,9 +36,16 @@ class Chat(chat_pb2_grpc.ChatServicer):
 
             if model.chat_type == ChatTypeEnum.PRIVATE:
                 chat_response.type = chat_pb2.PRIVATE
-                chat_response.interlocutor_id = current_user_id
-                chat_response.title = "Private Chat"
-
+                interlocutor = next(
+                    (x for x in model.members if x.user_id != current_user_id),
+                    None
+                )
+                if interlocutor:
+                    chat_response.interlocutor_id = interlocutor.user_id
+                    if interlocutor.user:
+                        chat_response.title = interlocutor.user.username
+                    else:
+                        chat_response.title = 'Unknown User'
             else:
                 chat_response.type = chat_pb2.GROUP
                 chat_response.title = model.name
