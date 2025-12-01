@@ -10,7 +10,7 @@ from protos import message_pb2, message_pb2_grpc
 from src.core.config import settings
 from src.routers.grpc import Message as MessageRouter
 from src.routers.kafka import broker
-from src.models import Message as MessageModel, ReadProgress, ReadStatus
+from src.models import Message as MessageModel, ReadProgress, ReadStatus, MetaData
 from src.models.replications import UserReplica, ChatReplica
 
 app = FastStream(broker)
@@ -29,6 +29,9 @@ async def startup():
             ReadStatus,
             ReadProgress,
         ]
+    )
+    await MessageModel.find({"metadata": {"$exists": False}}).update_many(
+        {"$set": {"metadata": MetaData().model_dump()}}
     )
 
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))

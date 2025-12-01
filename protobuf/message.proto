@@ -58,6 +58,7 @@ message Message {
     string content = 4;
     bool is_read = 5;
     google.protobuf.Timestamp created_at = 6;
+    Metadata metadata = 7;
 }
 
 message GetAllMessagesRequest {
@@ -73,6 +74,17 @@ message ReadBy {
     google.protobuf.Timestamp read_at = 2;
 }
 
+message ReactedBy {
+    repeated int32 users_id = 1;
+}
+
+message Metadata {
+    bool is_edited = 1;
+    bool is_pinned = 2;
+    string reply_to = 3;
+    map<string, ReactedBy> reactions = 4;
+}
+
 message FullMessageData {
     string id = 1;
     int32 chat_id = 2;
@@ -81,4 +93,5 @@ message FullMessageData {
     bool is_read = 5;
     repeated ReadBy read_by = 6;
     google.protobuf.Timestamp created_at = 7;
+    Metadata metadata = 8;
 }

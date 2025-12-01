@@ -16,17 +16,20 @@ chat_grpc_client = RpcChatService()
 @router.get('/all/{chat_id}')
 async def get_all_messages(chat_id: int, user_id = Depends(get_user_id)):
     messages = await message_grpc_client.get_all_messages(chat_id)
-    last_read_message = await chat_grpc_client.get_last_read_message(chat_id, user_id)
-    unread_count = 0
-    for message in messages.messages:
-        if message.id > last_read_message: unread_count += 1
+    # last_read_message = await chat_grpc_client.get_last_read_message(chat_id, user_id)
+    # unread_count = 0
+    # for message in messages.messages:
+    #     if message.id > last_read_message: unread_count += 1
 
-    return GetAllMessagesResponse(
-        count=len(messages.messages),
-        last_read_message_id=last_read_message if last_read_message else None,
-        unread_count=unread_count,
-        messages=messages.messages
-    )
+    # return GetAllMessagesResponse(
+    #     count=len(messages.messages),
+    #     last_read_message_id=last_read_message if last_read_message else None,
+    #     unread_count=unread_count,
+    #     messages=messages.messages
+    # )
+    print(messages)
+    return messages
+
 
 @router.get('/{message_id}')
 async def get_message_data(message_id: str):

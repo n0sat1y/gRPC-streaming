@@ -20,7 +20,7 @@ class MessageRepository:
             raise e
 
         
-    async def get_all(self, chat_id: int):
+    async def get_all(self, chat_id: int, fetch_links: bool = False):
         try:
             messages = await Message.find_many(Message.chat_id == chat_id).to_list()
             return messages

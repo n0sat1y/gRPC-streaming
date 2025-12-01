@@ -68,7 +68,8 @@ class RpcMessageService:
 
         logger.info(f'Получено сообщений: {len(response.messages)}')
         data = MessageToDict(response, preserving_proto_field_name=True)
-        return GetAllMessagesSchema.model_validate(data)
+        # return GetAllMessagesSchema.model_validate(data)
+        return data
     
     @handle_grpc_exceptions
     async def get_message_data(self, message_id: str):

@@ -27,7 +27,7 @@ class MessageService:
         return message
 
     async def get_all(self, chat_id: int):
-        result = await self.repo.get_all(chat_id)
+        result = await self.repo.get_all(chat_id, fetch_links=True)
         logger.info(f"Получено {len(result)} сообщений из чата {chat_id=}")
 
         user_ids = list(set(message.user_id for message in result))
@@ -45,7 +45,8 @@ class MessageService:
             content: str, 
             request_id: str, 
             sender_id: int,
-            broker: KafkaBroker
+            metadata: dict | None,
+            broker: KafkaBroker,
         ):
         errors = []
         if not (chat := await self.chat_service.get(chat_id)):
