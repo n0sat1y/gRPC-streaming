@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 from pydantic import BaseModel, model_validator
 
 class IdSchema(BaseModel):
@@ -6,6 +6,7 @@ class IdSchema(BaseModel):
 
 class UserData(IdSchema):
     username: str
+    avatar: Optional[str]
     is_active: bool
 
 class UserEvent(BaseModel):

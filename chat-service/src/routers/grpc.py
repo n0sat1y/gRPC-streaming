@@ -40,17 +40,25 @@ class Chat(chat_pb2_grpc.ChatServicer):
                     (x for x in model.members if x.user_id != current_user_id),
                     None
                 )
+                chat_response.title = 'Deleted Account'
                 if interlocutor:
                     chat_response.interlocutor_id = interlocutor.user_id
                     if interlocutor.user:
                         chat_response.title = interlocutor.user.username
                     else:
                         chat_response.title = 'Unknown User'
-            else:
+
+            elif model.chat_type == ChatTypeEnum.SAVED_MESSAGES:
+                chat_response.type = chat_pb2.SAVED_MESSAGES
+                chat_response.interlocutor_id = current_user_id
+                chat_response.title = 'Saved Messages'
+            
+            elif model.chat_type == ChatTypeEnum.GROUP:
                 chat_response.type = chat_pb2.GROUP
                 chat_response.title = model.name
                 if model.avatar:
                     chat_response.avatar = model.avatar
+            print(chat_response)
             response_chats.append(chat_response)
         return chat_pb2.MultipleChats(chats=response_chats)
     
@@ -83,8 +91,6 @@ class Chat(chat_pb2_grpc.ChatServicer):
         logger.info(f"Поступил запрос на получение данных чата {request.chat_id}")
         chat = await self.service.get(chat_id)
 
-        print(chat)
-
         response = chat_pb2.ChatData()
         response.id = chat.id
         
@@ -94,6 +100,7 @@ class Chat(chat_pb2_grpc.ChatServicer):
                 (x for x in chat.members if x.user_id != user_id),
                 None
             )
+            response.title = 'Deleted Account'
             if interlocutor:
                 response.interlocutor_id = interlocutor.user_id
                 if interlocutor.user:
@@ -101,12 +108,17 @@ class Chat(chat_pb2_grpc.ChatServicer):
                 else:
                     response.title = 'Unknown User'
 
-        else:
+        elif chat.chat_type == ChatTypeEnum.SAVED_MESSAGES:
+            response.type = chat_pb2.SAVED_MESSAGES
+            response.interlocutor_id = user_id
+            response.title = 'Saved Messages'
+
+        elif chat.chat_type == ChatTypeEnum.GROUP:
             response.type = chat_pb2.GROUP
             response.title = chat.name
             if chat.avatar:
                 response.avatar = chat.avatar
-
+        
         if chat.last_message:
             response.last_message = chat.last_message
         if chat.last_message_at:

@@ -51,4 +51,5 @@ class UserReplicaModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
     username: Mapped[str]
+    avatar: Mapped[str] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True)

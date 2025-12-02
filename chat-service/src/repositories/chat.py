@@ -13,25 +13,34 @@ from src.core.interfaces.repositories import IChatRepository
 
 class ChatRepository(IChatRepository):
     @with_session
-    async def get(self, id: int, session: AsyncSession) -> ChatModel:
-        stmt = await session.execute(
+    async def get(self, id: int, session: AsyncSession, eager_load: bool = True) -> ChatModel:
+        query = (
             select(ChatModel).
-            where(ChatModel.id==id).
-            options(selectinload(ChatModel.members)))
+            where(ChatModel.id==id)
+        )
+        if eager_load:
+            query = query.options(
+                selectinload(ChatModel.members).
+                selectinload(ChatMemberModel.user)
+            )
+        stmt = await session.execute(query)
         result = stmt.scalar_one_or_none()
         return result
         
     @with_session
     async def get_by_user_id(self, user_id: int, session: AsyncSession) -> ChatModel:
-        stmt = await session.execute(
+        query = (
             select(ChatModel)
             .join(ChatMemberModel)
-            .where(ChatMemberModel.user_id==user_id)
+            .where(ChatMemberModel.user_id == user_id)
             .options(
-                selectinload(ChatModel.members).selectinload(ChatMemberModel.user)
+                selectinload(ChatModel.members).
+                selectinload(ChatMemberModel.user)
             )
         )
-        result = stmt.scalars().all()
+        
+        stmt = await session.execute(query)
+        result = stmt.scalars().unique().all() 
         return result
     
     @with_session
@@ -47,18 +56,54 @@ class ChatRepository(IChatRepository):
         return stmt.scalar_one_or_none()
     
     @with_session
-    async def get_private(self, current_user: int, target_user: int, session: AsyncSession) -> ChatModel:
-        stmt = await session.execute(
-            select(ChatModel)
-            .join(ChatMemberModel)
-            .where(
-                ChatModel.chat_type == ChatTypeEnum.PRIVATE,
-                ChatMemberModel.user_id.in_([current_user, target_user])
+    async def get_or_create_private(self, current_user: int, target_user: int, session: AsyncSession) -> tuple[ChatModel, bool]:
+        if current_user == target_user:
+            query = (
+                select(ChatModel)
+                .join(ChatMemberModel)
+                .where(
+                    ChatModel.chat_type == ChatTypeEnum.SAVED_MESSAGES,
+                    ChatMemberModel.user_id == current_user
+                )
+                .group_by(ChatModel.id)
+                .having(func.count(ChatMemberModel.user_id) == 1) 
             )
-            .group_by(ChatModel.id)
-            .having(func.count(ChatMemberModel.user_id) == 2)
-        )
-        return stmt.scalar_one_or_none()
+            chat_type = ChatTypeEnum.SAVED_MESSAGES
+            members_to_add = [ChatMemberModel(user_id=current_user)]
+        else:
+            query = (
+                select(ChatModel)
+                .join(ChatMemberModel)
+                .where(
+                    ChatModel.chat_type == ChatTypeEnum.PRIVATE,
+                    ChatMemberModel.user_id.in_([current_user, target_user])
+                )
+                .group_by(ChatModel.id)
+                .having(func.count(ChatMemberModel.user_id) == 2)
+            )
+            chat_type = ChatTypeEnum.PRIVATE
+            members_to_add = [
+                ChatMemberModel(user_id=current_user),
+                ChatMemberModel(user_id=target_user),
+            ]
+        stmt = await session.execute(query)
+        chat = stmt.scalar_one_or_none()
+        if chat: return chat, False
+
+        try:
+            async with session.begin_nested():
+                chat = ChatModel(
+                    chat_type=chat_type,
+                    members=members_to_add
+                )
+                session.add(chat)
+                await session.flush()
+            await session.commit()
+            await session.refresh(chat)
+            return chat, True
+        except IntegrityError as e:
+            stmt = await session.execute(query)
+            return stmt.scalar_one()
     
     @with_session
     async def create_group(self, data: CreateGroupDTO, session: AsyncSession) -> ChatModel:
@@ -70,26 +115,9 @@ class ChatRepository(IChatRepository):
                 members=[ChatMemberModel(user_id=user.id) for user in data.members]
             )
             session.add(chat)
+            await session.flush()
             await session.commit()
             await session.refresh(chat, attribute_names=['members'])
-            return chat
-        except IntegrityError as e:
-            await session.rollback()
-            raise e
-        
-    @with_session
-    async def create_private(self, current_user: int, target_user: int, session: AsyncSession) -> ChatModel:
-        try:
-            chat = ChatModel(
-                chat_type=ChatTypeEnum.PRIVATE,
-                members=[
-                    ChatMemberModel(user_id=current_user),
-                    ChatMemberModel(user_id=target_user)
-                ]
-            )
-            session.add(chat)
-            await session.commit()
-            await session.refresh(chat)
             return chat
         except IntegrityError as e:
             await session.rollback()
@@ -122,6 +150,7 @@ class ChatRepository(IChatRepository):
         try:
             chat.members += [ChatMemberModel(user_id=id) for id in members]
             session.add(chat)
+            await session.flush()
             await session.commit()
             await session.refresh(chat, attribute_names=['members'])
             return chat

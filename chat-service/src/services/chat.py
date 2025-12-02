@@ -58,20 +58,16 @@ class ChatService(IChatService):
         return chat_member
     
     async def get_or_create_private(self, current_user: int, target_user: int) -> ChatModel:
-        logger.info(f"Проверяем наличие чата в бд: {current_user=}, {target_user=}")
-        if chat := await self.repo.get_private(current_user, target_user):
-            logger.info(f"Чат найден: {chat.id}")
-            return chat
-        logger.info(f"Чат не найден, создаем новый")
-
-        chat = await self.repo.create_private(current_user, target_user)
-        logger.info(f"Чат создан: {chat.id}")
-
-        members = [current_user, target_user]
-        
-        event_data = ChatDataBase(id=chat.id, members=members)
-        await self.producer.create(event_data)
-
+        await self.get_multiple_users([current_user, target_user])
+        logger.info(f"Получаем личный чат пользователя {current_user}")
+        chat, created = await self.repo.get_or_create_private(current_user, target_user)
+        if created:
+            logger.info(f"Чат создан: {chat.id}")
+            members = [current_user, target_user]
+            event_data = ChatDataBase(id=chat.id, members=members)
+            await self.producer.create(event_data)
+        else:
+            logger.info(f"Чат получен: {chat.id}")
         return chat
 
     async def create_group(self, data: CreateGroupDTO):
