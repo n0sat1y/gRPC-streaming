@@ -9,9 +9,8 @@ from src.models import ChatModel, ChatMemberModel, UserReplicaModel
 from src.decorators import with_session
 from src.enums.enums import ChatTypeEnum
 from src.dto.chat import *
-from src.core.interfaces.repositories import IChatRepository
 
-class ChatRepository(IChatRepository):
+class ChatRepository:
     @with_session
     async def get(self, id: int, session: AsyncSession, eager_load: bool = True) -> ChatModel:
         query = (

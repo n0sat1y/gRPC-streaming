@@ -1,15 +1,14 @@
 from loguru import logger
 from typing import List
 
-from src.core.interfaces.repositories import IUserRepository
+from src.repositories.user import UserRepository
 from src.models import UserReplicaModel
 from src.schemas.user import UserData
-from src.core.interfaces.services import IUserService
 
-class UserService(IUserService):
+class UserService:
     def __init__(
         self,
-        repo: IUserRepository
+        repo: UserRepository
     ):
         self.repo = repo
 
@@ -34,7 +33,7 @@ class UserService(IUserService):
 
     async def create_or_update(self, data: UserData):
         try:
-            logger.info(f"Создание пользователя {data.username}")
+            logger.info(f"Создание (или обновление) пользователя {data.username}")
             await self.repo.upsert(data.model_dump())
             logger.info(f"Пользователь создан {data.username}")
         except Exception as e:

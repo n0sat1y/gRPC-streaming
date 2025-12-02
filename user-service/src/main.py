@@ -8,6 +8,7 @@ from protos import user_pb2_grpc
 from src.core.config import settings
 from src.routers.grpc import User
 from src.routers.kafka import broker
+from src.core.deps import service
 
 
 app = FastStream(broker)
@@ -17,7 +18,7 @@ server: grpc.aio.Server | None = None
 async def startup():
     global server
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    user_pb2_grpc.add_UserServicer_to_server(User(), server)
+    user_pb2_grpc.add_UserServicer_to_server(User(service), server)
     server.add_insecure_port(f'[::]:{settings.GRPC_PORT}')
     await server.start()
     logger.info(f'Listening on port :{settings.GRPC_PORT}')

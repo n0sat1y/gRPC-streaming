@@ -1,4 +1,5 @@
 import grpc
+from google.protobuf.json_format import MessageToDict
 from loguru import logger
 from protos import user_pb2, user_pb2_grpc
 from contextlib import asynccontextmanager
@@ -6,7 +7,7 @@ from google.protobuf.json_format import MessageToDict
 
 from src.core.config import settings
 from src.decorators.grpc import handle_grpc_exceptions
-from src.schemas.user import UserData
+from src.schemas.user import UpdateUserDataSchema, UserData, UserIdSchema
 
 class RpcUserService:
     def __init__(self):
@@ -25,8 +26,8 @@ class RpcUserService:
             response = await stub.GetUserById(request)
 
         logger.info(f'Получен пользователь: {response.username}')
-        response = UserData.model_validate(response)
-        return response
+        response = MessageToDict(response, preserving_proto_field_name=True)
+        return UserData(**response)
     
     @handle_grpc_exceptions
     async def get_user_with_password(self, username: str):
@@ -47,7 +48,19 @@ class RpcUserService:
             response = await stub.CreateUser(request)
 
         logger.info(f"Пользователь создан: {response.id}")
-        return response.id
+        return UserIdSchema(id=response.id)
+    
+    @handle_grpc_exceptions
+    async def update_user(self, id: int, data: UpdateUserDataSchema):
+        async with self.get_stub() as stub:
+            request = user_pb2.UpdateUserRequest(
+                id=id,
+                **data.model_dump()
+            )
+            response = await stub.UpdateUser(request)
+
+        logger.info(f"Пользователь обновлен: {response.id}")
+        return UserIdSchema(id=response.id)
     
     @handle_grpc_exceptions
     async def delete_user(self, user_id: int):

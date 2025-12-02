@@ -33,7 +33,6 @@ def require_refresh_token(payload = Depends(get_token)) -> dict:
 	raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token type')
 
 def require_access_token(payload = Depends(get_token)) -> dict:
-	print(payload)
 	if payload['type'] == 'access':
 		return payload
 	logger.warning('Передан неверный тип токена')

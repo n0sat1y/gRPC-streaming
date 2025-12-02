@@ -27,7 +27,6 @@ async def message_event(data: IncomingMessage):
     auto_offset_reset='earliest'
 )
 async def read_messages(data: MessagesReadEvent):
-    print('YYYEEEEEYYY')
     await service.mark_as_read(data)
 
 

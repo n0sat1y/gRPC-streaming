@@ -1,6 +1,6 @@
 from loguru import logger
 
-from src.schemas.user import UserEvent
+from src.schemas.user import IncomingUserEvent
 from src.schemas.chat import ApiGatewayReadEvent
 from src.schemas.message import MessageEvent
 from src.routers.kafka import broker
@@ -9,21 +9,21 @@ from src.core.deps import user_service, chat_service
 
 @broker.subscriber(
         'user.event',
-        group_id='chat_service',
+        group_id='chat_service_users',
         auto_offset_reset='earliest'
     )
-async def user_event(data: UserEvent):
+async def user_event(data: IncomingUserEvent):
     event = data.event_type
     data = data.data
     logger.info(f"Получено уведомление о собынии в сервисе пользователей {event}")
-    if event == "UserCreated":
+    if event in ("UserCreated", "UserUpdated"):
         await user_service.create_or_update(data)
     elif event == 'UserDeactivated':
         await user_service.deactivate(data.id)
 
 @broker.subscriber(
         'message.event',
-        group_id='chat_service',
+        group_id='chat_service_messages',
         auto_offset_reset='earliest'
     )
 async def message_event(data: MessageEvent):
@@ -35,7 +35,7 @@ async def message_event(data: MessageEvent):
 
 @broker.subscriber(
     'api_gateway.mark_as_read',
-    group_id='chat_service',
+    group_id='chat_service_api',
     auto_offset_reset='earliest' 
 )
 async def handle_readed_messages(data: ApiGatewayReadEvent):

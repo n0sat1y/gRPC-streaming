@@ -3,7 +3,7 @@ from loguru import logger
 from faststream.kafka import KafkaBroker
 
 from protos import chat_pb2, chat_pb2_grpc
-from src.core.interfaces.services import IChatService
+from src.services.chat import ChatService
 from src.routers.kafka import broker
 from src.decorators import handle_exceptions
 from src.enums.enums import ChatTypeEnum
@@ -13,7 +13,7 @@ from src.dto.chat import *
 class Chat(chat_pb2_grpc.ChatServicer):
     def __init__(
         self,
-        service: IChatService
+        service: ChatService
     ):
         self.service = service
 
@@ -45,6 +45,9 @@ class Chat(chat_pb2_grpc.ChatServicer):
                     chat_response.interlocutor_id = interlocutor.user_id
                     if interlocutor.user:
                         chat_response.title = interlocutor.user.username
+                        avatar = interlocutor.user.avatar
+                        if avatar:
+                            chat_response.avatar = avatar
                     else:
                         chat_response.title = 'Unknown User'
 
@@ -105,6 +108,9 @@ class Chat(chat_pb2_grpc.ChatServicer):
                 response.interlocutor_id = interlocutor.user_id
                 if interlocutor.user:
                     response.title = interlocutor.user.username
+                    avatar = interlocutor.user.avatar
+                    if avatar:
+                        response.avatar = avatar
                 else:
                     response.title = 'Unknown User'
 

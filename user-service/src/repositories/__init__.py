@@ -56,6 +56,20 @@ class UserRepository:
         except IntegrityError as e:
             logger.error(f'Integrity Error {e}')
             raise e
+        
+    @with_session
+    async def update(self, user: UserModel, data: dict, session: AsyncSession) -> UserModel:
+        try:
+            for key, value in data.items():
+                if value:
+                    setattr(user, key, value)
+            session.add(user)
+            await session.flush()
+            await session.commit()
+            return user
+        except IntegrityError as e:
+            logger.error(f'Integrity Error {e}')
+            raise e
 
     @with_session
     async def delete(self, user_id: int, session: AsyncSession) -> None:

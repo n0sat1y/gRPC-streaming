@@ -2,15 +2,17 @@ import grpc
 
 from protos import user_pb2_grpc, user_pb2
 from src.services import UserService
-from src.routers.kafka import broker
 from src.exceptions.user import (
     UserNotFoundError, UserAlreadyExistsError
 )
+from src.dto.user import UpdateUserDataDTO
 
 class User(user_pb2_grpc.UserServicer):
-    def __init__(self):
-        self.service = UserService()
-        self.broker = broker
+    def __init__(
+        self, 
+        service: UserService
+    ):
+        self.service = service
 
     async def GetUserById(self, request, context):
         try:
@@ -18,6 +20,7 @@ class User(user_pb2_grpc.UserServicer):
             return user_pb2.UserData(
                 id=data.id, 
                 username=data.username,
+                avatar=data.avatar,
                 created_at=data.created_at
             )
         except UserNotFoundError as e:
@@ -55,7 +58,7 @@ class User(user_pb2_grpc.UserServicer):
                 'username': request.username,
                 'password': request.password
             }
-            new_user = await self.service.create(data, self.broker)
+            new_user = await self.service.create(data)
             return user_pb2.UserId(
                 id=new_user.id
             )
@@ -70,9 +73,29 @@ class User(user_pb2_grpc.UserServicer):
                 details="An error occured during creating user"
             ) 
     
+    async def UpdateUser(self, request, context):
+        try:
+            data = UpdateUserDataDTO(
+                id=request.id,
+                username=request.username,
+                avatar=request.avatar,
+            )
+            user = await self.service.update(data)
+            return user_pb2.UserId(id=user.id)
+        except UserAlreadyExistsError as e:
+            await context.abort(
+                grpc.StatusCode.ALREADY_EXISTS,
+                details=str(e)
+            )
+        except Exception as e:
+            await context.abort(
+                grpc.StatusCode.INTERNAL,
+                details="An error occured during updating user"
+            ) 
+    
     async def DeleteUser(self, request, context):
         try:
-            result = await self.service.delete(request.id, self.broker)
+            result = await self.service.delete(request.id)
             return user_pb2.DeleteUserResponse(
                 status=result
             )

@@ -54,6 +54,11 @@ class UserStub(object):
                 request_serializer=user__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=user__pb2.UserId.FromString,
                 _registered_method=True)
+        self.UpdateUser = channel.unary_unary(
+                '/user.User/UpdateUser',
+                request_serializer=user__pb2.UpdateUserRequest.SerializeToString,
+                response_deserializer=user__pb2.UserId.FromString,
+                _registered_method=True)
         self.DeleteUser = channel.unary_unary(
                 '/user.User/DeleteUser',
                 request_serializer=user__pb2.UserId.SerializeToString,
@@ -88,6 +93,12 @@ class UserServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UpdateUser(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def DeleteUser(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -115,6 +126,11 @@ def add_UserServicer_to_server(servicer, server):
             'CreateUser': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateUser,
                     request_deserializer=user__pb2.CreateUserRequest.FromString,
+                    response_serializer=user__pb2.UserId.SerializeToString,
+            ),
+            'UpdateUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateUser,
+                    request_deserializer=user__pb2.UpdateUserRequest.FromString,
                     response_serializer=user__pb2.UserId.SerializeToString,
             ),
             'DeleteUser': grpc.unary_unary_rpc_method_handler(
@@ -230,6 +246,33 @@ class User(object):
             target,
             '/user.User/CreateUser',
             user__pb2.CreateUserRequest.SerializeToString,
+            user__pb2.UserId.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UpdateUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/user.User/UpdateUser',
+            user__pb2.UpdateUserRequest.SerializeToString,
             user__pb2.UserId.FromString,
             options,
             channel_credentials,

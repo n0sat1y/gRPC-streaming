@@ -6,7 +6,6 @@ from faststream.kafka import KafkaBroker
 
 from src.repositories.chat import ChatRepository
 from src.services.user import UserService
-from src.core.interfaces.services import IChatService
 from src.models import ChatModel, ChatMemberModel, UserReplicaModel
 from src.schemas.chat import *
 from src.schemas.message import MessageData
@@ -17,7 +16,7 @@ from src.dto.chat import *
 from src.routers.kafka.producer import KafkaPublisher
 
 
-class ChatService(IChatService):
+class ChatService:
     def __init__(
         self,
         producer: KafkaPublisher,

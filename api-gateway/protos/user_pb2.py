@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x12\x04user\x1a\x1fgoogle/protobuf/timestamp.proto\"\x14\n\x06UserId\x12\n\n\x02id\x18\x01 \x01(\x05\"(\n\x0eOptionalUserId\x12\x0f\n\x02id\x18\x01 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_id\"1\n\x14MultipleUsersRequest\x12\x19\n\x03ids\x18\x01 \x03(\x0b\x32\x0c.user.UserId\"X\n\x08UserData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08username\x18\x02 \x01(\t\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"d\n\rMultipleUsers\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x1d\n\x05users\x18\x02 \x03(\x0b\x32\x0e.user.UserData\x12$\n\x06missed\x18\x03 \x03(\x0b\x32\x14.user.OptionalUserId\"#\n\x0fUsernameRequest\x12\x10\n\x08username\x18\x02 \x01(\t\"@\n\x1bGetUserWithPasswordResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x10\n\x08password\x18\x02 \x01(\x0c\"7\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\x0c\"$\n\x12\x44\x65leteUserResponse\x12\x0e\n\x06status\x18\x01 \x01(\t2\xc8\x02\n\x04User\x12-\n\x0bGetUserById\x12\x0c.user.UserId\x1a\x0e.user.UserData\"\x00\x12[\n\x1dGetUserByUsernameWithPassword\x12\x15.user.UsernameRequest\x1a!.user.GetUserWithPasswordResponse\"\x00\x12\x45\n\x10GetMultipleUsers\x12\x1a.user.MultipleUsersRequest\x1a\x13.user.MultipleUsers\"\x00\x12\x35\n\nCreateUser\x12\x17.user.CreateUserRequest\x1a\x0c.user.UserId\"\x00\x12\x36\n\nDeleteUser\x12\x0c.user.UserId\x1a\x18.user.DeleteUserResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\nuser.proto\x12\x04user\x1a\x1fgoogle/protobuf/timestamp.proto\"\x14\n\x06UserId\x12\n\n\x02id\x18\x01 \x01(\x05\"(\n\x0eOptionalUserId\x12\x0f\n\x02id\x18\x01 \x01(\x05H\x00\x88\x01\x01\x42\x05\n\x03_id\"1\n\x14MultipleUsersRequest\x12\x19\n\x03ids\x18\x01 \x03(\x0b\x32\x0c.user.UserId\"x\n\x08UserData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x13\n\x06\x61vatar\x18\x03 \x01(\tH\x00\x88\x01\x01\x12.\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\t\n\x07_avatar\"d\n\rMultipleUsers\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x1d\n\x05users\x18\x02 \x03(\x0b\x32\x0e.user.UserData\x12$\n\x06missed\x18\x03 \x03(\x0b\x32\x14.user.OptionalUserId\"#\n\x0fUsernameRequest\x12\x10\n\x08username\x18\x02 \x01(\t\"@\n\x1bGetUserWithPasswordResponse\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x10\n\x08password\x18\x02 \x01(\x0c\"7\n\x11\x43reateUserRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\x0c\"$\n\x12\x44\x65leteUserResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"c\n\x11UpdateUserRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\x08username\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x13\n\x06\x61vatar\x18\x03 \x01(\tH\x01\x88\x01\x01\x42\x0b\n\t_usernameB\t\n\x07_avatar2\xff\x02\n\x04User\x12-\n\x0bGetUserById\x12\x0c.user.UserId\x1a\x0e.user.UserData\"\x00\x12[\n\x1dGetUserByUsernameWithPassword\x12\x15.user.UsernameRequest\x1a!.user.GetUserWithPasswordResponse\"\x00\x12\x45\n\x10GetMultipleUsers\x12\x1a.user.MultipleUsersRequest\x1a\x13.user.MultipleUsers\"\x00\x12\x35\n\nCreateUser\x12\x17.user.CreateUserRequest\x1a\x0c.user.UserId\"\x00\x12\x35\n\nUpdateUser\x12\x17.user.UpdateUserRequest\x1a\x0c.user.UserId\"\x00\x12\x36\n\nDeleteUser\x12\x0c.user.UserId\x1a\x18.user.DeleteUserResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,17 +39,19 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_MULTIPLEUSERSREQUEST']._serialized_start=117
   _globals['_MULTIPLEUSERSREQUEST']._serialized_end=166
   _globals['_USERDATA']._serialized_start=168
-  _globals['_USERDATA']._serialized_end=256
-  _globals['_MULTIPLEUSERS']._serialized_start=258
-  _globals['_MULTIPLEUSERS']._serialized_end=358
-  _globals['_USERNAMEREQUEST']._serialized_start=360
-  _globals['_USERNAMEREQUEST']._serialized_end=395
-  _globals['_GETUSERWITHPASSWORDRESPONSE']._serialized_start=397
-  _globals['_GETUSERWITHPASSWORDRESPONSE']._serialized_end=461
-  _globals['_CREATEUSERREQUEST']._serialized_start=463
-  _globals['_CREATEUSERREQUEST']._serialized_end=518
-  _globals['_DELETEUSERRESPONSE']._serialized_start=520
-  _globals['_DELETEUSERRESPONSE']._serialized_end=556
-  _globals['_USER']._serialized_start=559
-  _globals['_USER']._serialized_end=887
+  _globals['_USERDATA']._serialized_end=288
+  _globals['_MULTIPLEUSERS']._serialized_start=290
+  _globals['_MULTIPLEUSERS']._serialized_end=390
+  _globals['_USERNAMEREQUEST']._serialized_start=392
+  _globals['_USERNAMEREQUEST']._serialized_end=427
+  _globals['_GETUSERWITHPASSWORDRESPONSE']._serialized_start=429
+  _globals['_GETUSERWITHPASSWORDRESPONSE']._serialized_end=493
+  _globals['_CREATEUSERREQUEST']._serialized_start=495
+  _globals['_CREATEUSERREQUEST']._serialized_end=550
+  _globals['_DELETEUSERRESPONSE']._serialized_start=552
+  _globals['_DELETEUSERRESPONSE']._serialized_end=588
+  _globals['_UPDATEUSERREQUEST']._serialized_start=590
+  _globals['_UPDATEUSERREQUEST']._serialized_end=689
+  _globals['_USER']._serialized_start=692
+  _globals['_USER']._serialized_end=1075
 # @@protoc_insertion_point(module_scope)

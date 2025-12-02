@@ -22,7 +22,7 @@ async def user_event(data: UserEvent):
     event = data.event_type
     data = data.data
     logger.info(f"Получено уведомление о собынии в сервисе пользователей {event}")
-    if event == "UserCreated":
+    if event in ("UserCreated", "UserUpdated"):
         await user_service.create(data)
     elif event == 'UserDeactivated':
         await user_service.deactivate(data)

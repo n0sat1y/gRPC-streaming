@@ -9,6 +9,7 @@ service User {
     rpc GetUserByUsernameWithPassword (UsernameRequest) returns (GetUserWithPasswordResponse) {}
     rpc GetMultipleUsers (MultipleUsersRequest) returns (MultipleUsers) {}
     rpc CreateUser (CreateUserRequest) returns (UserId) {}
+    rpc UpdateUser (UpdateUserRequest) returns (UserId) {}
     rpc DeleteUser (UserId) returns (DeleteUserResponse) {}
 }
 
@@ -27,7 +28,8 @@ message MultipleUsersRequest {
 message UserData {
     int32 id = 1;
     string username = 2;
-    google.protobuf.Timestamp created_at = 3;
+    optional string avatar = 3;
+    google.protobuf.Timestamp created_at = 4;
 }
 
 message MultipleUsers {
@@ -52,4 +54,10 @@ message CreateUserRequest {
 
 message DeleteUserResponse {
     string status = 1;
+}
+
+message UpdateUserRequest {
+    int32 id = 1;
+    optional string username = 2;
+    optional string avatar = 3;
 }
