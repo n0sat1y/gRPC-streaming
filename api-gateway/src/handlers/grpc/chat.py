@@ -20,15 +20,30 @@ class RpcChatService:
             yield stub
 
     @handle_grpc_exceptions
-    async def get_chat_by_id(self, chat_id: int):
+    async def get_chat_by_id(self, chat_id: int, user_id: int):
         async with self.get_stub() as stub:
-            request = chat_pb2.ChatId(id=chat_id)
+            request = chat_pb2.GetChatRequest(chat_id=chat_id, user_id=user_id)
             response = await stub.GetChatData(request)
 
         logger.info(f"Получен чат: {chat_id}")
         data = MessageToDict(response, preserving_proto_field_name=True)
         print(data)
         return ChatData.model_validate(data)
+    
+    @handle_grpc_exceptions
+    async def get_or_create_private_chat(self, data: GetOrCreatePrivateChatRequest):
+        async with self.get_stub() as stub:
+            print(data)
+            request = chat_pb2.CreatePrivateChatRequest(
+                current_user_id=data.current_user_id, 
+                target_user_id=data.target_user_id
+            )
+            print(request)
+            response = await stub.GetOrCreatePrivateChat(request)
+
+        logger.info(f"Создан чат: {response.id}")
+        response = MessageToDict(response, preserving_proto_field_name=True)
+        return IdSchema.model_validate(response)
     
     @handle_grpc_exceptions
     async def create_group_chat(self, data: CreateGroupChatRequest):

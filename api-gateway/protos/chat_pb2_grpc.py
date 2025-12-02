@@ -61,7 +61,7 @@ class ChatStub(object):
                 _registered_method=True)
         self.GetChatData = channel.unary_unary(
                 '/chat.Chat/GetChatData',
-                request_serializer=chat__pb2.ChatId.SerializeToString,
+                request_serializer=chat__pb2.GetChatRequest.SerializeToString,
                 response_deserializer=chat__pb2.ChatData.FromString,
                 _registered_method=True)
         self.DeleteUserChat = channel.unary_unary(
@@ -168,7 +168,7 @@ def add_ChatServicer_to_server(servicer, server):
             ),
             'GetChatData': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChatData,
-                    request_deserializer=chat__pb2.ChatId.FromString,
+                    request_deserializer=chat__pb2.GetChatRequest.FromString,
                     response_serializer=chat__pb2.ChatData.SerializeToString,
             ),
             'DeleteUserChat': grpc.unary_unary_rpc_method_handler(
@@ -347,7 +347,7 @@ class Chat(object):
             request,
             target,
             '/chat.Chat/GetChatData',
-            chat__pb2.ChatId.SerializeToString,
+            chat__pb2.GetChatRequest.SerializeToString,
             chat__pb2.ChatData.FromString,
             options,
             channel_credentials,

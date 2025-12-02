@@ -69,19 +69,37 @@ class Chat(chat_pb2_grpc.ChatServicer):
     
     @handle_exceptions
     async def GetOrCreatePrivateChat(self, request, context):
-        pass
+        logger.info(f"Поступил запрос на получение приватного чата")
+        chat = await self.service.get_or_create_private(
+            request.current_user_id,
+            request.target_user_id
+        )
+        response = chat_pb2.ChatId(id=chat.id)
+        return response
     
     @handle_exceptions
     async def GetChatData(self, request, context):
-        logger.info(f"Поступил запрос на получение данных чата {request.id}")
-        chat = await self.service.get(request.id)
+        user_id, chat_id = request.user_id, request.chat_id
+        logger.info(f"Поступил запрос на получение данных чата {request.chat_id}")
+        chat = await self.service.get(chat_id)
+
+        print(chat)
 
         response = chat_pb2.ChatData()
         response.id = chat.id
         
         if chat.chat_type == ChatTypeEnum.PRIVATE:
             response.type = chat_pb2.PRIVATE
-            response.title = "Private Chat"
+            interlocutor = next(
+                (x for x in chat.members if x.user_id != user_id),
+                None
+            )
+            if interlocutor:
+                response.interlocutor_id = interlocutor.user_id
+                if interlocutor.user:
+                    response.title = interlocutor.user.username
+                else:
+                    response.title = 'Unknown User'
 
         else:
             response.type = chat_pb2.GROUP

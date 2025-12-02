@@ -10,7 +10,7 @@ service Chat {
     rpc GetOrCreatePrivateChat (CreatePrivateChatRequest) returns (ChatId) {}
     rpc UpdateChat (UpdateChatRequest) returns (ChatId) {}
     rpc AddMembersToChat (AddMembersRequest) returns (ChatId) {}
-    rpc GetChatData (ChatId) returns (ChatData) {}
+    rpc GetChatData (GetChatRequest) returns (ChatData) {}
     rpc DeleteUserChat (DeleteUserFromChatRequest) returns (DeleteResponse) {}
     rpc DeleteChat (ChatId) returns (DeleteResponse) {}
     rpc GetLastReadMessage (GetLastReadMessageRequest) returns (MessageId) {}
@@ -30,6 +30,11 @@ message ChatId {
 
 message UserId {
     int32 id = 1;
+}
+
+message GetChatRequest {
+    int32 chat_id = 1;
+    int32 user_id = 2;
 }
 
 message ChatResponse {

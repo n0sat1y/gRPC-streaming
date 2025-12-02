@@ -6,20 +6,26 @@ from src.dependencies import get_user_id
 
 router = APIRouter(prefix='/chat', tags=['Chat'])
 
-
-@router.post('/group/')
-async def create_group_chat(data: CreateGroupChatRequest, user = Depends(get_user_id)) -> IdSchema:
-    response = await RpcChatService().create_group_chat(data)
-    return response
-
 @router.get('/me')
 async def get_chat_by_user_id(user_id = Depends(get_user_id)) -> MultipleChatsResponse:
     response = await RpcChatService().get_chats_by_user_id(user_id)
     return response
 
 @router.get('/{chat_id}')
-async def get_chat(chat_id: int, user = Depends(get_user_id)) -> ChatData:
-    response = await RpcChatService().get_chat_by_id(chat_id)
+async def get_group(chat_id: int, user = Depends(get_user_id)) -> ChatData:
+    response = await RpcChatService().get_chat_by_id(chat_id, user)
+    return response
+
+@router.post('/group/')
+async def create_group_chat(data: CreateGroupChatRequest, user = Depends(get_user_id)) -> IdSchema:
+    response = await RpcChatService().create_group_chat(data)
+    return response
+
+@router.post('/private/')
+async def get_or_create_private(target_id: int, user = Depends(get_user_id)) -> IdSchema:
+    response = await RpcChatService().get_or_create_private_chat(
+        GetOrCreatePrivateChatRequest(current_user_id=user, target_user_id=target_id)
+    )
     return response
 
 @router.patch('/update')

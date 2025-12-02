@@ -44,6 +44,10 @@ class CreateGroupChatRequest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class GetOrCreatePrivateChatRequest(BaseModel):
+    current_user_id: int
+    target_user_id: int
+
 class UpdateChatData(BaseModel):
     chat_id: int
     name: Optional[str] = None

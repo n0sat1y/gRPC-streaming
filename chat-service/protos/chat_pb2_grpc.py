@@ -5,7 +5,7 @@ import warnings
 
 import protos.chat_pb2 as chat__pb2
 
-GRPC_GENERATED_VERSION = '1.75.0'
+GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in chat_pb2_grpc.py depends on'
+        + ' but the generated code in chat_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -61,7 +61,7 @@ class ChatStub(object):
                 _registered_method=True)
         self.GetChatData = channel.unary_unary(
                 '/chat.Chat/GetChatData',
-                request_serializer=chat__pb2.ChatId.SerializeToString,
+                request_serializer=chat__pb2.GetChatRequest.SerializeToString,
                 response_deserializer=chat__pb2.ChatData.FromString,
                 _registered_method=True)
         self.DeleteUserChat = channel.unary_unary(
@@ -168,7 +168,7 @@ def add_ChatServicer_to_server(servicer, server):
             ),
             'GetChatData': grpc.unary_unary_rpc_method_handler(
                     servicer.GetChatData,
-                    request_deserializer=chat__pb2.ChatId.FromString,
+                    request_deserializer=chat__pb2.GetChatRequest.FromString,
                     response_serializer=chat__pb2.ChatData.SerializeToString,
             ),
             'DeleteUserChat': grpc.unary_unary_rpc_method_handler(
@@ -347,7 +347,7 @@ class Chat(object):
             request,
             target,
             '/chat.Chat/GetChatData',
-            chat__pb2.ChatId.SerializeToString,
+            chat__pb2.GetChatRequest.SerializeToString,
             chat__pb2.ChatData.FromString,
             options,
             channel_credentials,
