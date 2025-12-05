@@ -56,7 +56,6 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.content,
             request.request_id,
             request.sender_id,
-            
             self.broker
         )
         response = message_pb2.SendMessageResponse()

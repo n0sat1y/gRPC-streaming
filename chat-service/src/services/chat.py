@@ -2,7 +2,6 @@ from datetime import datetime
 import grpc
 from loguru import logger
 from sqlalchemy.exc import IntegrityError
-from faststream.kafka import KafkaBroker
 
 from src.repositories.chat import ChatRepository
 from src.services.user import UserService
@@ -173,7 +172,7 @@ class ChatService:
         chat = await self.get(chat_id)
         if not chat.members:
             logger.info(f"Был удален последний пользователь. Удаление чата {chat_id=}")
-            await self.delete(chat_id, self.broker)
+            await self.delete(chat_id)
         else:
             members = [c.user_id for c in chat.members]
             event_data = ChatDataBase(id=chat.id, members=members)

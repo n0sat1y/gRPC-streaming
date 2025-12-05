@@ -5,28 +5,28 @@ from pydantic import ValidationError, TypeAdapter
 
 from src.services.connection import manager
 from src.schemas.websocket import *
-from src.dependencies import get_user_id_for_websocket
+from src.dependencies import get_user_id_for_websocket, get_presence_service, get_websocket_handler
 from src.services.websocket import WebsocketHandler
 from src.handlers.grpc.presence import RpcPresenceService
 
 router = APIRouter(prefix='/ws', tags=['Websockets'])
-websocket_manager = WebsocketHandler()
-presence_service = RpcPresenceService()
 
 PING_INTERVAL = 30
 
 @router.websocket('')
 async def connection(
     ws: WebSocket,
-    user_id = Depends(get_user_id_for_websocket)
+    user_id = Depends(get_user_id_for_websocket),
+    _presence_service: RpcPresenceService = Depends(get_presence_service),
+    _websocket_manager: WebsocketHandler = Depends(get_websocket_handler)
 ):
-    await manager.connect(user_id, ws)
+    await manager.connect(user_id, ws, _presence_service)
 
     try:
         while True:
             try:
                 recieve_data = await asyncio.wait_for(ws.receive_json(), timeout=PING_INTERVAL)
-                await presence_service.refresh_online(user_id)
+                await _presence_service.refresh_online(user_id)
                 if recieve_data == {'type': 'pong'}:
                     continue
 
@@ -41,9 +41,7 @@ async def connection(
                         )
                     ).model_dump())
                 
-                response_data = await websocket_manager.handle_incoming_message(user_id, message)
-                if response_data:
-                    await ws.send_json(response_data)
+                await _websocket_manager.handle_incoming_message(user_id, message)
 
             except asyncio.TimeoutError:
                 await ws.send_json({"type": "ping"})
@@ -52,6 +50,6 @@ async def connection(
         logger.info(f"User {user_id} disconnected.")
     finally:
         logger.info(f"Cleaning up for user {user_id}...")
-        await manager.disconnect(user_id, ws)
+        await manager.disconnect(user_id, ws, _presence_service)
         logger.info(f"Cleanup for user {user_id} complete.")
     

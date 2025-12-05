@@ -8,8 +8,8 @@ from src.handlers.grpc.user import RpcUserService
 from src.schemas.auth import TokenResponse
 
 class AuthService:
-    def __init__(self):
-        self.rpc_service = RpcUserService()
+    def __init__(self, user_service: RpcUserService):
+        self.rpc_service = user_service
     
     async def login(self, username: str, password: str) -> TokenResponse:
         user = await self.rpc_service.get_user_with_password(username)

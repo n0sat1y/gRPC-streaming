@@ -3,14 +3,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from src.handlers.kafka import router as kafka_router
+from src.core.kafka import router as kafka_router
 from src.api import router
+from src.handlers.grpc import grpc_service
 
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await grpc_service.start()
     yield
+    await grpc_service.stop()
 
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(

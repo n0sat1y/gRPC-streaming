@@ -45,8 +45,8 @@ class MessageService:
             content: str, 
             request_id: str, 
             sender_id: int,
-            metadata: dict | None,
             broker: KafkaBroker,
+            metadata: dict | None = None,
         ):
         errors = []
         if not (chat := await self.chat_service.get(chat_id)):

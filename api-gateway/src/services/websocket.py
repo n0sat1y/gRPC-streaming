@@ -1,38 +1,28 @@
 import grpc
+from loguru import logger
 from src.schemas.websocket import *
 from src.schemas.message import ApiGatewayReadEvent
 from src.handlers.grpc.message import RpcMessageService
-from src.handlers.kafka.message import router
+from src.core.kafka import router
 
 class WebsocketHandler:
-    def __init__(self):
-        self.rpc_message_service = RpcMessageService()
+    def __init__(self, message_service: RpcMessageService):
+        self.rpc_message_service = message_service
         self.kafka_router = router
+        self._handler = {
+            'send_message': self.send_message,
+            'edit_message': self.edit_message,
+            'delete_message': self.delete_message,
+            'mark_as_read': self.mark_as_read,
+        }
 
     async def handle_incoming_message(self, user_id: int, message: IncomingMessage):
         try:
-            if message.event_type == 'send_message':
-                await self.send_message(
-                    user_id=user_id,
-                    message=message
-                )
-                return None
-            elif message.event_type == 'edit_message':
-                await self.edit_message(
-                    user_id=user_id,
-                    message=message
-                )
-            elif message.event_type == 'delete_message':
-                await self.delete_message(
-                    user_id=user_id,
-                    message=message
-                )
-            elif message.event_type == 'mark_as_read':
-                await self.read_messages(
-                    user_id=user_id,
-                    message=message
-                )
-                print('new_message_read')
+            event = self._handler.get(message.event_type, None)
+            if not event:
+                logger.warning(f"Неизвестный тип события: {message.event_type}")
+                return
+            await event(user_id, message)
         except grpc.RpcError as e:
             return ErrorResponse(
                 payload=ErrorPayload(
@@ -65,7 +55,7 @@ class WebsocketHandler:
             request_id=message.request_id
         )
 
-    async def read_messages(self, user_id: int, message: ReadMessagesEvent):
+    async def mark_as_read(self, user_id: int, message: ReadMessagesEvent):
         await self.kafka_router.publisher('api_gateway.mark_as_read').publish(
             ApiGatewayReadEvent(
                 user_id=user_id,

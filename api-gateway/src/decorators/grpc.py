@@ -15,10 +15,25 @@ def handle_grpc_exceptions(func: F) -> F:
         try:
             return await func(*args, **kwargs)
         except grpc.RpcError as e:
-            logger.error(f"gRPC error in {func.__name__}: {e.details()}")
+            details = e.details()
+            code = e.code()
+
+            logger.error(f"gRPC error in {func.__name__} | Code: {code} | Details: {details}")
+
+            if code == grpc.StatusCode.UNAVAILABLE:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=f"Service unavailable"
+                )
+            
+            if code == grpc.StatusCode.DEADLINE_EXCEEDED:
+                 raise HTTPException(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    detail="Service timeout"
+                )
             raise HTTPException(
-                status_code=CodeEnum.from_grpc_code(e.code()), 
-                detail=e.details()
+                status_code=CodeEnum.from_grpc_code(code), 
+                detail=details
             )
         except Exception as e:
             logger.error(f"Unexpected error in {func.__name__}: {e}")

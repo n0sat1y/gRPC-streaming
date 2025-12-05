@@ -5,6 +5,13 @@ from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from src.utils import decode_jwt
+from src.handlers.grpc import grpc_service
+from src.handlers.grpc.chat import RpcChatService
+from src.handlers.grpc.message import RpcMessageService
+from src.handlers.grpc.user import RpcUserService
+from src.handlers.grpc.presence import RpcPresenceService
+from src.services.auth import AuthService
+from src.services.websocket import WebsocketHandler
 
 bearer_scheme = HTTPBearer()
 
@@ -47,3 +54,35 @@ def get_user_id_for_websocket(token: str = Query(...)):
         logger.warning('Передан неверный тип токена')
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token type')
     return int(payload['sub'])
+
+
+def get_chat_stub():
+    return grpc_service.chat
+
+def get_message_stub():
+    return grpc_service.message
+
+def get_presence_stub():
+    return grpc_service.presence
+
+def get_user_stub():
+    return grpc_service.user
+
+def get_chat_service(stub = Depends(get_chat_stub)):
+    return RpcChatService(stub)
+
+def get_message_service(stub = Depends(get_message_stub)):
+    return RpcMessageService(stub)
+
+def get_presence_service(stub = Depends(get_presence_stub)):
+    return RpcPresenceService(stub)
+
+def get_user_service(stub = Depends(get_user_stub)):
+    return RpcUserService(stub)
+
+def get_auth_service(service = Depends(get_user_service)):
+    return AuthService(service)
+
+def get_websocket_handler(message_service = Depends(get_message_service)):
+    return WebsocketHandler(message_service)
+

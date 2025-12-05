@@ -40,7 +40,7 @@ class ChatData(BaseModel):
 
 class CreateGroupChatRequest(BaseModel):
     name: str
-    avatar: Optional[str]
+    avatar: Optional[str] = None
     members: list[IdSchema]
 
     model_config = ConfigDict(from_attributes=True)

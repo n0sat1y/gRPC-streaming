@@ -2,6 +2,7 @@ from faststream.kafka.fastapi import KafkaRouter
 
 from src.schemas.presence import PresenceEvent
 from src.services.connection import manager
+from src.dependencies import get_presence_service
 
 router = KafkaRouter()
 
@@ -25,6 +26,6 @@ async def handle_presence_event(event: PresenceEvent):
         }
     )
     if event.status == 'offline':
-        await manager.kill(user_id, set_offline=False)
+        await manager.kill(user_id, presence_service=None, set_offline=False)
 
 

@@ -7,65 +7,53 @@ from contextlib import asynccontextmanager
 from src.core.config import settings
 from src.decorators.grpc import handle_grpc_exceptions, handle_websocket_grpc_exceptions
 from src.schemas.message import GetAllMessagesSchema
+from protos import message_pb2_grpc
 
 class RpcMessageService:
-    def __init__(self):
-        self.connection_url = f"{settings.GRPC_HOST}:{settings.GRPC_MESSAGE_PORT}"
-
-    @asynccontextmanager
-    async def get_stub(self):
-        async with grpc.aio.insecure_channel(self.connection_url) as channel:
-            stub = message_pb2_grpc.MessageServiceStub(channel)
-            yield stub
+    def __init__(self, stub: message_pb2_grpc.MessageServiceStub):
+        self.stub = stub
 
     async def send_message(self, chat_id: int, content: str, request_id: str, sender_id: int) -> dict:
-        async with self.get_stub() as stub:
-            request = message_pb2.SendMessageRequest(
-                user_id=sender_id,
-                chat_id=chat_id,
-                content=content,
-                request_id=request_id,
-                sender_id=sender_id
-            )
-            response = await stub.SendMessage(request)
+        request = message_pb2.SendMessageRequest(
+            user_id=sender_id,
+            chat_id=chat_id,
+            content=content,
+            request_id=request_id,
+            sender_id=sender_id
+        )
+        response = await self.stub.SendMessage(request)
 
         logger.info(f'Отправлено сообщение: {response.message_id}')
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
     
     async def update_message(self, message_id: str, new_content: str, request_id: str, sender_id: int) -> str:
-        async with self.get_stub() as stub:
-            request = message_pb2.UpdateMessageRequest(
-                message_id=message_id,
-                new_content=new_content,
-                request_id=request_id,
-                sender_id=sender_id
-            )
-            response = await stub.UpdateMessage(request)
-
+        request = message_pb2.UpdateMessageRequest(
+            message_id=message_id,
+            new_content=new_content,
+            request_id=request_id,
+            sender_id=sender_id
+        )
+        response = await self.stub.UpdateMessage(request)
         logger.info(f'Обновлено сообщение: {response.message_id}')
         return response.message_id
     
     async def delete_message(self, message_id: str, request_id: str, sender_id: int) -> str:
-        async with self.get_stub() as stub:
-            request = message_pb2.DeleteMessageRequest(
-                message_id=message_id,
-                request_id=request_id,
-                sender_id=sender_id
-            )
-            response = await stub.DeleteMessage(request)
-
+        request = message_pb2.DeleteMessageRequest(
+            message_id=message_id,
+            request_id=request_id,
+            sender_id=sender_id
+        )
+        response = await self.stub.DeleteMessage(request)
         logger.info(f'Удалено сообщение: {message_id}')
         return response.status
     
     @handle_grpc_exceptions
     async def get_all_messages(self, chat_id: int) -> GetAllMessagesSchema:
-        async with self.get_stub() as stub:
-            request = message_pb2.GetAllMessagesRequest(
-                chat_id=chat_id
-            )
-            response = await stub.GetAllMessages(request)
-
+        request = message_pb2.GetAllMessagesRequest(
+            chat_id=chat_id
+        )
+        response = await self.stub.GetAllMessages(request)
         logger.info(f'Получено сообщений: {len(response.messages)}')
         data = MessageToDict(response, preserving_proto_field_name=True)
         # return GetAllMessagesSchema.model_validate(data)
@@ -73,12 +61,10 @@ class RpcMessageService:
     
     @handle_grpc_exceptions
     async def get_message_data(self, message_id: str):
-        async with self.get_stub() as stub:
-            request = message_pb2.MessageId(
-                message_id=message_id
-            )
-            response = await stub.GetMessageData(request)
-
+        request = message_pb2.MessageId(
+            message_id=message_id
+        )
+        response = await self.stub.GetMessageData(request)
         logger.info(f'Получено сообщений: {len(response.messages)}')
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
