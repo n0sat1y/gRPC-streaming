@@ -50,6 +50,7 @@ class RpcChatService:
         async with self.get_stub() as stub:
             request = chat_pb2.CreateGroupChatRequest(
                 name=data.name,
+                avatar=data.avatar,
                 members=[chat_pb2.UserId(id=member.id) for member in data.members]
             )
             response = await stub.CreateGroupChat(request)

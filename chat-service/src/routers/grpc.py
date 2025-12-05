@@ -45,8 +45,7 @@ class Chat(chat_pb2_grpc.ChatServicer):
                     chat_response.interlocutor_id = interlocutor.user_id
                     if interlocutor.user:
                         chat_response.title = interlocutor.user.username
-                        avatar = interlocutor.user.avatar
-                        if avatar:
+                        if avatar := interlocutor.user.avatar:
                             chat_response.avatar = avatar
                     else:
                         chat_response.title = 'Unknown User'

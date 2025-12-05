@@ -124,8 +124,9 @@ class ChatRepository:
         
     @with_session
     async def update(self, chat: ChatModel, data: UpdateGroupDTO, session: AsyncSession) -> ChatModel:
-        chat.avatar = data.avatar
-        chat.name = data.name
+        
+        if data.avatar: chat.avatar = data.avatar
+        if data.name: chat.name = data.name
         session.add(chat)
         await session.commit()
         await session.refresh(chat)

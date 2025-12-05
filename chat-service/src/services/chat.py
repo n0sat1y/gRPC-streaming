@@ -87,9 +87,13 @@ class ChatService:
 
     async def update(self, data: UpdateGroupDTO):
         chat = await self.get(data.id)
+        if chat.chat_type != ChatTypeEnum.GROUP:
+            logger.warning('Попытка обновить не валидный тип чата')
+            raise WrongChatType()
         if not (chat := await self.repo.update(chat, data)):
             logger.error(f"Не удалось обновить чат {data.id}")
             raise ChatUpdateFailed()
+        
         return chat
     
     async def update_last_read_message(

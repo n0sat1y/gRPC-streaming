@@ -16,6 +16,10 @@ class ChatMemberUpdateFailed(Exception):
     def __init__(self):
         super().__init__(f"Failed to update member")
 
+class WrongChatType(Exception):
+    def __init__(self):
+        super().__init__(f"Wrong chat type recieved")
+
 class AddMembersFailed(Exception):
     def __init__(self):
         super().__init__(f"Failed to add members to chat")

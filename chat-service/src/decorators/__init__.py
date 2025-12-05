@@ -35,6 +35,16 @@ def handle_exceptions(func):
                 grpc.StatusCode.ALREADY_EXISTS,
                 details=str(e)
             ) 
+        except (WrongChatType) as e:
+            await context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT,
+                details=str(e)
+            )
+        except (AddMembersAborted) as e:
+            await context.abort(
+                grpc.StatusCode.ABORTED,
+                details=str(e)
+            )
         except (ChatUpdateFailed, AddMembersFailed) as e:
             await context.abort(
                 grpc.StatusCode.INTERNAL,
