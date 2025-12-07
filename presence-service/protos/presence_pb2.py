@@ -25,7 +25,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0epresence.proto\x12\x08presence\x1a\x1bgoogle/protobuf/empty.proto\"\x10\n\x02Id\x12\n\n\x02id\x18\x01 \x01(\x05\"8\n\x10SetOnlineRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x03ttl\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x06\n\x04_ttl\"<\n\x14RefreshOnlineRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x03ttl\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x06\n\x04_ttl\"\x1c\n\nUserStatus\x12\x0e\n\x06status\x18\x01 \x01(\t2\x85\x02\n\x08Presence\x12\x41\n\tSetOnline\x12\x1a.presence.SetOnlineRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x34\n\nSetOffline\x12\x0c.presence.Id\x1a\x16.google.protobuf.Empty\"\x00\x12I\n\rRefreshOnline\x12\x1e.presence.RefreshOnlineRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x35\n\rGetUserStatus\x12\x0c.presence.Id\x1a\x14.presence.UserStatus\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0epresence.proto\x12\x08presence\x1a\x1bgoogle/protobuf/empty.proto\"\x10\n\x02Id\x12\n\n\x02id\x18\x01 \x01(\x05\"8\n\x10SetOnlineRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x03ttl\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x06\n\x04_ttl\"<\n\x14RefreshOnlineRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x03ttl\x18\x02 \x01(\x05H\x00\x88\x01\x01\x42\x06\n\x04_ttl\"\x1c\n\nUserStatus\x12\x0e\n\x06status\x18\x01 \x01(\t\")\n\x1aGetManyUserStatusesRequest\x12\x0b\n\x03ids\x18\x01 \x03(\x05\"*\n\x0cStatusWithId\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0e\n\x06status\x18\x02 \x01(\t\"@\n\x14UserStatusesResponse\x12(\n\x08statuses\x18\x01 \x03(\x0b\x32\x16.presence.StatusWithId2\xe4\x02\n\x08Presence\x12\x41\n\tSetOnline\x12\x1a.presence.SetOnlineRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x34\n\nSetOffline\x12\x0c.presence.Id\x1a\x16.google.protobuf.Empty\"\x00\x12I\n\rRefreshOnline\x12\x1e.presence.RefreshOnlineRequest\x1a\x16.google.protobuf.Empty\"\x00\x12\x35\n\rGetUserStatus\x12\x0c.presence.Id\x1a\x14.presence.UserStatus\"\x00\x12]\n\x13GetManyUserStatuses\x12$.presence.GetManyUserStatusesRequest\x1a\x1e.presence.UserStatusesResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -40,6 +40,12 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_REFRESHONLINEREQUEST']._serialized_end=193
   _globals['_USERSTATUS']._serialized_start=195
   _globals['_USERSTATUS']._serialized_end=223
-  _globals['_PRESENCE']._serialized_start=226
-  _globals['_PRESENCE']._serialized_end=487
+  _globals['_GETMANYUSERSTATUSESREQUEST']._serialized_start=225
+  _globals['_GETMANYUSERSTATUSESREQUEST']._serialized_end=266
+  _globals['_STATUSWITHID']._serialized_start=268
+  _globals['_STATUSWITHID']._serialized_end=310
+  _globals['_USERSTATUSESRESPONSE']._serialized_start=312
+  _globals['_USERSTATUSESRESPONSE']._serialized_end=376
+  _globals['_PRESENCE']._serialized_start=379
+  _globals['_PRESENCE']._serialized_end=735
 # @@protoc_insertion_point(module_scope)

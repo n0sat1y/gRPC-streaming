@@ -32,10 +32,11 @@ class PresenceService:
             )
             logger.info(f"Уведомление об изменении статуса пользователя {user_id} отправлено")
 
-
-    async def refresh_user_status(self, user_id: int, ttl_seconds: int = 60):
+    async def refresh_user_status(self, user_id: int, broker: KafkaBroker, ttl_seconds: int = 60):
         key = f"user_status:{user_id}"
-        await self.redis.expire(key, ttl_seconds)
+        result = await self.redis.expire(key, ttl_seconds)
+        if not result:
+            await self.set_online(user_id, broker, ttl_seconds)
         print(f"TTL пользователя {user_id} обновлен до {ttl_seconds}с")
 
     
@@ -45,15 +46,13 @@ class PresenceService:
         await self.redis.delete(key)
 
         recievers = await self.chat_service.get_relations(user_id)
-        print(recievers)
         if recievers:
-            await broker.publish(
-                PresenceEvent(
+            event = PresenceEvent(
                     user_id=user_id,
                     status='offline',
                     recievers=recievers
-                ), 'presence.status'
-            )
+                )
+            await broker.publish(event, 'presence.status')
             logger.info(f"Уведомление об изменении статуса пользователя {user_id} отправлено")
 
         logger.info(f"Пользователь {user_id} теперь оффлайн")
@@ -64,3 +63,18 @@ class PresenceService:
         if status:
             return status.decode('utf-8')
         return "offline"
+    
+    async def get_multiple_statuses(self, ids: list[int]) -> dict[int, str]:
+        if not ids:
+            return {}
+        
+        keys = [f"user_status:{x}" for x in ids]
+        values = await self.redis.mget(keys)
+
+        result = {}
+        for key, value in zip(ids, values):
+            if value:
+                result[key] = value
+            else:
+                result[key] = 'offline'
+        return result

@@ -3,8 +3,7 @@ from faststream.kafka.fastapi import KafkaRouter
 from src.schemas.presence import PresenceEvent
 from src.services.connection import manager
 from src.dependencies import get_presence_service
-
-router = KafkaRouter()
+from src.core.kafka import router
 
 @router.subscriber(
     'presence.status',
@@ -14,7 +13,7 @@ router = KafkaRouter()
 async def handle_presence_event(event: PresenceEvent):
     status = event.status
     user_id = event.user_id
-
+    print(event)
     await manager.broadcast(
         recievers=event.recievers,
         data={

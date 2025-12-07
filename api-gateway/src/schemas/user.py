@@ -9,6 +9,7 @@ class UserData(UserIdSchema):
     username: str
     avatar: Optional[str] = None
     created_at: datetime
+    status: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

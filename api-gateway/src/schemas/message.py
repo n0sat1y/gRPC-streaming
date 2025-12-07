@@ -46,7 +46,6 @@ class CreatedMessageEvent(BaseModel):
     recievers: list[int]
     data: MessageData
     request_id: str
-    event_id: str
     sender_id: int
 
 class UpdateMessageEvent(BaseModel):
@@ -54,7 +53,6 @@ class UpdateMessageEvent(BaseModel):
     recievers: list[int]
     data: UpdateMessagePayload
     request_id: str
-    event_id: str
     sender_id: int
 
 class DeleteMessageEvent(BaseModel):
@@ -62,13 +60,11 @@ class DeleteMessageEvent(BaseModel):
     recievers: list[int]
     data: MessageIdPayload
     request_id: str
-    event_id: str
     sender_id: int
 
 class MessagesReadEvent(BaseModel):
     event_type: Literal['MessagesRead']
     data: list[SlimMessageData]
-    event_id: str
 
 IncomingMessage = Union[CreatedMessageEvent, UpdateMessageEvent, DeleteMessageEvent]
 

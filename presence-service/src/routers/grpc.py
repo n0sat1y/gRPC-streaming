@@ -29,7 +29,7 @@ class Presence(presence_pb2_grpc.PresenceServicer):
     async def RefreshOnline(self, request, context):
         logger.info(f"Поступил запрос на обновление статуса online для пользователя {request.id}")
         ttl = request.ttl if request.ttl else 60
-        await self.service.refresh_user_status(request.id, ttl)
+        await self.service.refresh_user_status(request.id, broker, ttl)
         return empty_pb2.Empty()
     
     @handle_exceptions
@@ -37,3 +37,16 @@ class Presence(presence_pb2_grpc.PresenceServicer):
         logger.info(f"Поступил запрос на получение статуса для пользователя {request.id}")
         status = await self.service.get_user_status(request.id)
         return presence_pb2.UserStatus(status=status)
+    
+    @handle_exceptions
+    async def GetManyUserStatuses(self, request, context):
+        logger.info(f"Поступил запрос на получение статусов для пользователей")
+        ids = list(request.ids) 
+        result = await self.service.get_multiple_statuses(ids)
+
+        status_objects = [
+            presence_pb2.StatusWithId(id=user_id, status=status) 
+            for user_id, status in result.items()
+        ]
+
+        return presence_pb2.UserStatusesResponse(statuses=status_objects)

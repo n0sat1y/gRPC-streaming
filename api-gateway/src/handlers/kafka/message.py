@@ -3,8 +3,8 @@ from pydantic import TypeAdapter
 
 from src.schemas.message import *
 from src.services.message import MessageService
+from src.core.kafka import router
 
-router = KafkaRouter()
 service = MessageService(router)
 
 @router.subscriber(

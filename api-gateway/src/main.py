@@ -6,7 +6,8 @@ from contextlib import asynccontextmanager
 from src.core.kafka import router as kafka_router
 from src.api import router
 from src.handlers.grpc import grpc_service
-
+import src.handlers.kafka.presence
+import src.handlers.kafka.message
 
 
 @asynccontextmanager
@@ -29,5 +30,6 @@ app.include_router(kafka_router)
 if __name__ == '__main__':
     uvicorn.run(
         'src.main:app',
-        reload=True
+        reload=True,
+        
     )

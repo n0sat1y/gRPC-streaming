@@ -88,7 +88,6 @@ class MessageService:
                 recievers=active_recievers,
                 data=event_data,
                 request_id=request_id,
-                event_id=str(uuid.uuid4()),
                 sender_id=sender_id,
             ), 'message.event')
         logger.info(f"Уведомление о создании сообщения {message.id} отправлено")
@@ -116,7 +115,6 @@ class MessageService:
                 recievers=active_recievers,
                 data=event_data,
                 request_id=request_id,
-                event_id=str(uuid.uuid4()),
                 sender_id=sender_id,
             ), 'message.event'
         )
@@ -141,7 +139,6 @@ class MessageService:
                 recievers=recievers,
                 data=MessageIdPayload(id=str(message_id)),
                 request_id=request_id,
-                event_id=str(uuid.uuid4()),
                 sender_id=sender_id,
             ), 'message.event'
         )
@@ -178,7 +175,6 @@ class MessageService:
             await broker.publish(
                 MessagesReadEvent(
                     data=event_data,
-                    event_id=str(uuid.uuid4())
                 ), 'message.read_messages'
             )
             logger.info(f"Уведомление о прочтении сообщений отправлено")

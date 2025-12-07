@@ -2,8 +2,9 @@ import grpc
 from fastapi import APIRouter, Depends
 
 from src.handlers.grpc.user import RpcUserService
-from src.dependencies import get_user_id, get_user_service
-from src.schemas.user import UpdateUserDataSchema
+from src.handlers.grpc.presence import RpcPresenceService
+from src.dependencies import get_user_id, get_user_service, get_presence_service
+from src.schemas.user import UpdateUserDataSchema, UserData
 
 router = APIRouter(prefix='/user', tags=['User'])
 
@@ -11,13 +12,16 @@ router = APIRouter(prefix='/user', tags=['User'])
 async def get_user(
     id: int, 
     _reciever_id = Depends(get_user_id), 
-    _service: RpcUserService = Depends(get_user_service)
-):
+    _service: RpcUserService = Depends(get_user_service),
+    _presense_service: RpcPresenceService = Depends(get_presence_service)
+) -> UserData:
     response = await _service.get_user_by_id(id)
+    status = await _presense_service.get_user_status(id)
+    response.status = status.status
     return response
 
 @router.patch('/')
-async def get_user(
+async def update_user(
     data: UpdateUserDataSchema, 
     _reciever_id = Depends(get_user_id), 
     _service: RpcUserService = Depends(get_user_service)

@@ -27,7 +27,6 @@ class CreatedMessageEvent(BaseModel):
     recievers: list[int]
     data: MessageData
     request_id: str
-    event_id: str
     sender_id: int
 
 class UpdateMessageEvent(BaseModel):
@@ -35,7 +34,6 @@ class UpdateMessageEvent(BaseModel):
     recievers: list[int]
     data: UpdateMessagePayload
     request_id: str
-    event_id: str
     sender_id: int
 
 class DeleteMessageEvent(BaseModel):
@@ -43,7 +41,6 @@ class DeleteMessageEvent(BaseModel):
     recievers: list[int]
     data: MessageIdPayload
     request_id: str
-    event_id: str
     sender_id: int
 
 class ApiGatewayReadEvent(BaseModel):
@@ -58,4 +55,3 @@ class SlimMessageData(BaseModel):
 class MessagesReadEvent(BaseModel):
     event_type: str = 'MessagesRead'
     data: list[SlimMessageData]
-    event_id: str

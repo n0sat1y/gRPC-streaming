@@ -28,7 +28,7 @@ class ConnectionManager:
             self.active_connections[user_id].remove(websocket)
 
             if not self.active_connections[user_id]:
-                await self.kill(user_id, set_offline=True)
+                await self.kill(user_id, presence_service=presence_service, set_offline=True)
 
     async def kill(self, user_id: int, presence_service: Optional[RpcPresenceService] = None, set_offline: bool = True):
         if user_id in self.cleaning_in_progress:
@@ -48,6 +48,7 @@ class ConnectionManager:
             
             if set_offline and presence_service:
                 await presence_service.set_offline(user_id)
+                logger.info(f"Пользователь {user_id} теперь оффлайн")
         finally:
             self.cleaning_in_progress.remove(user_id)
 

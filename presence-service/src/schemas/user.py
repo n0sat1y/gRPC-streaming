@@ -5,6 +5,6 @@ class IdSchema(BaseModel):
     id: int
 
 class UserEvent(BaseModel):
-    event_type: Literal['UserDeactivated']
+    event_type: str
     data: Union[IdSchema]
 

@@ -9,6 +9,7 @@ service Presence {
     rpc SetOffline (Id) returns (google.protobuf.Empty) {}
     rpc RefreshOnline (RefreshOnlineRequest) returns (google.protobuf.Empty) {}
     rpc GetUserStatus (Id) returns (UserStatus) {}
+    rpc GetManyUserStatuses (GetManyUserStatusesRequest) returns (UserStatusesResponse) {}
 }
 
 message Id {
@@ -27,4 +28,17 @@ message RefreshOnlineRequest {
 
 message UserStatus {
     string status = 1;
+}
+
+message GetManyUserStatusesRequest {
+    repeated int32 ids = 1;
+}
+
+message StatusWithId {
+    int32 id = 1;
+    string status = 2;
+}
+
+message UserStatusesResponse {
+    repeated StatusWithId statuses = 1;
 }

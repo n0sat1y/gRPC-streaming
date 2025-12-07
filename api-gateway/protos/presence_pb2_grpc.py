@@ -55,6 +55,11 @@ class PresenceStub(object):
                 request_serializer=presence__pb2.Id.SerializeToString,
                 response_deserializer=presence__pb2.UserStatus.FromString,
                 _registered_method=True)
+        self.GetManyUserStatuses = channel.unary_unary(
+                '/presence.Presence/GetManyUserStatuses',
+                request_serializer=presence__pb2.GetManyUserStatusesRequest.SerializeToString,
+                response_deserializer=presence__pb2.UserStatusesResponse.FromString,
+                _registered_method=True)
 
 
 class PresenceServicer(object):
@@ -84,6 +89,12 @@ class PresenceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetManyUserStatuses(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_PresenceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -106,6 +117,11 @@ def add_PresenceServicer_to_server(servicer, server):
                     servicer.GetUserStatus,
                     request_deserializer=presence__pb2.Id.FromString,
                     response_serializer=presence__pb2.UserStatus.SerializeToString,
+            ),
+            'GetManyUserStatuses': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetManyUserStatuses,
+                    request_deserializer=presence__pb2.GetManyUserStatusesRequest.FromString,
+                    response_serializer=presence__pb2.UserStatusesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -216,6 +232,33 @@ class Presence(object):
             '/presence.Presence/GetUserStatus',
             presence__pb2.Id.SerializeToString,
             presence__pb2.UserStatus.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetManyUserStatuses(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/presence.Presence/GetManyUserStatuses',
+            presence__pb2.GetManyUserStatusesRequest.SerializeToString,
+            presence__pb2.UserStatusesResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from src.core.config import settings
 from src.decorators.grpc import handle_grpc_exceptions
-from src.schemas.presence import UserStatus
+from src.schemas.presence import UserStatus, MultipleUsersStatuses, UserStatusWithId
 from protos import presence_pb2_grpc
 
 
@@ -58,4 +58,17 @@ class RpcPresenceService:
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.UNAVAILABLE:
                 return UserStatus(status='offline')
+            raise e
+        
+    @handle_grpc_exceptions
+    async def get_users_statuses(self, ids: list[int]):
+        try:
+            request = presence_pb2.GetManyUserStatusesRequest(ids=ids)
+            response = await self.stub.GetManyUserStatuses(request)
+            logger.info(f"Получен статусы для нескольких пользователей")
+            data = MessageToDict(response, preserving_proto_field_name=True)
+            return MultipleUsersStatuses.model_validate(data)
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                return MultipleUsersStatuses(statuses=[UserStatusWithId(id=x, status='offline') for x in ids])
             raise e
