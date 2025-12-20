@@ -11,10 +11,13 @@ from src.models import Message as MessageModel
 
 
 class Message(message_pb2_grpc.MessageServiceServicer):
-    def __init__(self):
-        self.service = MessageService()
-        self.chat_service = ChatService()
-        self.broker = broker
+    def __init__(
+        self,
+        chat_service: ChatService,
+        message_service: MessageService
+    ):
+        self.chat_service = chat_service
+        self.service = message_service
 
     def get_message_obj(self, message: MessageModel, users: dict) -> message_pb2.Message:
         message_obj = message_pb2.Message(
@@ -55,8 +58,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.chat_id,
             request.content,
             request.request_id,
-            request.sender_id,
-            self.broker
+            request.sender_id
         )
         response = message_pb2.SendMessageResponse()
         response.message_id = str(message.id)
@@ -99,8 +101,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.message_id,
             request.new_content,
             request.request_id,
-            request.sender_id,
-            self.broker
+            request.sender_id
         )
         return message_pb2.MessageId(message_id=str(message.id))
 
@@ -109,8 +110,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         await self.service.delete(
             request.message_id,
             request.request_id,
-            request.sender_id,
-            self.broker
+            request.sender_id
         )
         return message_pb2.DeleteMessageResponse(
             status='Success'

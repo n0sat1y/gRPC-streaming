@@ -10,13 +10,21 @@ from src.services.chat import ChatService
 from src.models import Message
 from src.exceptions.message import *
 from src.schemas.message import *
+from src.routers.kafka.producer import KafkaPublisher
 
 
 class MessageService:
-    def __init__(self):
-        self.repo = MessageRepository()
-        self.user_service = UserService()
-        self.chat_service = ChatService()
+    def __init__(
+            self, 
+            repo: MessageRepository,
+            user_service: UserService,
+            chat_service: ChatService,
+            kafka_producer: KafkaPublisher,
+        ):
+        self.repo = repo
+        self.user_service = user_service
+        self.chat_service = chat_service
+        self.kafka_producer = kafka_producer
 
     async def get(self, message_id: str, get_full: bool = False) -> Message:
         logger.info(f"Получаем сообщение {message_id}")
@@ -45,7 +53,6 @@ class MessageService:
             content: str, 
             request_id: str, 
             sender_id: int,
-            broker: KafkaBroker,
             metadata: dict | None = None,
         ):
         errors = []
@@ -83,14 +90,12 @@ class MessageService:
             ),
             created_at=message.created_at
         )
-        await broker.publish(
-            CreatedMessageEvent(
-                recievers=active_recievers,
-                data=event_data,
-                request_id=request_id,
-                sender_id=sender_id,
-            ), 'message.event')
-        logger.info(f"Уведомление о создании сообщения {message.id} отправлено")
+        await self.kafka_producer.create_message(
+            recievers=active_recievers,
+            data=event_data,
+            request_id=request_id,
+            sender_id=sender_id,
+        )
 
         return message
     
@@ -99,8 +104,7 @@ class MessageService:
         message_id: str, 
         new_content: str, 
         request_id: str, 
-        sender_id: int,
-        broker: KafkaBroker
+        sender_id: int
     ) -> Message:
         logger.info(f"Обновляем сообщение {message_id}")
 
@@ -110,23 +114,20 @@ class MessageService:
 
         active_recievers = await self.chat_service.get_active_members(chat_id=message.chat_id)
         event_data = UpdateMessagePayload(id=str(message.id), content=message.content)
-        await broker.publish(
-            UpdateMessageEvent(
-                recievers=active_recievers,
-                data=event_data,
-                request_id=request_id,
-                sender_id=sender_id,
-            ), 'message.event'
+        await self.kafka_producer.update_message(
+            recievers=active_recievers,
+            data=event_data,
+            request_id=request_id,
+            sender_id=sender_id,
         )
         logger.info(f"Уведомление об обновлении сообщения {message.id} отправлено")
         return message
     
     async def delete(
-        self, 
-        message_id: str, 
-        request_id: str, 
-        sender_id: int,
-        broker: KafkaBroker
+        self,
+        message_id: str,
+        request_id: str,
+        sender_id: int
     ):
         logger.info(f"Удаляем сообщение {message_id}")
         message = await self.get(message_id)
@@ -134,15 +135,12 @@ class MessageService:
         logger.info(f"Удалено сообщение {message_id}")
 
         recievers = await self.chat_service.get_active_members(message.chat_id)
-        await broker.publish(
-            DeleteMessageEvent(
-                recievers=recievers,
-                data=MessageIdPayload(id=str(message_id)),
-                request_id=request_id,
-                sender_id=sender_id,
-            ), 'message.event'
+        await self.kafka_producer.delete_message(
+            recievers=recievers,
+            data=MessageIdPayload(id=str(message_id)),
+            request_id=request_id,
+            sender_id=sender_id,
         )
-        logger.info(f"Уведомление об удалении сообщения {message.id} отправлено")
     
     async def delete_chat_messages(self, chat_id: int):
         logger.info(f"Удаляем сообщения чата {chat_id}")
@@ -154,8 +152,7 @@ class MessageService:
             self, 
             chat_id: int, 
             user_id: int, 
-            message_id: str,
-            broker: KafkaBroker
+            message_id: str
         ):
         logger.info(f"Обновляем последнее прочитанное сообщение")
 
@@ -172,11 +169,6 @@ class MessageService:
         print(changed_messages)
         if changed_messages:
             event_data = [SlimMessageData(id=str(message.id), sender_id=message.user_id) for message in changed_messages]
-            await broker.publish(
-                MessagesReadEvent(
-                    data=event_data,
-                ), 'message.read_messages'
-            )
-            logger.info(f"Уведомление о прочтении сообщений отправлено")
+            await self.kafka_producer.read_message(data=event_data)
 
         logger.info(f"Последнее прочитанное сообщение пользователя {user_id} обновлено")

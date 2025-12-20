@@ -7,9 +7,13 @@ from src.services.user import UserService
 
 
 class ChatService():
-    def __init__(self):
-        self.repo = ChatRepository()
-        self.user_service = UserService()
+    def __init__(
+        self,
+        repo: ChatRepository,
+        user_service: UserService
+    ):
+        self.repo = repo
+        self.user_service = user_service
 
     async def get(self, chat_id: int) -> ChatReplica:
         logger.info(f"Получаем чат {chat_id}")

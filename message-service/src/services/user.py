@@ -6,8 +6,8 @@ from src.schemas.user import UserData, IdSchema
 
 
 class UserService():
-    def __init__(self):
-        self.repo = UserRepository()
+    def __init__(self, repo: UserRepository):
+        self.repo = repo
 
     async def get(self, user_id: int) -> UserReplica:
         logger.info(f'Получаем пользователя {user_id}')

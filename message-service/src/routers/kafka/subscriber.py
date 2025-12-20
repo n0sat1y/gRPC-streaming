@@ -1,19 +1,23 @@
-from faststream.kafka import KafkaBroker
 from loguru import logger
-from src.core.config import settings
+from faststream.kafka import KafkaRouter
 
-from src.services.user import UserService
+from src.routers.kafka import broker
 from src.schemas.user import IncomingUserEvent
-from src.services.chat import ChatService
 from src.schemas.chat import ChatEvent
 from src.services.message import *
+from src.core.deps import (
+    get_user_service,
+    get_chat_service,
+    get_message_service
+)
 
-broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
-user_service = UserService()
-chat_service = ChatService()
-message_service = MessageService()
+router = KafkaRouter()
 
-@broker.subscriber(
+user_service = get_user_service()
+chat_service = get_chat_service()
+message_service = get_message_service()
+
+@router.subscriber(
         'user.event',
         group_id='message_service',
         auto_offset_reset='earliest'
@@ -27,7 +31,7 @@ async def user_event(data: IncomingUserEvent):
     elif event == 'UserDeactivated':
         await user_service.deactivate(data)
 
-@broker.subscriber(
+@router.subscriber(
         'chat.events',
         group_id='message_service',
         auto_offset_reset='earliest' 
@@ -41,9 +45,9 @@ async def chat_event(data: ChatEvent):
     elif event == 'ChatDeleted':
         await chat_service.delete(data)
         await message_service.delete_chat_messages(data.id)
-    
-    
-@broker.subscriber(
+
+
+@router.subscriber(
     'api_gateway.mark_as_read',
     group_id='message_service',
     auto_offset_reset='earliest' 
@@ -52,8 +56,7 @@ async def handle_readed_messages(data: ApiGatewayReadEvent):
     await message_service.mark_as_read(
         chat_id=data.chat_id,
         user_id=data.user_id,
-        message_id=data.last_read_message_id,
-        broker=broker
+        message_id=data.last_read_message_id
     )
     logger.info(f"{data}")
     

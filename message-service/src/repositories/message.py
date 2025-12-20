@@ -1,5 +1,5 @@
 from loguru import logger
-from beanie.operators import Set
+from beanie.operators import Set, In
 from bson import ObjectId
 
 from src.models import Message, ReadProgress, ReadStatus
@@ -83,19 +83,33 @@ class MessageRepository:
             request_stmt = [Message.id <= ObjectId(last_read_message)]
             if previous_message_read:
                 request_stmt.append(Message.id > ObjectId(previous_message_read))
-
+            request_stmt.append(Message.user_id != read_by)
             messages = await Message.find(*request_stmt).to_list()
-            changed_messages = []
 
-            for message in messages:
-                if not message.user_id == read_by:
-                    await ReadStatus(message_id=message.id, read_by=read_by).insert()
-                    if not message.is_read:
-                        message.is_read = True
-                        await message.save()
-                        changed_messages.append(message)
+            if not messages:
+                return []
+            
+            read_statuses = [
+                ReadStatus(message_id=message.id, read_by=read_by)
+                for message in messages
+            ]
+            if read_statuses:
+                await ReadStatus.insert_many(read_statuses)
 
-            return changed_messages
+            unread_messages = [message for message in messages if not message.is_read]
+            if not unread_messages:
+                return []
+            
+            unread_ids = [msg.id for msg in unread_messages]
+            await Message.find(
+                In(Message.id, unread_ids)
+            ).update(
+                {"$set": {Message.is_read: True}}
+            )
+            for msg in unread_messages:
+                msg.is_read = True
+
+            return unread_messages
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e
