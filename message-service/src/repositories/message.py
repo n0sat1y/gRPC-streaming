@@ -7,13 +7,15 @@ from src.models import Message, ReadProgress, ReadStatus
 class MessageRepository:
     async def get(self, message_id: str, get_full: bool = False):
         try:
-            message = await Message.get(message_id, fetch_links=get_full)
-            if get_full and message:
-                await message.fetch_all_links()
-                # # Преобразуем все бэклинки в реальные документы
-                # if hasattr(message, 'read_by') and message.read_by:
-                #     message.read_by = [await backlink.fetch() for backlink in message.read_by]
-            print(message)
+            message = await Message.get(message_id)
+            if not message:
+                return None
+            if get_full:
+                # await message.fetch_all_links()
+                read_statuses = await ReadStatus.find(
+                    ReadStatus.message_id.id == message.id
+                ).to_list()
+                message.read_by = read_statuses
             return message
         except Exception as e:
             logger.error(f'Database Error {e}')
@@ -46,7 +48,12 @@ class MessageRepository:
     async def update(self, message: Message, new_content: str):
         try:
             message = await message.update(
-                Set({Message.content: new_content})
+                Set(
+                    {
+                        Message.content: new_content,
+                        Message.metadata.is_edited: True,
+                    }
+                )
             )
             return message
         except Exception as e:

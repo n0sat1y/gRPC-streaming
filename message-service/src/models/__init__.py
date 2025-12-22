@@ -4,12 +4,25 @@ from beanie import Document, Indexed, Link, BackLink
 from pydantic import Field, BaseModel
 
 
+class ReplyData(BaseModel):
+    message_id: str
+    user_id: int
+    username: str
+    preview: str
+
+class ForwardData(BaseModel):
+    from_message_id: str
+    from_chat_id: int
+    sender_user_id: int
+    sender_username: str
 
 class MetaData(BaseModel):
     is_edited: bool = False
     is_pinned: bool = False
     reactions: Dict[str, List[int]] = Field(default_factory=dict)
-    reply_to: Optional[str] = None
+    reply_to: Optional[ReplyData] = None
+    forward_from: Optional[ForwardData] = None
+    url_preview: Optional[str] = None
 
 
 class Message(Document):
@@ -22,12 +35,16 @@ class Message(Document):
 
     read_by: List[BackLink["ReadStatus"]] = Field(
         default_factory=list,
-        json_schema_extra={"original_field": "message"}
+        json_schema_extra={"original_field": "message_id"}
     )
 
     class Settings:
         name = "messages"
-        indexes = ['chat_id', 'user_id']
+        indexes = [
+            'chat_id', 
+            'user_id',
+            ('chat_id', '-created_at')
+        ]
 
 class ReadStatus(Document):
     message_id: Link[Message]

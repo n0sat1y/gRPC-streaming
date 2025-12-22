@@ -37,7 +37,8 @@ class WebsocketHandler:
             sender_id=user_id,
             chat_id=message.payload.chat_id,
             content=message.payload.content,
-            request_id=message.request_id
+            request_id=message.request_id,
+            reply_to=message.payload.reply_to,
         )
 
     async def edit_message(self, user_id: int, message: EditMessageEvent):

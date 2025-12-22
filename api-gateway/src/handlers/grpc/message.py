@@ -1,3 +1,4 @@
+from typing import Optional
 import grpc
 from google.protobuf.json_format import MessageToDict
 from loguru import logger
@@ -13,13 +14,21 @@ class RpcMessageService:
     def __init__(self, stub: message_pb2_grpc.MessageServiceStub):
         self.stub = stub
 
-    async def send_message(self, chat_id: int, content: str, request_id: str, sender_id: int) -> dict:
+    async def send_message(
+            self, 
+            chat_id: int, 
+            content: str, 
+            request_id: str, 
+            sender_id: int,
+            reply_to: Optional[str] = None,
+        ) -> dict:
         request = message_pb2.SendMessageRequest(
             user_id=sender_id,
             chat_id=chat_id,
             content=content,
             request_id=request_id,
-            sender_id=sender_id
+            sender_id=sender_id,
+            reply_to=reply_to
         )
         response = await self.stub.SendMessage(request)
 
@@ -65,7 +74,7 @@ class RpcMessageService:
             message_id=message_id
         )
         response = await self.stub.GetMessageData(request)
-        logger.info(f'Получено сообщений: {len(response.messages)}')
+        logger.info(f'Получено сообщение: {response.id}')
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
     

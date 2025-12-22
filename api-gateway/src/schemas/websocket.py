@@ -1,4 +1,4 @@
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 from pydantic import BaseModel
 
 class ErrorPayload(BaseModel):
@@ -12,6 +12,7 @@ class ErrorResponse(BaseModel):
 class SendMessagePayload(BaseModel):
     chat_id: int
     content: str
+    reply_to: Optional[str] = None
 
 class DeleteMessagePayload(BaseModel):
     message_id: str

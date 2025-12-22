@@ -51,6 +51,7 @@ async def chat_event(data: ChatEvent):
     auto_offset_reset='earliest' 
 )
 async def handle_readed_messages(data: ApiGatewayReadEvent):
+    logger.info("Получено уведомление о прочтении сообщений")
     await message_service.mark_as_read(
         chat_id=data.chat_id,
         user_id=data.user_id,

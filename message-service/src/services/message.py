@@ -1,3 +1,4 @@
+from typing import Optional
 import grpc
 import uuid
 from collections import defaultdict
@@ -7,7 +8,7 @@ from faststream.kafka import KafkaBroker
 from src.repositories.message import MessageRepository
 from src.services.user import UserService
 from src.services.chat import ChatService
-from src.models import Message
+from src.models import Message, MetaData, ReplyData
 from src.exceptions.message import *
 from src.schemas.message import *
 from src.routers.kafka.producer import KafkaPublisher
@@ -53,7 +54,7 @@ class MessageService:
             content: str, 
             request_id: str, 
             sender_id: int,
-            metadata: dict | None = None,
+            reply_to: Optional[str] = None,
         ):
         errors = []
         if not (chat := await self.chat_service.get(chat_id)):
@@ -65,12 +66,34 @@ class MessageService:
             print(chat.members)            
             errors.append('user not is chat member')
 
+        metadata = MetaData()
+        if reply_to:
+            reply_to_message = await self.get(reply_to)
+            if reply_to_message.chat_id == chat_id:
+                reply_to_user = await self.user_service.get(reply_to_message.user_id)
+                reply_data = ReplyData(
+                    message_id=reply_to,
+                    user_id=reply_to_user.user_id,
+                    username=reply_to_user.username,
+                    preview=(reply_to_message.content 
+                            if len(reply_to_message.content) <= 50 
+                            else reply_to_message.content[:47]+"..."
+                    )
+                )
+                metadata.reply_to = reply_data
+
+
         if errors:
             err_str = ', '.join(errors)
             logger.warning(f"Неверные данные: {err_str}")
             raise DataLossError(err_str)
 
-        message = Message(user_id=user_id, chat_id=chat_id, content=content)
+        message = Message(
+            user_id=user_id, 
+            chat_id=chat_id, 
+            content=content,
+            metadata=metadata
+        )
         message = await self.repo.insert(message)
         logger.info(f"Добавлено сообщение {message.id=} в {chat_id=}")
 
