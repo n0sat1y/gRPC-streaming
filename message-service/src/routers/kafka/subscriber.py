@@ -11,13 +11,11 @@ from src.core.deps import (
     get_message_service
 )
 
-router = KafkaRouter()
-
 user_service = get_user_service()
 chat_service = get_chat_service()
 message_service = get_message_service()
 
-@router.subscriber(
+@broker.subscriber(
         'user.event',
         group_id='message_service',
         auto_offset_reset='earliest'
@@ -31,7 +29,7 @@ async def user_event(data: IncomingUserEvent):
     elif event == 'UserDeactivated':
         await user_service.deactivate(data)
 
-@router.subscriber(
+@broker.subscriber(
         'chat.events',
         group_id='message_service',
         auto_offset_reset='earliest' 
@@ -47,7 +45,7 @@ async def chat_event(data: ChatEvent):
         await message_service.delete_chat_messages(data.id)
 
 
-@router.subscriber(
+@broker.subscriber(
     'api_gateway.mark_as_read',
     group_id='message_service',
     auto_offset_reset='earliest' 

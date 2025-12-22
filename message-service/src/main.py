@@ -12,6 +12,7 @@ from src.core.deps import get_grpc_message_service as MessageRouter
 from src.routers.kafka import broker
 from src.models import Message as MessageModel, ReadProgress, ReadStatus, MetaData
 from src.models.replications import UserReplica, ChatReplica
+import src.routers.kafka.subscriber
 
 app = FastStream(broker)
 server: grpc.aio.Server | None = None
