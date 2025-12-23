@@ -10,6 +10,8 @@ from src.services.user import UserService
 from src.services.chat import ChatService
 from src.models import Message, MetaData, ReplyData
 from src.exceptions.message import *
+from src.exceptions.chat import *
+from src.exceptions.user import *
 from src.schemas.message import *
 from src.routers.kafka.producer import KafkaPublisher
 
@@ -57,14 +59,21 @@ class MessageService:
             reply_to: Optional[str] = None,
         ):
         errors = []
-        if not (chat := await self.chat_service.get(chat_id)):
+        try:
+            chat = await self.chat_service.get(chat_id)
+        except ChatNotFoundError:
             errors.append('chat_id')
-        user = await self.user_service.get(user_id)
-        if not user or not user.is_active:
+        try:
+            user = await self.user_service.get(user_id)
+        except UserNotFoundError:
             errors.append('user_id')
-        elif not user.user_id in chat.members:
-            print(chat.members)            
+        if not user.user_id in chat.members:           
             errors.append('user not is chat member')
+
+        if errors:
+            err_str = ', '.join(errors)
+            logger.warning(f"Неверные данные: {err_str}")
+            raise DataLossError(err_str)
 
         metadata = MetaData()
         if reply_to:
@@ -81,12 +90,6 @@ class MessageService:
                     )
                 )
                 metadata.reply_to = reply_data
-
-
-        if errors:
-            err_str = ', '.join(errors)
-            logger.warning(f"Неверные данные: {err_str}")
-            raise DataLossError(err_str)
 
         message = Message(
             user_id=user_id, 
@@ -180,7 +183,6 @@ class MessageService:
         logger.info(f"Обновляем последнее прочитанное сообщение")
 
         previous_read_message = await self.repo.get_last_read_message(chat_id=chat_id, user_id=user_id)
-        print(previous_read_message)
         await self.repo.set_last_read_message(chat_id, user_id, message_id)
         logger.info(f"Обновили счетчик последнего прочитанного сообщения")
 
@@ -189,9 +191,46 @@ class MessageService:
             last_read_message=message_id,
             read_by=user_id
         )
-        print(changed_messages)
         if changed_messages:
             event_data = [SlimMessageData(id=str(message.id), sender_id=message.user_id) for message in changed_messages]
             await self.kafka_producer.read_message(data=event_data)
 
         logger.info(f"Последнее прочитанное сообщение пользователя {user_id} обновлено")
+
+    async def add_reaction(
+            self, 
+            message_id: str, 
+            reaction: str, 
+            author: int
+        ):
+        await self.user_service.get(author)
+        logger.info(f"Добавляем реакцию в сообщение: {message_id}")
+        result = await self.repo.add_reaction(message_id, reaction, author)
+        if result > 0:
+            event_data = Reaction(
+                message_id=message_id,
+                author=author,
+                reaction=reaction
+            )
+            await self.kafka_producer.add_reaction(event_data)
+        else:
+            raise ReacionNotAdded()
+
+    async def remove_reaction(
+            self, 
+            message_id: str, 
+            reaction: str, 
+            author: int
+        ):
+        await self.user_service.get(author)
+        logger.info(f"Удаляем реакцию реакцию из сообщения: {message_id}")
+        result = await self.repo.remove_reaction(message_id, reaction, author)
+        if result > 0:
+            event_data = Reaction(
+                message_id=message_id,
+                author=author,
+                reaction=reaction
+            )
+            await self.kafka_producer.remove_reaction(event_data)
+        else:
+            raise ReacionNotAdded()

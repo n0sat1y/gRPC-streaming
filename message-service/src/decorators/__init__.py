@@ -3,6 +3,8 @@ from functools import wraps
 from loguru import logger
 
 from src.exceptions.message import *
+from src.exceptions.user import *
+from src.exceptions.chat import *
 
 def handle_exceptions(func):
     @wraps(func)
@@ -14,9 +16,14 @@ def handle_exceptions(func):
                 grpc.StatusCode.DATA_LOSS,
                 details=str(e)
             )
-        except MessageNotFoundError as e:
+        except (MessageNotFoundError, UserNotFoundError, ChatNotFoundError) as e:
             await context.abort(
                 grpc.StatusCode.NOT_FOUND,
+                details=str(e)
+            )
+        except ReacionNotAdded as e:
+            await context.abort(
+                grpc.StatusCode.ALREADY_EXISTS,
                 details=str(e)
             )
         except Exception as e:

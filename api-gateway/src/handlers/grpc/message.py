@@ -78,3 +78,23 @@ class RpcMessageService:
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
     
+    @handle_grpc_exceptions
+    async def add_reaction(self, message_id: str, reaction: str, author: int):
+        request = message_pb2.Reaction(
+            message_id=message_id,
+            reaction=reaction,
+            author=author
+        )
+        response = await self.stub.AddReaction(request)
+        return None
+    
+    @handle_grpc_exceptions
+    async def remove_reaction(self, message_id: str, reaction: str, author: int):
+        request = message_pb2.Reaction(
+            message_id=message_id,
+            reaction=reaction,
+            author=author
+        )
+        response = await self.stub.RemoveReaction(request)
+        return None
+    

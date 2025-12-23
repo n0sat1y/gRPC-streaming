@@ -2,6 +2,7 @@ import asyncio
 from typing import Union
 import grpc
 from loguru import logger
+from google.protobuf import empty_pb2
 
 from protos import message_pb2_grpc, message_pb2
 from src.services.message import MessageService
@@ -38,10 +39,10 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             is_pinned=message.metadata.is_pinned,
             reply_to=reply_to_obj,
         )
-
+        print(message.metadata.reactions)
         for reaction, reacted_by in message.metadata.reactions.items():
             reacted_by_obj = message_pb2.ReactedBy(users_id=reacted_by)
-            metadata_obj.reactions[reaction] = reacted_by_obj
+            metadata_obj.reactions[reaction].CopyFrom(reacted_by_obj)
 
         obj.metadata.CopyFrom(metadata_obj)
         return obj
@@ -136,3 +137,20 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             status='Success'
         )
     
+    @handle_exceptions
+    async def AddReaction(self, request, context):
+        await self.service.add_reaction(
+            request.message_id,
+            request.reaction,
+            request.author
+        )
+        return empty_pb2.Empty()
+    
+    @handle_exceptions
+    async def RemoveReaction(self, request, context):
+        await self.service.remove_reaction(
+            request.message_id,
+            request.reaction,
+            request.author
+        )
+        return empty_pb2.Empty()

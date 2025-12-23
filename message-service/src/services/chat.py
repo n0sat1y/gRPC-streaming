@@ -4,6 +4,7 @@ from src.repositories.chat import ChatRepository
 from src.models.replications import ChatReplica
 from src.schemas.chat import ChatData, IdSchema
 from src.services.user import UserService
+from src.exceptions.chat import ChatNotFoundError
 
 
 class ChatService():
@@ -18,6 +19,9 @@ class ChatService():
     async def get(self, chat_id: int) -> ChatReplica:
         logger.info(f"Получаем чат {chat_id}")
         chat = await self.repo.get(chat_id)
+        if not chat:
+            logger.warning(f"Не удалось найти чат: {chat_id}")
+            raise ChatNotFoundError(chat_id=chat_id)
         logger.info(f"Чат полчен: {chat_id}")
         return chat
 

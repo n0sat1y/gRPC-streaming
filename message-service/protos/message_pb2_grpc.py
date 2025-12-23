@@ -3,6 +3,7 @@
 import grpc
 import warnings
 
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 import protos.message_pb2 as message__pb2
 
 GRPC_GENERATED_VERSION = '1.75.1'
@@ -59,6 +60,16 @@ class MessageServiceStub(object):
                 request_serializer=message__pb2.MessageId.SerializeToString,
                 response_deserializer=message__pb2.FullMessageData.FromString,
                 _registered_method=True)
+        self.AddReaction = channel.unary_unary(
+                '/message.MessageService/AddReaction',
+                request_serializer=message__pb2.Reaction.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
+        self.RemoveReaction = channel.unary_unary(
+                '/message.MessageService/RemoveReaction',
+                request_serializer=message__pb2.Reaction.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class MessageServiceServicer(object):
@@ -94,6 +105,18 @@ class MessageServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def AddReaction(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RemoveReaction(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MessageServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -121,6 +144,16 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     servicer.GetMessageData,
                     request_deserializer=message__pb2.MessageId.FromString,
                     response_serializer=message__pb2.FullMessageData.SerializeToString,
+            ),
+            'AddReaction': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddReaction,
+                    request_deserializer=message__pb2.Reaction.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'RemoveReaction': grpc.unary_unary_rpc_method_handler(
+                    servicer.RemoveReaction,
+                    request_deserializer=message__pb2.Reaction.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -258,6 +291,60 @@ class MessageService(object):
             '/message.MessageService/GetMessageData',
             message__pb2.MessageId.SerializeToString,
             message__pb2.FullMessageData.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AddReaction(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/message.MessageService/AddReaction',
+            message__pb2.Reaction.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def RemoveReaction(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/message.MessageService/RemoveReaction',
+            message__pb2.Reaction.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,

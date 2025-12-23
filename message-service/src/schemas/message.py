@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Literal, Union
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -7,6 +7,11 @@ class IdBase(BaseModel):
 
 class UserData(IdBase):
     username: str
+
+class Reaction(BaseModel):
+    message_id: str
+    author: int
+    reaction: str    
 
 class MessageData(BaseModel):
     id: str
@@ -55,3 +60,7 @@ class SlimMessageData(BaseModel):
 class MessagesReadEvent(BaseModel):
     event_type: str = 'MessagesRead'
     data: list[SlimMessageData]
+
+class ReactionEvent(BaseModel):
+    event_type: Literal['AddReaction', 'RemoveReaction']
+    data: Reaction

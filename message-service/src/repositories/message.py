@@ -1,8 +1,9 @@
 from loguru import logger
-from beanie.operators import Set, In
+from beanie.operators import Set, In, AddToSet, Pull
 from bson import ObjectId
 
 from src.models import Message, ReadProgress, ReadStatus
+from src.exceptions.message import MessageNotFoundError
 
 class MessageRepository:
     async def get(self, message_id: str, get_full: bool = False):
@@ -149,6 +150,30 @@ class MessageRepository:
                     last_read_message_id=message_obj.id
                 )
             )
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+
+    async def add_reaction(self, message_id: str, reaction: str, author: str) -> bool:
+        try:
+            result = await Message.find_one(Message.id == ObjectId(message_id)).update(
+                AddToSet({Message.metadata.reactions[reaction]: author})
+            )
+            if result.matched_count == 0:
+                raise MessageNotFoundError(message_id)
+            return result.modified_count > 0
+        except Exception as e:
+            logger.error(f'Database Error', e)
+            raise e
+
+    async def remove_reaction(self, message_id: str, reaction: str, author: str) -> bool:
+        try:
+            result = await Message.find_one(Message.id == ObjectId(message_id)).update(
+                Pull({Message.metadata.reactions[reaction]: author})
+            )
+            if result.matched_count == 0:
+                raise MessageNotFoundError(message_id)
+            return result.modified_count > 0
         except Exception as e:
             logger.error(f'Database Error', e)
             raise e

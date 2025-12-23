@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 package message;
 
@@ -10,6 +11,8 @@ service MessageService {
     rpc DeleteMessage (DeleteMessageRequest) returns (DeleteMessageResponse) {}
     rpc GetAllMessages (GetAllMessagesRequest) returns (AllMessages) {}
     rpc GetMessageData (MessageId) returns (FullMessageData) {}
+    rpc AddReaction (Reaction) returns (google.protobuf.Empty) {}
+    rpc RemoveReaction (Reaction) returns (google.protobuf.Empty) {}
 }
 
 message MessageId {
@@ -102,4 +105,10 @@ message FullMessageData {
     repeated ReadBy read_by = 6;
     google.protobuf.Timestamp created_at = 7;
     Metadata metadata = 8;
+}
+
+message Reaction {
+    string message_id = 1;
+    int32 author = 2;
+    string reaction = 3;
 }

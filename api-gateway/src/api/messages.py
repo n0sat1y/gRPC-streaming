@@ -38,3 +38,13 @@ async def get_all_messages(
 async def get_message_data(message_id: str, _message_service: RpcMessageService = Depends(get_message_service)):
     message = await _message_service.get_message_data(message_id)
     return message
+
+@router.post('/{message_id}/{reaction}')
+async def add_reaction(message_id: str, reaction: str, user_id = Depends(get_user_id), _message_service: RpcMessageService = Depends(get_message_service)):
+    message = await _message_service.add_reaction(message_id, reaction, user_id)
+    return message
+
+@router.delete('/{message_id}/{reaction}')
+async def add_reaction(message_id: str, reaction: str, user_id = Depends(get_user_id), _message_service: RpcMessageService = Depends(get_message_service)):
+    message = await _message_service.remove_reaction(message_id, reaction, user_id)
+    return message

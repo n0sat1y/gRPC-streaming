@@ -3,6 +3,7 @@ from loguru import logger
 from src.repositories.user import UserRepository
 from src.models.replications import UserReplica
 from src.schemas.user import UserData, IdSchema
+from src.exceptions.user import UserNotFoundError
 
 
 class UserService():
@@ -12,6 +13,9 @@ class UserService():
     async def get(self, user_id: int) -> UserReplica:
         logger.info(f'Получаем пользователя {user_id}')
         user = await self.repo.get(user_id)
+        if not user:
+            logger.warning(f"Не удалось найти пользователя: {user_id}")
+            raise UserNotFoundError(user_id=user_id)
         logger.info(f'Получен пользователь {user_id}')
         return user
     

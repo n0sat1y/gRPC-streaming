@@ -2,11 +2,7 @@ from typing import Union
 from faststream.kafka import KafkaBroker
 from loguru import logger
 
-from src.schemas.message import (
-    CreatedMessageEvent, UpdateMessageEvent, DeleteMessageEvent,
-    MessageIdPayload, UpdateMessagePayload, MessageData, 
-    UserData, SlimMessageData, MessagesReadEvent
-)
+from src.schemas.message import *
 
 
 class KafkaPublisher:
@@ -82,3 +78,23 @@ class KafkaPublisher:
     ) -> None:
         self.logger.info('Публикуем событие чтения сообщений в Kafka')
         return await self._publish(MessagesReadEvent(data=data))
+
+    async def add_reaction(
+            self,
+            data: Reaction
+    ) -> None:
+        self.logger.info('Публикуем событие о добавлении реакции сообщения')
+        return await self._publish(ReactionEvent(
+            event_type='AddReaction',
+            data=data
+        ))
+
+    async def remove_reaction(
+            self,
+            data: Reaction
+    ) -> None:
+        self.logger.info('Публикуем событие об удалении реакции на сообщение')
+        return await self._publish(ReactionEvent(
+            event_type='RemoveReaction',
+            data=data
+        ))
