@@ -16,8 +16,8 @@ chat_service = get_chat_service()
 message_service = get_message_service()
 
 @broker.subscriber(
-        'user.event',
-        group_id='message_service',
+        'user.events',
+        group_id='message_service_user',
         auto_offset_reset='earliest'
     )
 async def user_event(data: IncomingUserEvent):
@@ -31,7 +31,7 @@ async def user_event(data: IncomingUserEvent):
 
 @broker.subscriber(
         'chat.events',
-        group_id='message_service',
+        group_id='message_service_chat',
         auto_offset_reset='earliest' 
     )
 async def chat_event(data: ChatEvent):
@@ -47,7 +47,7 @@ async def chat_event(data: ChatEvent):
 
 @broker.subscriber(
     'api_gateway.mark_as_read',
-    group_id='message_service',
+    group_id='message_service_api',
     auto_offset_reset='earliest' 
 )
 async def handle_readed_messages(data: ApiGatewayReadEvent):

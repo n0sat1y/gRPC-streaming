@@ -7,7 +7,7 @@ from src.core.kafka import router
 
 @router.subscriber(
     'presence.status',
-    group_id='api-gateway',
+    group_id='api-gateway_presence',
     auto_offset_reset='earliest'
 )
 async def handle_presence_event(event: PresenceEvent):

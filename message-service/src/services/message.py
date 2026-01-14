@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 import grpc
 import uuid
 from collections import defaultdict
@@ -9,6 +9,7 @@ from src.repositories.message import MessageRepository
 from src.services.user import UserService
 from src.services.chat import ChatService
 from src.models import Message, MetaData, ReplyData
+from src.models.replications import UserReplica
 from src.exceptions.message import *
 from src.exceptions.chat import *
 from src.exceptions.user import *
@@ -29,23 +30,34 @@ class MessageService:
         self.chat_service = chat_service
         self.kafka_producer = kafka_producer
 
-    async def get(self, message_id: str, get_full: bool = False) -> Message:
+    async def get(self, message_id: str, get_full: bool = False) -> Tuple[Message, dict]:
         logger.info(f"Получаем сообщение {message_id}")
         message = await self.repo.get(message_id, get_full=get_full)
         if not message:
             logger.warning(f"Не найдено сообщение {message_id}")
             raise MessageNotFoundError(message_id=message_id)
-        return message
+        user = None
+        if message.metadata.reply_to:
+            user = await self.user_service.get(message.metadata.reply_to.user_id)
+            user = {user.user_id: user.username}
+        elif message.metadata.forward_from:
+            user = await self.user_service.get(message.metadata.forward_from.sender_user_id)
+            user = {user.user_id: user.username}
+        return message, user
 
     async def get_all(self, chat_id: int):
         result = await self.repo.get_all(chat_id, fetch_links=True)
         logger.info(f"Получено {len(result)} сообщений из чата {chat_id=}")
 
-        user_ids = list(set(message.user_id for message in result))
-        users = await self.user_service.get_multiple(user_ids)
-        user_dict = {}
-        for user in users:
-            user_dict[user.user_id] = user.username
+        user_ids = set()
+        for message in result:
+            user_ids.add(message.user_id)
+            if message.metadata.reply_to:
+                user_ids.add(message.metadata.reply_to.user_id)
+            if message.metadata.forward_from:
+                user_ids.add(message.metadata.forward_from.sender_user_id)
+        users = await self.user_service.get_multiple(list(user_ids))
+        user_dict = {user.user_id: user.username for user in users}
 
         return result, user_dict
     
@@ -83,7 +95,6 @@ class MessageService:
                 reply_data = ReplyData(
                     message_id=reply_to,
                     user_id=reply_to_user.user_id,
-                    username=reply_to_user.username,
                     preview=(reply_to_message.content 
                             if len(reply_to_message.content) <= 50 
                             else reply_to_message.content[:47]+"..."

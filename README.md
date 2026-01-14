@@ -13,7 +13,8 @@ python -m grpc_tools.protoc -I ../protobuf --python_out=./protos --grpc_python_o
 "request_id": "req_12345",
 "payload": {
     "chat_id": 123456,
-    "content": "Hello, this is a test message"
+    "content": "Hello, this is a test message",
+    "reply_to": None,
 }
 }
 ```

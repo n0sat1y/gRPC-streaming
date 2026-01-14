@@ -24,6 +24,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
     def _add_metadata(
         self, 
         message: MessageModel, 
+        users: dict | None,
         obj: Union[message_pb2.Message, message_pb2.FullMessageData]
     ) -> Union[message_pb2.Message, message_pb2.FullMessageData]:
         reply_to_obj = message_pb2.ReplyData()
@@ -31,7 +32,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         if reply_data:
              reply_to_obj.message_id = reply_data.message_id
              reply_to_obj.user_id = reply_data.user_id
-             reply_to_obj.username = reply_data.username
+             reply_to_obj.username = users[reply_data.user_id]
              reply_to_obj.preview = reply_data.preview
 
         metadata_obj = message_pb2.Metadata(
@@ -64,7 +65,8 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         obj.content = message.content
         obj.is_read = message.is_read
         obj.created_at.FromDatetime(message.created_at)
-        obj = self._add_metadata(message, obj)
+        if message.metadata:
+            obj = self._add_metadata(message, users, obj)
         print(obj)
         return obj
 
@@ -97,7 +99,7 @@ class Message(message_pb2_grpc.MessageServiceServicer):
     
     @handle_exceptions
     async def GetMessageData(self, request, context):
-        message = await self.service.get(request.message_id, get_full=True)
+        message, user = await self.service.get(request.message_id, get_full=True)
         response_obj = message_pb2.FullMessageData(
             id=str(message.id),
             chat_id=message.chat_id,
@@ -112,7 +114,8 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             read_by_list.append(read_by_obj)
         response_obj.read_by.extend(read_by_list)
         response_obj.created_at.FromDatetime(message.created_at)
-        response_obj = self._add_metadata(message, response_obj)
+        if message.metadata:
+            response_obj = self._add_metadata(message, user, response_obj)
         
         return response_obj
     

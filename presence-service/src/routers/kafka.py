@@ -11,7 +11,7 @@ broker = KafkaBroker(f"{settings.KAFKA_HOST}:{settings.KAFKA_PORT}")
 chat_service = ChatService()
 
 @broker.subscriber(
-        'user.event',
+        'user.events',
         group_id='presence_service',
         auto_offset_reset='earliest'
     )

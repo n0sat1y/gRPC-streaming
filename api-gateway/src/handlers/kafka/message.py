@@ -8,8 +8,8 @@ from src.core.kafka import router
 service = MessageService(router)
 
 @router.subscriber(
-    'message.event',
-    group_id='api-gateway',
+    'message.events',
+    group_id='api-gateway_message',
     auto_offset_reset='earliest'
 )
 async def message_event(data: IncomingMessage):
@@ -23,7 +23,7 @@ async def message_event(data: IncomingMessage):
 
 @router.subscriber(
     'message.read_messages',
-    group_id='api-gateway',
+    group_id='api-gateway_message',
     auto_offset_reset='earliest'
 )
 async def read_messages(data: MessagesReadEvent):

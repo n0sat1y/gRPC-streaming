@@ -8,7 +8,7 @@ from src.core.deps import user_service, chat_service
 
 
 @broker.subscriber(
-        'user.event',
+        'user.events',
         group_id='chat_service_users',
         auto_offset_reset='earliest'
     )
@@ -22,7 +22,7 @@ async def user_event(data: IncomingUserEvent):
         await user_service.deactivate(data.id)
 
 @broker.subscriber(
-        'message.event',
+        'message.events',
         group_id='chat_service_messages',
         auto_offset_reset='earliest'
     )

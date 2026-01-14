@@ -48,14 +48,17 @@ class MessageRepository:
         
     async def update(self, message: Message, new_content: str):
         try:
-            message = await message.update(
-                Set(
-                    {
-                        Message.content: new_content,
-                        Message.metadata.is_edited: True,
-                    }
+            update_data = {
+                Message.content: new_content,
+                Message.metadata.is_edited: True,
+            }
+            if message.metadata.reply_to:
+                update_data[Message.metadata.reply_to.preview] = (
+                    new_content 
+                    if len(new_content) <= 50 
+                    else new_content[:47]+"..."
                 )
-            )
+            message = await message.update(Set(update_data))
             return message
         except Exception as e:
             logger.error(f'Database Error', e)

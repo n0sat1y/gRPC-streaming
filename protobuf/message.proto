@@ -62,7 +62,7 @@ message Message {
     string content = 4;
     bool is_read = 5;
     google.protobuf.Timestamp created_at = 6;
-    Metadata metadata = 7;
+    optional Metadata metadata = 7;
 }
 
 message GetAllMessagesRequest {
@@ -104,7 +104,7 @@ message FullMessageData {
     bool is_read = 5;
     repeated ReadBy read_by = 6;
     google.protobuf.Timestamp created_at = 7;
-    Metadata metadata = 8;
+    optional Metadata metadata = 8;
 }
 
 message Reaction {

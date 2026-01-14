@@ -7,14 +7,12 @@ from pydantic import Field, BaseModel
 class ReplyData(BaseModel):
     message_id: str
     user_id: int
-    username: str
     preview: str
 
 class ForwardData(BaseModel):
     from_message_id: str
     from_chat_id: int
     sender_user_id: int
-    sender_username: str
 
 class MetaData(BaseModel):
     is_edited: bool = False

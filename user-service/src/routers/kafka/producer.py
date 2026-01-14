@@ -7,7 +7,7 @@ class KafkaPublisher:
     def __init__(
         self,
         broker: KafkaBroker,
-        topic = 'user.event'
+        topic = 'user.events'
     ):
         self.broker = broker
         self.topic = topic
