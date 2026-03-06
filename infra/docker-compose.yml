@@ -1,0 +1,36 @@
+services:
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    user: root
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT
+      # Слушаем на 9092 для внешнего мира (localhost) и на 9094 для других контейнеров
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,INTERNAL://:9094
+      # Рекламируем 9092 как localhost (для ваших скриптов на хосте) 
+      # и 9094 как kafka (для вашего message-service в Docker)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,INTERNAL://kafka:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+    volumes:
+      - kafka_data:/tmp/kafka-logs
+    networks:
+      - messenger
+    healthcheck:
+      # Используем полный путь к скрипту
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+volumes:
+  kafka_data:
+
+networks:
+  messenger:
+    external: true

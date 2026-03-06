@@ -1,0 +1,49 @@
+services:
+  chat_api:
+    build: .
+    container_name: chat-service
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=userpass
+      - POSTGRES_DB=db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - GRPC_USER_HOST=user-service
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9094
+    env_file:
+      - .env
+    depends_on:
+      chat_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+    networks:
+      - messenger
+      - default
+
+  chat_db:
+    image: postgres:17
+    container_name: chat-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 2s
+      start_period: 10s  
+      retries: 15
+    volumes:
+      - chat_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - default
+
+
+volumes:
+  chat_db:
+
+
+networks:
+  messenger:
+    external: true

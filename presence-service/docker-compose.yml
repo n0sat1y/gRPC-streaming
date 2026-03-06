@@ -1,0 +1,59 @@
+services:
+  presence_api:
+    build: .
+    container_name: presence-service
+    networks:
+      - messenger
+      - default
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=userpass
+      - POSTGRES_DB=db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9094
+    env_file:
+      - .env
+    depends_on:
+      presence_redis:
+        condition: service_started
+      presence_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  presence_redis:
+    image: redis:7-alpine
+    container_name: presence-redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --notify-keyspace-events Ex
+    networks:
+      - default
+
+  presence_db:
+    image: postgres:17
+    container_name: presence-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 2s
+      start_period: 10s  
+      retries: 15
+    volumes:
+      - presence_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - default
+
+
+volumes:
+  redis_data:
+  presence_db:
+
+networks:
+  messenger:
+    external: true

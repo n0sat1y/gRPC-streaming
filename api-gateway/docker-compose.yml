@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - GRPC_USER_HOST=user-service
+      - GRPC_CHAT_HOST=chat-service
+      - GRPC_MESSAGE_HOST=message-service
+      - GRPC_PRESENCE_HOST=presence-service
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9094
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+    networks:
+      - messenger
+
+
+networks:
+  messenger:
+    external: true

@@ -1,0 +1,41 @@
+services:
+  message_api:
+    build: .
+    container_name: message-service
+    depends_on:
+      message_mongodb:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - MONGO_HOST=mongodb
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9094
+    networks:
+      - messenger
+      - default
+
+
+  message_mongodb:
+    image: mongo:latest 
+    container_name: message-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_USER
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_PASS
+    networks:
+      - default
+
+volumes:
+  mongo_data:
+
+networks:
+  messenger:
+    external: true

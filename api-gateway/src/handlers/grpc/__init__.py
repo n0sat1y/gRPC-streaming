@@ -1,11 +1,6 @@
 import grpc
 from typing import Optional
-from protos import (
-    chat_pb2_grpc,
-    message_pb2_grpc,
-    presence_pb2_grpc,
-    user_pb2_grpc
-)
+from protos import chat_pb2_grpc, message_pb2_grpc, presence_pb2_grpc, user_pb2_grpc
 from src.core.config import settings
 
 
@@ -20,25 +15,25 @@ class GRPCService:
         self.message_channel = None
         self.presence_channel = None
         self.user_channel = None
-    
+
     async def start(self):
         self.chat_channel = grpc.aio.insecure_channel(
-            f"{settings.GRPC_HOST}:{settings.GRPC_CHAT_PORT}"
+            f"{settings.GRPC_CHAT_HOST}:{settings.GRPC_CHAT_PORT}"
         )
         self.chat = chat_pb2_grpc.ChatStub(self.chat_channel)
 
         self.user_channel = grpc.aio.insecure_channel(
-            f"{settings.GRPC_HOST}:{settings.GRPC_USER_PORT}"
+            f"{settings.GRPC_USER_HOST}:{settings.GRPC_USER_PORT}"
         )
         self.user = user_pb2_grpc.UserStub(self.user_channel)
 
         self.presence_channel = grpc.aio.insecure_channel(
-            f"{settings.GRPC_HOST}:{settings.GRPC_PRESENCE_PORT}"
+            f"{settings.GRPC_PRESENCE_HOST}:{settings.GRPC_PRESENCE_PORT}"
         )
         self.presence = presence_pb2_grpc.PresenceStub(self.presence_channel)
 
         self.message_channel = grpc.aio.insecure_channel(
-            f"{settings.GRPC_HOST}:{settings.GRPC_MESSAGE_PORT}"
+            f"{settings.GRPC_MESSAGE_HOST}:{settings.GRPC_MESSAGE_PORT}"
         )
         self.message = message_pb2_grpc.MessageServiceStub(self.message_channel)
 

@@ -1,0 +1,47 @@
+services:
+  user_api:
+    build: .
+    container_name: user-service
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=userpass
+      - POSTGRES_DB=db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - KAFKA_HOST=kafka
+      - KAFKA_PORT=9094
+    env_file:
+      - .env
+    depends_on:
+      user_db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+    networks:
+      - messenger
+      - default
+
+  user_db:
+    image: postgres:17
+    container_name: user-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 2s
+      start_period: 10s  
+      retries: 15
+    volumes:
+      - user_db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - default
+
+
+volumes:
+  user_db:
+
+networks:
+  messenger:
+    external: true

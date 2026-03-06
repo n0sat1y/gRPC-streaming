@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env')
+    model_config = SettingsConfigDict(env_file=".env")
 
     # --- POSTGRES ---
     POSTGRES_USER: str
@@ -16,13 +16,15 @@ class Settings(BaseSettings):
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # --- GRPC ---
-    GRPC_HOST: str = 'localhost'
+    GRPC_HOST: str = "localhost"
     GRPC_PORT: int = 50052
 
+    GRPC_USER_HOST: str = "localhost"
     GRPC_USER_PORT: int = 50051
 
     # --- KAFKA ---
-    KAFKA_HOST: str = 'localhost'
+    KAFKA_HOST: str = "localhost"
     KAFKA_PORT: int = 9092
+
 
 settings = Settings()
