@@ -9,9 +9,9 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=userpass
       - POSTGRES_DB=db
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=presence-db
       - POSTGRES_PORT=5432
-      - REDIS_HOST=redis
+      - REDIS_HOST=presence-redis
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
     env_file:
@@ -21,14 +21,16 @@ services:
         condition: service_started
       presence_db:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
+      # kafka:
+      #   condition: service_healthy
+    volumes:
+      - .:/app
 
   presence_redis:
     image: redis:7-alpine
     container_name: presence-redis
     volumes:
-      - redis_data:/data
+      - presence_redis_data:/data
     command: redis-server --appendonly yes --notify-keyspace-events Ex
     networks:
       - default
@@ -43,16 +45,18 @@ services:
       start_period: 10s  
       retries: 15
     volumes:
-      - presence_db:/var/lib/postgresql/data
+      - presence_db_data:/var/lib/postgresql/data
     env_file:
       - .env
+    ports:
+      - "5435:5432"
     networks:
       - default
 
 
 volumes:
-  redis_data:
-  presence_db:
+  presence_redis_data:
+  presence_db_data:
 
 networks:
   messenger:

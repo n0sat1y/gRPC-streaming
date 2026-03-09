@@ -15,4 +15,4 @@ COPY . .
 
 ENV PYTHONPATH="/app"
 
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run -m src.main"]
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run faststream run src.main:app --reload"]

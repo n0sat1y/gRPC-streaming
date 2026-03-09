@@ -16,20 +16,17 @@ async def lifespan(app: FastAPI):
     yield
     await grpc_service.stop()
 
+
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.include_router(router)
 app.include_router(kafka_router)
-
-if __name__ == '__main__':
-    uvicorn.run(
-        'src.main:app',
-        reload=True,
-        
-    )
+# huy
+if __name__ == "__main__":
+    uvicorn.run("src.main:app", reload=True, host="0.0.0.0", port=8000)

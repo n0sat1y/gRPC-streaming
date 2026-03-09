@@ -11,9 +11,11 @@ services:
       - GRPC_PRESENCE_HOST=presence-service
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
-    depends_on:
-      kafka:
-        condition: service_healthy
+    # depends_on:
+      # kafka:
+      #   condition: service_healthy
+    volumes:
+      - .:/app
 
     networks:
       - messenger

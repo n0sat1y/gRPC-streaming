@@ -5,14 +5,16 @@ services:
     depends_on:
       message_mongodb:
         condition: service_started
-      kafka:
-        condition: service_healthy
+      # kafka:
+      #   condition: service_healthy
     env_file:
       - .env
     environment:
-      - MONGO_HOST=mongodb
+      - MONGO_HOST=message-mongo
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
+    volumes:
+      - .:/app
     networks:
       - messenger
       - default
@@ -24,7 +26,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - message_mongo_data:/data/db
     env_file:
       - .env
     environment:
@@ -34,7 +36,7 @@ services:
       - default
 
 volumes:
-  mongo_data:
+  message_mongo_data:
 
 networks:
   messenger:

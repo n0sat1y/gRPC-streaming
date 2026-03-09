@@ -14,7 +14,7 @@ dependencies = [
     "colorama==0.4.6",
     "fast-depends==3.0.1",
     "fastapi==0.116.2",
-    "faststream==0.6.0",
+    "faststream[cli]==0.6.0",
     "grpcio==1.75.0",
     "grpcio-tools==1.75.0",
     "h11==0.16.0",

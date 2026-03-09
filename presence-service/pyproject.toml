@@ -13,7 +13,7 @@ dependencies = [
     "async-timeout==5.0.1",
     "asyncpg>=0.31.0",
     "fast-depends==3.0.3",
-    "faststream==0.6.2",
+    "faststream[cli]==0.6.2",
     "grpcio==1.76.0",
     "grpcio-tools==1.76.0",
     "idna==3.11",

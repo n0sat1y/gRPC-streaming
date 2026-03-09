@@ -15,4 +15,4 @@ COPY . .
 
 ENV PYTHONPATH="/app"
 
-CMD ["uv", "run", "python", "-m", "src.main"]
+CMD ["uv", "run", "faststream", "run", "src.main:app", "--reload"]

@@ -6,7 +6,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=userpass
       - POSTGRES_DB=db
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=user-db
       - POSTGRES_PORT=5432
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
@@ -15,9 +15,10 @@ services:
     depends_on:
       user_db:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
-
+      # kafka:
+      #   condition: service_healthy
+    volumes:
+      - .:/app
     networks:
       - messenger
       - default
@@ -31,8 +32,10 @@ services:
       timeout: 2s
       start_period: 10s  
       retries: 15
+    ports:
+      - "5434:5432"
     volumes:
-      - user_db:/var/lib/postgresql/data
+      - user_db_data:/var/lib/postgresql/data
     env_file:
       - .env
     networks:
@@ -40,7 +43,7 @@ services:
 
 
 volumes:
-  user_db:
+  user_db_data:
 
 networks:
   messenger:

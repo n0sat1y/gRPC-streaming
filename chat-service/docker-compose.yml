@@ -6,7 +6,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=userpass
       - POSTGRES_DB=db
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=chat-db
       - POSTGRES_PORT=5432
       - GRPC_USER_HOST=user-service
       - KAFKA_HOST=kafka
@@ -16,9 +16,10 @@ services:
     depends_on:
       chat_db:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
-
+      # kafka:
+      #   condition: service_healthy
+    volumes:
+      - .:/app
     networks:
       - messenger
       - default
@@ -33,7 +34,9 @@ services:
       start_period: 10s  
       retries: 15
     volumes:
-      - chat_db:/var/lib/postgresql/data
+      - chat_db_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
     env_file:
       - .env
     networks:
@@ -41,7 +44,7 @@ services:
 
 
 volumes:
-  chat_db:
+  chat_db_data:
 
 
 networks:
