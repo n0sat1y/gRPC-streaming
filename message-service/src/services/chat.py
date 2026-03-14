@@ -1,28 +1,24 @@
 from loguru import logger
 
-from src.repositories.chat import ChatRepository
+from src.exceptions.chat import ChatNotFoundError
 from src.models.replications import ChatReplica
+from src.repositories.chat import ChatRepository
 from src.schemas.chat import ChatData, IdSchema
 from src.services.user import UserService
-from src.exceptions.chat import ChatNotFoundError
 
 
-class ChatService():
-    def __init__(
-        self,
-        repo: ChatRepository,
-        user_service: UserService
-    ):
+class ChatService:
+    def __init__(self, repo: ChatRepository, user_service: UserService):
         self.repo = repo
         self.user_service = user_service
 
     async def get(self, chat_id: int) -> ChatReplica:
-        logger.info(f"Получаем чат {chat_id}")
+        logger.debug(f"Получаем чат {chat_id}")
         chat = await self.repo.get(chat_id)
         if not chat:
             logger.warning(f"Не удалось найти чат: {chat_id}")
             raise ChatNotFoundError(chat_id=chat_id)
-        logger.info(f"Чат полчен: {chat_id}")
+        logger.debug(f"Чат полчен: {chat_id}")
         return chat
 
     async def upsert(self, data: ChatData):
@@ -43,9 +39,7 @@ class ChatService():
 
         users = await self.user_service.get_multiple(chat.members)
         active_recievers = [
-            member.user_id for member in users 
-            if member.is_active == True
+            member.user_id for member in users if member.is_active == True
         ]
 
         return active_recievers
-

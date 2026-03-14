@@ -1,13 +1,14 @@
-import grpc
-from loguru import logger
-from google.protobuf.json_format import MessageToDict
-from protos import presence_pb2, presence_pb2_grpc
 from contextlib import asynccontextmanager
 
+import grpc
+from google.protobuf.json_format import MessageToDict
+from loguru import logger
+
+from protos import presence_pb2, presence_pb2_grpc
 from src.core.config import settings
-from src.decorators.grpc import handle_grpc_exceptions
-from src.schemas.presence import UserStatus, MultipleUsersStatuses, UserStatusWithId
-from protos import presence_pb2_grpc
+from src.schemas.events.presence import (MultipleUsersStatuses, UserStatus,
+                                         UserStatusWithId)
+from src.utils.decorators.grpc import handle_grpc_exceptions
 
 
 class RpcPresenceService:
@@ -57,9 +58,9 @@ class RpcPresenceService:
             return UserStatus.model_validate(data)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.UNAVAILABLE:
-                return UserStatus(status='offline')
+                return UserStatus(status="offline")
             raise e
-        
+
     @handle_grpc_exceptions
     async def get_users_statuses(self, ids: list[int]):
         try:
@@ -70,5 +71,7 @@ class RpcPresenceService:
             return MultipleUsersStatuses.model_validate(data)
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.UNAVAILABLE:
-                return MultipleUsersStatuses(statuses=[UserStatusWithId(id=x, status='offline') for x in ids])
+                return MultipleUsersStatuses(
+                    statuses=[UserStatusWithId(id=x, status="offline") for x in ids]
+                )
             raise e

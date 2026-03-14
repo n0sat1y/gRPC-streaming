@@ -18,6 +18,7 @@ from src.repositories.message import MessageRepository
 from src.routers.kafka.producer import KafkaPublisher
 from src.schemas.message import *
 from src.services.chat import ChatService
+from src.services.policy import AccessPolicy
 from src.services.user import UserService
 
 
@@ -28,11 +29,13 @@ class MessageService:
         user_service: UserService,
         chat_service: ChatService,
         kafka_producer: KafkaPublisher,
+        access_policy: AccessPolicy,
     ):
         self.repo = repo
         self.user_service = user_service
         self.chat_service = chat_service
         self.kafka_producer = kafka_producer
+        self.access_policy = access_policy
 
     async def get(self, message_id: str, get_full: bool = False) -> MessageDTO:
         logger.info(f"Получаем сообщение {message_id}")
@@ -56,7 +59,7 @@ class MessageService:
         result = ManyMessagesDTO(messages=messages)
         logger.info(f"Получено {len(result.messages)} сообщений из чата {chat_id=}")
         user_ids = set()
-        for message in result:
+        for message in messages:
             user_ids.add(message.user_id)
             if message.metadata.reply_to:
                 user_ids.add(message.metadata.reply_to.user_id)
@@ -76,22 +79,9 @@ class MessageService:
         sender_id: int,
         reply_to: Optional[str] = None,
     ) -> MessageDTO:
-        errors = []
-        try:
-            chat = await self.chat_service.get(chat_id)
-        except ChatNotFoundError:
-            errors.append("chat_id")
-        try:
-            user = await self.user_service.get(user_id)
-        except UserNotFoundError:
-            errors.append("user_id")
-        if not user.user_id in chat.members:
-            errors.append("user not is chat member")
-
-        if errors:
-            err_str = ", ".join(errors)
-            logger.warning(f"Неверные данные: {err_str}")
-            raise DataLossError(err=err_str)
+        chat = await self.chat_service.get(chat_id)
+        user = await self.user_service.get(user_id)
+        self.access_policy.can_see_chat(user_id, chat)
 
         metadata = MetaData()
         if reply_to:
@@ -137,8 +127,10 @@ class MessageService:
     ) -> MessageDTO:
         logger.info(f"Обновляем сообщение {message_id}")
 
-        message = await self.get(message_id)
-        message = await self.repo.update(message.message, new_content)
+        message_data = await self.get(message_id)
+        message = message_data.message
+        self.access_policy.can_modify(user_id=sender_id, message=message)
+        message = await self.repo.update(message, new_content)
         logger.info(f"Обновлено сообщение: {message_id}")
 
         active_recievers = await self.chat_service.get_active_members(
@@ -157,6 +149,7 @@ class MessageService:
     async def delete(self, message_id: str, request_id: str, sender_id: int) -> None:
         logger.info(f"Удаляем сообщение {message_id}")
         message = await self.get(message_id)
+        self.access_policy.can_modify(sender_id, message.message)
         await self.repo.delete(message.message)
         logger.info(f"Удалено сообщение {message_id}")
 
@@ -175,6 +168,9 @@ class MessageService:
 
     async def mark_as_read(self, chat_id: int, user_id: int, message_id: str) -> None:
         logger.info(f"Обновляем последнее прочитанное сообщение")
+        user = await self.user_service.get(user_id)
+        chat = await self.chat_service.get(chat_id)
+        self.access_policy.can_see_chat(user_id=user_id, chat=chat)
         previous_read_message = await self.repo.get_last_read_message(
             chat_id=chat_id, user_id=user_id
         )
@@ -197,13 +193,17 @@ class MessageService:
 
     async def add_reaction(self, message_id: str, reaction: str, author: int) -> None:
         await self.user_service.get(author)
+        message = await self.get(message_id)
         logger.info(f"Добавляем реакцию в сообщение: {message_id}")
         result = await self.repo.add_reaction(message_id, reaction, author)
         if result > 0:
-            event_data = Reaction(
-                message_id=message_id, author=author, reaction=reaction
+            recievers = await self.chat_service.get_active_members(
+                message.message.chat_id
             )
-            await self.kafka_producer.add_reaction(event_data)
+            event_data = Reaction(message_id=message_id, reaction=reaction)
+            await self.kafka_producer.add_reaction(
+                data=event_data, sender_id=author, recievers=recievers
+            )
         else:
             raise ReacionNotAdded()
 
@@ -211,13 +211,17 @@ class MessageService:
         self, message_id: str, reaction: str, author: int
     ) -> None:
         await self.user_service.get(author)
+        message = await self.get(message_id)
         logger.info(f"Удаляем реакцию реакцию из сообщения: {message_id}")
         result = await self.repo.remove_reaction(message_id, reaction, author)
         if result > 0:
-            event_data = Reaction(
-                message_id=message_id, author=author, reaction=reaction
+            recievers = await self.chat_service.get_active_members(
+                message.message.chat_id
             )
-            await self.kafka_producer.remove_reaction(event_data)
+            event_data = Reaction(message_id=message_id, reaction=reaction)
+            await self.kafka_producer.remove_reaction(
+                data=event_data, sender_id=author, recievers=recievers
+            )
         else:
             raise ReacionNotAdded()
 
@@ -229,22 +233,9 @@ class MessageService:
         content: str | None,
         request_id: str,
     ):
-        errors = []
-        try:
-            chat = await self.chat_service.get(chat_id)
-        except ChatNotFoundError:
-            errors.append("chat_id")
-        try:
-            user = await self.user_service.get(user_id)
-        except UserNotFoundError:
-            errors.append("user_id")
-        if not user.user_id in chat.members:
-            errors.append("user not is chat member")
-
-        if errors:
-            err_str = ", ".join(errors)
-            logger.warning(f"Неверные данные: {err_str}")
-            raise DataLossError(err=err_str)
+        chat = await self.chat_service.get(chat_id)
+        user = await self.user_service.get(user_id)
+        self.access_policy.can_see_chat(user_id, chat)
 
         coros = []
         for message_id in messages:

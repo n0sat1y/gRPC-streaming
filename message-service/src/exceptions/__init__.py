@@ -21,3 +21,10 @@ class DataLossError(AppException):
     def __init__(self, err: str):
         self.err = err
         super().__init__(f"Wrong data: {self.err}")
+
+
+class AccessDeniedError(AppException):
+    status_code = grpc.StatusCode.PERMISSION_DENIED
+
+    def __init__(self) -> None:
+        super().__init__("Access denied")

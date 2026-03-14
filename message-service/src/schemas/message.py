@@ -1,17 +1,21 @@
-from typing import Literal, Union
-from pydantic import BaseModel
 from datetime import datetime
+from typing import Literal, Union
+
+from pydantic import BaseModel
+
 
 class IdBase(BaseModel):
     id: int
 
+
 class UserData(IdBase):
     username: str
 
+
 class Reaction(BaseModel):
     message_id: str
-    author: int
-    reaction: str    
+    reaction: str
+
 
 class MessageData(BaseModel):
     id: str
@@ -20,47 +24,58 @@ class MessageData(BaseModel):
     sender: UserData
     created_at: datetime
 
+
 class UpdateMessagePayload(BaseModel):
     id: str
     content: str
 
+
 class MessageIdPayload(BaseModel):
     id: str
 
+
 class CreatedMessageEvent(BaseModel):
-    event_type: str = 'MessageCreated'
+    event_type: str = "MessageCreated"
     recievers: list[int]
     data: MessageData
     request_id: str
     sender_id: int
 
+
 class UpdateMessageEvent(BaseModel):
-    event_type: str = 'MessageUpdated'
+    event_type: str = "MessageUpdated"
     recievers: list[int]
     data: UpdateMessagePayload
     request_id: str
     sender_id: int
 
+
 class DeleteMessageEvent(BaseModel):
-    event_type: str = 'MessageDeleted'
+    event_type: str = "MessageDeleted"
     recievers: list[int]
     data: MessageIdPayload
     request_id: str
     sender_id: int
+
 
 class ApiGatewayReadEvent(BaseModel):
     user_id: int
     chat_id: int
     last_read_message_id: str
 
+
 class SlimMessageData(BaseModel):
     id: str
     sender_id: int
 
+
 class MessagesReadEvent(BaseModel):
-    event_type: str = 'MessagesRead'
+    event_type: str = "MessagesRead"
     data: list[SlimMessageData]
 
+
 class ReactionEvent(BaseModel):
-    event_type: Literal['AddReaction', 'RemoveReaction']
+    event_type: Literal["ReactionAdded", "ReactionRemoved"]
+    recievers: list[int]
     data: Reaction
+    sender_id: int

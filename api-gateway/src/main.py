@@ -1,13 +1,14 @@
+from contextlib import asynccontextmanager
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
-from src.core.kafka import router as kafka_router
+import src.infrastructure.kafka_consumers.message
+import src.infrastructure.kafka_consumers.presence
 from src.api import router
-from src.handlers.grpc import grpc_service
-import src.handlers.kafka.presence
-import src.handlers.kafka.message
+from src.core.kafka import router as kafka_router
+from src.infrastructure.grpc_clients import grpc_service
 
 
 @asynccontextmanager

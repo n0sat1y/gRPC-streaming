@@ -1,13 +1,14 @@
 from functools import wraps
-from typing import Any, Callable, TypeVar, Optional
+from typing import Any, Callable, Optional, TypeVar
+
 import grpc
-from fastapi import HTTPException, WebSocket
+from fastapi import HTTPException, WebSocket, status
 from loguru import logger
-from fastapi import status
 
-from src.enums.status_code import CodeEnum, WsCloseCodeEnum
+from src.utils.enums.status_code import CodeEnum, WsCloseCodeEnum
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
+
 
 def handle_grpc_exceptions(func: F) -> F:
     @wraps(func)
@@ -18,32 +19,32 @@ def handle_grpc_exceptions(func: F) -> F:
             details = e.details()
             code = e.code()
 
-            logger.error(f"gRPC error in {func.__name__} | Code: {code} | Details: {details}")
+            logger.error(
+                f"gRPC error in {func.__name__} | Code: {code} | Details: {details}"
+            )
 
             if code == grpc.StatusCode.UNAVAILABLE:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=f"Service unavailable"
+                    detail=f"Service unavailable",
                 )
-            
+
             if code == grpc.StatusCode.DEADLINE_EXCEEDED:
-                 raise HTTPException(
+                raise HTTPException(
                     status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail="Service timeout"
+                    detail="Service timeout",
                 )
             raise HTTPException(
-                status_code=CodeEnum.from_grpc_code(code), 
-                detail=details
+                status_code=CodeEnum.from_grpc_code(code), detail=details
             )
         except Exception as e:
             logger.error(f"Unexpected error in {func.__name__}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error"
+                detail="Internal server error",
             )
-        
-    return wrapper
 
+    return wrapper
 
 
 def _find_websocket_in_args(*args: Any, **kwargs: Any) -> Optional[WebSocket]:
@@ -55,6 +56,7 @@ def _find_websocket_in_args(*args: Any, **kwargs: Any) -> Optional[WebSocket]:
             return arg
     return None
 
+
 def handle_websocket_grpc_exceptions(func: F) -> F:
     @wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -62,7 +64,7 @@ def handle_websocket_grpc_exceptions(func: F) -> F:
 
         try:
             return await func(*args, **kwargs)
-        
+
         except grpc.aio.AioRpcError as e:
             logger.error(f"gRPC error в задаче '{func.__name__}': {e.details()}")
             if websocket:
@@ -79,11 +81,11 @@ def handle_websocket_grpc_exceptions(func: F) -> F:
             if websocket:
                 try:
                     await websocket.close(
-                        code=status.WS_1011_INTERNAL_ERROR, 
-                        reason="Internal Server Error"
+                        code=status.WS_1011_INTERNAL_ERROR,
+                        reason="Internal Server Error",
                     )
                 except RuntimeError:
                     pass
             return
-            
+
     return wrapper

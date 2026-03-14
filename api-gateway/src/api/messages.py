@@ -1,20 +1,21 @@
 import asyncio
+
 import grpc
-from fastapi import APIRouter, Query, WebSocket, Depends
+from fastapi import APIRouter, Depends, Query, WebSocket
 from loguru import logger
 
-from src.handlers.grpc.message import RpcMessageService
-from src.handlers.grpc.chat import RpcChatService
-from src.dependencies import get_user_id, get_chat_service, get_message_service
-from src.schemas.message import GetAllMessagesResponse
+from src.dependencies import get_chat_service, get_message_service, get_user_id
+from src.infrastructure.grpc_clients.chat import RpcChatService
+from src.infrastructure.grpc_clients.message import RpcMessageService
+from src.schemas.api.message import GetAllMessagesResponse
 
-router = APIRouter(prefix='/message', tags=['Message'])
+router = APIRouter(prefix="/message", tags=["Message"])
 
 
-@router.get('/all/{chat_id}')
+@router.get("/all/{chat_id}")
 async def get_all_messages(
-    chat_id: int, 
-    user_id = Depends(get_user_id), 
+    chat_id: int,
+    user_id=Depends(get_user_id),
     _message_service: RpcMessageService = Depends(get_message_service),
     _chat_service: RpcChatService = Depends(get_chat_service),
 ):
@@ -34,17 +35,9 @@ async def get_all_messages(
     return messages
 
 
-@router.get('/{message_id}')
-async def get_message_data(message_id: str, _message_service: RpcMessageService = Depends(get_message_service)):
+@router.get("/{message_id}")
+async def get_message_data(
+    message_id: str, _message_service: RpcMessageService = Depends(get_message_service)
+):
     message = await _message_service.get_message_data(message_id)
-    return message
-
-@router.post('/{message_id}/{reaction}')
-async def add_reaction(message_id: str, reaction: str, user_id = Depends(get_user_id), _message_service: RpcMessageService = Depends(get_message_service)):
-    message = await _message_service.add_reaction(message_id, reaction, user_id)
-    return message
-
-@router.delete('/{message_id}/{reaction}')
-async def add_reaction(message_id: str, reaction: str, user_id = Depends(get_user_id), _message_service: RpcMessageService = Depends(get_message_service)):
-    message = await _message_service.remove_reaction(message_id, reaction, user_id)
     return message

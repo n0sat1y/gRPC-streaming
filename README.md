@@ -49,3 +49,13 @@ python -m grpc_tools.protoc -I ../protobuf --python_out=./protos --grpc_python_o
   }
 }
 ```
+## Add Reaction Event
+```
+{
+  "event_type": "add_reaction",
+  "payload": {
+    "message_id": "msg_skdfbs",
+    "reaction": "str"
+  }
+}
+```

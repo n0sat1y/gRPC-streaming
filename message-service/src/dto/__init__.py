@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from src.models import Message
 from src.models.replications import UserReplica
@@ -7,10 +7,10 @@ from src.models.replications import UserReplica
 @dataclass
 class MessageDTO:
     message: Message
-    users: dict[int, UserReplica] = {}
+    users: dict[int, UserReplica] = field(default_factory=dict)
 
 
 @dataclass
 class ManyMessagesDTO:
-    messages: list[Message] = []
-    users: dict[str, UserReplica] = {}
+    messages: list[Message] = field(default_factory=list)
+    users: dict[int, UserReplica] = field(default_factory=dict)

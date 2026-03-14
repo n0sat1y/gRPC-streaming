@@ -1,39 +1,42 @@
 import grpc
 from fastapi import APIRouter, Depends
 
-from src.handlers.grpc.user import RpcUserService
-from src.handlers.grpc.presence import RpcPresenceService
+from src.infrastructure.grpc_clients.user import RpcUserService
+from src.infrastructure.grpc_clients.presence import RpcPresenceService
 from src.dependencies import get_user_id, get_user_service, get_presence_service
-from src.schemas.user import UpdateUserDataSchema, UserData
+from src.schemas.api.user import UpdateUserDataSchema, UserData
 
-router = APIRouter(prefix='/user', tags=['User'])
+router = APIRouter(prefix="/user", tags=["User"])
 
-@router.get('/{user_id}/')
+
+@router.get("/{user_id}/")
 async def get_user(
-    id: int, 
-    _reciever_id = Depends(get_user_id), 
+    id: int,
+    _reciever_id=Depends(get_user_id),
     _service: RpcUserService = Depends(get_user_service),
-    _presense_service: RpcPresenceService = Depends(get_presence_service)
+    _presense_service: RpcPresenceService = Depends(get_presence_service),
 ) -> UserData:
     response = await _service.get_user_by_id(id)
     status = await _presense_service.get_user_status(id)
     response.status = status.status
     return response
 
-@router.patch('/')
+
+@router.patch("/")
 async def update_user(
-    data: UpdateUserDataSchema, 
-    _reciever_id = Depends(get_user_id), 
-    _service: RpcUserService = Depends(get_user_service)
+    data: UpdateUserDataSchema,
+    _reciever_id=Depends(get_user_id),
+    _service: RpcUserService = Depends(get_user_service),
 ):
     response = await _service.update_user(_reciever_id, data)
     return response
 
-@router.delete('/{user_id}/')
+
+@router.delete("/{user_id}/")
 async def delete_user(
-    id: int, 
-    _reciever_id = Depends(get_user_id), 
-    _service: RpcUserService = Depends(get_user_service)
+    id: int,
+    _reciever_id=Depends(get_user_id),
+    _service: RpcUserService = Depends(get_user_service),
 ):
     response = await _service.delete_user(id)
-    return {'status': response}
+    return {"status": response}

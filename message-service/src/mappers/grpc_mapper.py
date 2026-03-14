@@ -1,7 +1,6 @@
 from typing import Union
 
 from google.protobuf import empty_pb2
-from loguru import logger
 
 from protos import message_pb2, message_pb2_grpc
 from src.dto import ManyMessagesDTO, MessageDTO
@@ -55,7 +54,7 @@ class GrpcMapper:
         obj.is_read = message.is_read
         obj.created_at.FromDatetime(message.created_at)
         if message.metadata:
-            obj = self._add_metadata(message_data, obj)
+            obj = cls._add_metadata(message_data, obj)
         print(obj)
         return obj
 
@@ -69,10 +68,11 @@ class GrpcMapper:
     @classmethod
     def get_all(cls, messages: ManyMessagesDTO) -> message_pb2.AllMessages:
         response = []
-        for message in messages:
+        for message in messages.messages:
+            message_data = MessageDTO(message=message, users=messages.users)
             message_obj = message_pb2.Message()
             message_obj = cls._get_slim_message_obj(
-                message_data=message, obj=message_obj
+                message_data=message_data, obj=message_obj
             )
             response.append(message_obj)
         return message_pb2.AllMessages(messages=response)
@@ -117,3 +117,6 @@ class GrpcMapper:
 
 mapper = GrpcMapper
 
+
+from src.exceptions.chat import *
+from src.exceptions.message import *
