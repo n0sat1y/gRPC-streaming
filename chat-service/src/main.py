@@ -12,14 +12,12 @@ from src.routers.kafka import broker
 from src.core.deps import chat_service
 import src.routers.kafka.consumer
 
-# dfhdfd
 app = FastStream(broker)
 server: grpc.aio.Server | None = None
 
 
 @app.on_startup
 async def startup():
-    # Пробрасываем зависимости
     chat_grpc_router = Chat(service=chat_service)
 
     global server

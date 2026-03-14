@@ -1,20 +1,24 @@
-from typing import Optional, Tuple
-import grpc
+import asyncio
 import uuid
 from collections import defaultdict
-from loguru import logger
-from faststream.kafka import KafkaBroker
+from typing import Optional, Tuple
 
-from src.repositories.message import MessageRepository
-from src.services.user import UserService
-from src.services.chat import ChatService
+import grpc
+from faststream.kafka import KafkaBroker
+from loguru import logger
+
+from src.dto import ManyMessagesDTO, MessageDTO
+from src.exceptions.chat import *
+from src.exceptions.message import *
+from src.exceptions.user import *
+from src.formatters.text_formatter import slim_text_formatter
 from src.models import Message, MetaData, ReplyData
 from src.models.replications import UserReplica
-from src.exceptions.message import *
-from src.exceptions.chat import *
-from src.exceptions.user import *
-from src.schemas.message import *
+from src.repositories.message import MessageRepository
 from src.routers.kafka.producer import KafkaPublisher
+from src.schemas.message import *
+from src.services.chat import ChatService
+from src.services.user import UserService
 
 
 class MessageService:
@@ -30,29 +34,27 @@ class MessageService:
         self.chat_service = chat_service
         self.kafka_producer = kafka_producer
 
-    async def get(
-        self, message_id: str, get_full: bool = False
-    ) -> Tuple[Message, dict]:
+    async def get(self, message_id: str, get_full: bool = False) -> MessageDTO:
         logger.info(f"Получаем сообщение {message_id}")
         message = await self.repo.get(message_id, get_full=get_full)
+        message_data = MessageDTO(message=message)
         if not message:
             logger.warning(f"Не найдено сообщение {message_id}")
             raise MessageNotFoundError(message_id=message_id)
-        user = None
         if message.metadata.reply_to:
             user = await self.user_service.get(message.metadata.reply_to.user_id)
-            user = {user.user_id: user.username}
+            message_data.users[user.user_id] = user
         elif message.metadata.forward_from:
             user = await self.user_service.get(
                 message.metadata.forward_from.sender_user_id
             )
-            user = {user.user_id: user.username}
-        return message, user
+            message_data.users[user.user_id] = user
+        return message_data
 
-    async def get_all(self, chat_id: int):
-        result = await self.repo.get_all(chat_id, fetch_links=True)
-        logger.info(f"Получено {len(result)} сообщений из чата {chat_id=}")
-
+    async def get_all(self, chat_id: int) -> ManyMessagesDTO:
+        messages = await self.repo.get_all(chat_id, fetch_links=True)
+        result = ManyMessagesDTO(messages=messages)
+        logger.info(f"Получено {len(result.messages)} сообщений из чата {chat_id=}")
         user_ids = set()
         for message in result:
             user_ids.add(message.user_id)
@@ -61,9 +63,9 @@ class MessageService:
             if message.metadata.forward_from:
                 user_ids.add(message.metadata.forward_from.sender_user_id)
         users = await self.user_service.get_multiple(list(user_ids))
-        user_dict = {user.user_id: user.username for user in users}
-
-        return result, user_dict
+        user_dict = {user.user_id: user for user in users}
+        result.users = user_dict
+        return result
 
     async def insert(
         self,
@@ -73,7 +75,7 @@ class MessageService:
         request_id: str,
         sender_id: int,
         reply_to: Optional[str] = None,
-    ):
+    ) -> MessageDTO:
         errors = []
         try:
             chat = await self.chat_service.get(chat_id)
@@ -93,17 +95,13 @@ class MessageService:
 
         metadata = MetaData()
         if reply_to:
-            reply_to_message = (await self.get(reply_to))[0]
+            reply_to_message = (await self.get(reply_to)).message
             if reply_to_message.chat_id == chat_id:
                 reply_to_user = await self.user_service.get(reply_to_message.user_id)
                 reply_data = ReplyData(
                     message_id=reply_to,
                     user_id=reply_to_user.user_id,
-                    preview=(
-                        reply_to_message.content
-                        if len(reply_to_message.content) <= 50
-                        else reply_to_message.content[:47] + "..."
-                    ),
+                    preview=(slim_text_formatter(reply_to_message.content)),
                 )
                 metadata.reply_to = reply_data
 
@@ -132,15 +130,15 @@ class MessageService:
             sender_id=sender_id,
         )
 
-        return message
+        return MessageDTO(message=message)
 
     async def update(
         self, message_id: str, new_content: str, request_id: str, sender_id: int
-    ) -> Message:
+    ) -> MessageDTO:
         logger.info(f"Обновляем сообщение {message_id}")
 
         message = await self.get(message_id)
-        message = await self.repo.update(message, new_content)
+        message = await self.repo.update(message.message, new_content)
         logger.info(f"Обновлено сообщение: {message_id}")
 
         active_recievers = await self.chat_service.get_active_members(
@@ -154,15 +152,15 @@ class MessageService:
             sender_id=sender_id,
         )
         logger.info(f"Уведомление об обновлении сообщения {message.id} отправлено")
-        return message
+        return MessageDTO(message=message)
 
-    async def delete(self, message_id: str, request_id: str, sender_id: int):
+    async def delete(self, message_id: str, request_id: str, sender_id: int) -> None:
         logger.info(f"Удаляем сообщение {message_id}")
         message = await self.get(message_id)
-        await self.repo.delete(message)
+        await self.repo.delete(message.message)
         logger.info(f"Удалено сообщение {message_id}")
 
-        recievers = await self.chat_service.get_active_members(message.chat_id)
+        recievers = await self.chat_service.get_active_members(message.message.chat_id)
         await self.kafka_producer.delete_message(
             recievers=recievers,
             data=MessageIdPayload(id=str(message_id)),
@@ -170,14 +168,13 @@ class MessageService:
             sender_id=sender_id,
         )
 
-    async def delete_chat_messages(self, chat_id: int):
+    async def delete_chat_messages(self, chat_id: int) -> None:
         logger.info(f"Удаляем сообщения чата {chat_id}")
         deleted_count = await self.repo.delete_chat_messages(chat_id)
         logger.info(f"Удалены {deleted_count} сообщения чата: {chat_id=}")
 
-    async def mark_as_read(self, chat_id: int, user_id: int, message_id: str):
+    async def mark_as_read(self, chat_id: int, user_id: int, message_id: str) -> None:
         logger.info(f"Обновляем последнее прочитанное сообщение")
-
         previous_read_message = await self.repo.get_last_read_message(
             chat_id=chat_id, user_id=user_id
         )
@@ -198,7 +195,7 @@ class MessageService:
 
         logger.info(f"Последнее прочитанное сообщение пользователя {user_id} обновлено")
 
-    async def add_reaction(self, message_id: str, reaction: str, author: int):
+    async def add_reaction(self, message_id: str, reaction: str, author: int) -> None:
         await self.user_service.get(author)
         logger.info(f"Добавляем реакцию в сообщение: {message_id}")
         result = await self.repo.add_reaction(message_id, reaction, author)
@@ -210,7 +207,9 @@ class MessageService:
         else:
             raise ReacionNotAdded()
 
-    async def remove_reaction(self, message_id: str, reaction: str, author: int):
+    async def remove_reaction(
+        self, message_id: str, reaction: str, author: int
+    ) -> None:
         await self.user_service.get(author)
         logger.info(f"Удаляем реакцию реакцию из сообщения: {message_id}")
         result = await self.repo.remove_reaction(message_id, reaction, author)
@@ -221,3 +220,34 @@ class MessageService:
             await self.kafka_producer.remove_reaction(event_data)
         else:
             raise ReacionNotAdded()
+
+    async def forward_message(
+        self,
+        user_id: int,
+        chat_id: int,
+        messages: list[str],
+        content: str | None,
+        request_id: str,
+    ):
+        errors = []
+        try:
+            chat = await self.chat_service.get(chat_id)
+        except ChatNotFoundError:
+            errors.append("chat_id")
+        try:
+            user = await self.user_service.get(user_id)
+        except UserNotFoundError:
+            errors.append("user_id")
+        if not user.user_id in chat.members:
+            errors.append("user not is chat member")
+
+        if errors:
+            err_str = ", ".join(errors)
+            logger.warning(f"Неверные данные: {err_str}")
+            raise DataLossError(err=err_str)
+
+        coros = []
+        for message_id in messages:
+            coros.append(self.get(message_id))
+
+        messages_data = asyncio.gather(*coros)

@@ -1,13 +1,16 @@
-class DataLossError(Exception):
-    def __init__(self, *args, err):
-        self.err = err
-        super().__init__(f"Wrong data: {self.err}")
+import grpc
 
-class MessageNotFoundError(Exception):
-    def __init__(self, *args, message_id: str):
+from src.exceptions import AppException, NotFoundError
+
+
+class MessageNotFoundError(NotFoundError):
+    def __init__(self, message_id: str):
         self.message_id = message_id
         super().__init__(f"Message not found: {self.message_id}")
 
-class ReacionNotAdded(Exception):
-    def __init__(self, *args):
+
+class ReacionNotAdded(AppException):
+    status_code = grpc.StatusCode.ALREADY_EXISTS
+
+    def __init__(self):
         super().__init__(f"Reaction already added")

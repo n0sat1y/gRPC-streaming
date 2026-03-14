@@ -1,7 +1,8 @@
-from typing import Optional, List, Dict
 from datetime import datetime, timezone
-from beanie import Document, Indexed, Link, BackLink
-from pydantic import Field, BaseModel
+from typing import Dict, List, Optional
+
+from beanie import BackLink, Document, Indexed, Link
+from pydantic import BaseModel, Field
 
 
 class ReplyData(BaseModel):
@@ -9,10 +10,12 @@ class ReplyData(BaseModel):
     user_id: int
     preview: str
 
+
 class ForwardData(BaseModel):
     from_message_id: str
     from_chat_id: int
     sender_user_id: int
+
 
 class MetaData(BaseModel):
     is_edited: bool = False
@@ -32,17 +35,13 @@ class Message(Document):
     metadata: MetaData = Field(default_factory=MetaData)
 
     read_by: List[BackLink["ReadStatus"]] = Field(
-        default_factory=list,
-        json_schema_extra={"original_field": "message_id"}
+        default_factory=list, json_schema_extra={"original_field": "message_id"}
     )
 
     class Settings:
         name = "messages"
-        indexes = [
-            'chat_id', 
-            'user_id',
-            ('chat_id', '-created_at')
-        ]
+        indexes = ["chat_id", "user_id", ("chat_id", "-created_at")]
+
 
 class ReadStatus(Document):
     message_id: Link[Message]
@@ -51,6 +50,7 @@ class ReadStatus(Document):
 
     class Settings:
         name = "read_status"
+
 
 class ReadProgress(Document):
     chat_id: Indexed(int)

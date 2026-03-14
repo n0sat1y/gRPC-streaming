@@ -1,9 +1,10 @@
-from loguru import logger
-from beanie.operators import Set, In, AddToSet, Pull
+from beanie.operators import AddToSet, In, Pull, Set
 from bson import ObjectId
+from loguru import logger
 
-from src.models import Message, ReadProgress, ReadStatus
 from src.exceptions.message import MessageNotFoundError
+from src.models import Message, ReadProgress, ReadStatus
+
 
 class MessageRepository:
     async def get(self, message_id: str, get_full: bool = False):
@@ -19,33 +20,32 @@ class MessageRepository:
                 message.read_by = read_statuses
             return message
         except Exception as e:
-            logger.error(f'Database Error {e}')
+            logger.error(f"Database Error {e}")
             raise e
 
-        
     async def get_all(self, chat_id: int, fetch_links: bool = False):
         try:
             messages = await Message.find_many(Message.chat_id == chat_id).to_list()
             return messages
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     async def insert(self, message: Message):
         try:
             await message.insert()
             return message
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     async def delete(self, message: Message):
         try:
             await message.delete()
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     async def update(self, message: Message, new_content: str):
         try:
             update_data = {
@@ -54,16 +54,14 @@ class MessageRepository:
             }
             if message.metadata.reply_to:
                 update_data[Message.metadata.reply_to.preview] = (
-                    new_content 
-                    if len(new_content) <= 50 
-                    else new_content[:47]+"..."
+                    new_content if len(new_content) <= 50 else new_content[:47] + "..."
                 )
             message = await message.update(Set(update_data))
             return message
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     # async def delete_user_messages(self, user_id: int):
     #     try:
     #         messages = Message.find(Message.user_id == user_id)
@@ -73,7 +71,7 @@ class MessageRepository:
     #     except Exception as e:
     #         logger.error(f'Database Error', e)
     #         raise e
-    
+
     async def delete_chat_messages(self, chat_id: int):
         try:
             messages = Message.find(Message.chat_id == chat_id)
@@ -81,15 +79,12 @@ class MessageRepository:
             await messages.delete()
             return count
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     async def mark_as_read(
-            self, 
-            previous_message_read: str | None, 
-            last_read_message: str,
-            read_by: int
-        ) -> list[Message]:
+        self, previous_message_read: str | None, last_read_message: str, read_by: int
+    ) -> list[Message]:
         try:
             request_stmt = [Message.id <= ObjectId(last_read_message)]
             if previous_message_read:
@@ -99,7 +94,7 @@ class MessageRepository:
 
             if not messages:
                 return []
-            
+
             read_statuses = [
                 ReadStatus(message_id=message.id, read_by=read_by)
                 for message in messages
@@ -110,11 +105,9 @@ class MessageRepository:
             unread_messages = [message for message in messages if not message.is_read]
             if not unread_messages:
                 return []
-            
+
             unread_ids = [msg.id for msg in unread_messages]
-            await Message.find(
-                In(Message.id, unread_ids)
-            ).update(
+            await Message.find(In(Message.id, unread_ids)).update(
                 {"$set": {Message.is_read: True}}
             )
             for msg in unread_messages:
@@ -122,42 +115,47 @@ class MessageRepository:
 
             return unread_messages
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
-        
+
     async def get_last_read_message(self, chat_id: int, user_id: int):
         try:
             progress = await ReadProgress.find_one(
                 ReadProgress.chat_id == chat_id,
                 ReadProgress.user_id == user_id,
             )
-            return str(progress.last_read_message_id.ref.id) if progress and progress.last_read_message_id else None
+            return (
+                str(progress.last_read_message_id.ref.id)
+                if progress and progress.last_read_message_id
+                else None
+            )
         except Exception as e:
-            logger.error(f'Database Error: {e}')
+            logger.error(f"Database Error: {e}")
             raise e
-        
-    async def set_last_read_message(self, chat_id: int, user_id: int, message_id: str) -> None:
+
+    async def set_last_read_message(
+        self, chat_id: int, user_id: int, message_id: str
+    ) -> None:
         try:
             message_obj = await Message.get(ObjectId(message_id))
             if not message_obj:
                 raise ValueError(f"Message with id {message_id} not found")
-                
+
             await ReadProgress.find_one(
-                ReadProgress.chat_id == chat_id,
-                ReadProgress.user_id == user_id
+                ReadProgress.chat_id == chat_id, ReadProgress.user_id == user_id
             ).upsert(
                 Set({ReadProgress.last_read_message_id: message_obj.id}),
                 on_insert=ReadProgress(
-                    user_id=user_id, 
-                    chat_id=chat_id, 
-                    last_read_message_id=message_obj.id
-                )
+                    user_id=user_id,
+                    chat_id=chat_id,
+                    last_read_message_id=message_obj.id,
+                ),
             )
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
 
-    async def add_reaction(self, message_id: str, reaction: str, author: str) -> bool:
+    async def add_reaction(self, message_id: str, reaction: str, author: int) -> bool:
         try:
             result = await Message.find_one(Message.id == ObjectId(message_id)).update(
                 AddToSet({Message.metadata.reactions[reaction]: author})
@@ -166,10 +164,12 @@ class MessageRepository:
                 raise MessageNotFoundError(message_id)
             return result.modified_count > 0
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
 
-    async def remove_reaction(self, message_id: str, reaction: str, author: str) -> bool:
+    async def remove_reaction(
+        self, message_id: str, reaction: str, author: int
+    ) -> bool:
         try:
             result = await Message.find_one(Message.id == ObjectId(message_id)).update(
                 Pull({Message.metadata.reactions[reaction]: author})
@@ -178,5 +178,5 @@ class MessageRepository:
                 raise MessageNotFoundError(message_id)
             return result.modified_count > 0
         except Exception as e:
-            logger.error(f'Database Error', e)
+            logger.error(f"Database Error", e)
             raise e
