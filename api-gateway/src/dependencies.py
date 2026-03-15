@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 
+from src.core.redis import redis
 from src.features.auth.service import AuthService
 from src.infrastructure.grpc_clients import grpc_service
 from src.infrastructure.grpc_clients.chat import RpcChatService
@@ -12,6 +13,7 @@ from src.infrastructure.grpc_clients.message import RpcMessageService
 from src.infrastructure.grpc_clients.presence import RpcPresenceService
 from src.infrastructure.grpc_clients.user import RpcUserService
 from src.infrastructure.websocket.handler import WebsocketHandler
+from src.infrastructure.websocket.manager import ConnectionManager
 from src.utils.utils import decode_jwt
 
 bearer_scheme = HTTPBearer()
@@ -84,12 +86,12 @@ def get_user_stub():
     return grpc_service.user
 
 
+def get_redis():
+    return redis
+
+
 def get_chat_service(stub=Depends(get_chat_stub)):
     return RpcChatService(stub)
-
-
-def get_message_service(stub=Depends(get_message_stub)):
-    return RpcMessageService(stub)
 
 
 def get_presence_service(stub=Depends(get_presence_stub)):
@@ -100,9 +102,31 @@ def get_user_service(stub=Depends(get_user_stub)):
     return RpcUserService(stub)
 
 
+def get_message_service(stub=Depends(get_message_stub)):
+    return RpcMessageService(stub)
+
+
 def get_auth_service(service=Depends(get_user_service)):
     return AuthService(service)
 
 
 def get_websocket_handler(message_service=Depends(get_message_service)):
     return WebsocketHandler(message_service)
+
+
+def get_connection_manager(
+    presence_service=Depends(get_presence_service), redis_client=Depends(get_redis)
+):
+    return ConnectionManager(
+        presence_service=presence_service, redis_client=redis_client
+    )
+
+
+def get_non_dependend_presence_service():
+    return RpcPresenceService(stub=get_presence_stub())
+
+
+def get_non_dependend_connection_manager(
+    redis_client=redis, presence_service=get_non_dependend_presence_service()
+):
+    return ConnectionManager(redis_client, presence_service)

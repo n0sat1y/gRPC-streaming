@@ -21,6 +21,14 @@ class Settings(BaseSettings):
     KAFKA_HOST: str = "localhost"
     KAFKA_PORT: int = 9092
 
+    # --- REDIS ---
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+
+    @property
+    def REDIS_URL(self):
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
+
     # --- JWT ---
     SECRET_KEY: str = "Secret key"
     JWT_ALGORITHM: str = "HS256"

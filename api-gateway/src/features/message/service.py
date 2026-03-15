@@ -5,21 +5,17 @@ from faststream.kafka import KafkaRouter
 from loguru import logger
 from pydantic import TypeAdapter
 
-from src.infrastructure.websocket.manager import manager
-from src.schemas.events.message import (
-    AddReactionEvent,
-    CreatedMessageEvent,
-    DeleteMessageEvent,
-    MessagesReadEvent,
-    RemoveReactionEvent,
-    UpdateMessageEvent,
-)
+from src.infrastructure.websocket.manager import ConnectionManager
+from src.schemas.events.message import (AddReactionEvent, CreatedMessageEvent,
+                                        DeleteMessageEvent, MessagesReadEvent,
+                                        RemoveReactionEvent,
+                                        UpdateMessageEvent)
 
 
 class MessageService:
-    def __init__(self, router: KafkaRouter):
+    def __init__(self, router: KafkaRouter, connection_manager: ConnectionManager):
         self.router = router
-        self.connection_manager = manager
+        self.connection_manager = connection_manager
         self.read_message_pub = self.router.publisher("api_gateway.messages_read")
 
     async def send_message(self, data: CreatedMessageEvent):

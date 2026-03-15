@@ -1,11 +1,15 @@
+from fastapi import Depends
 from faststream.kafka import KafkaRouter
 from pydantic import TypeAdapter
 
 from src.core.kafka import router
+from src.dependencies import get_non_dependend_connection_manager
 from src.features.message.service import MessageService
 from src.schemas.events.message import *
 
-service = MessageService(router=router)
+service = MessageService(
+    router=router, connection_manager=get_non_dependend_connection_manager()
+)
 
 
 @router.subscriber(

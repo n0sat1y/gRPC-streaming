@@ -4,15 +4,12 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from loguru import logger
 from pydantic import TypeAdapter, ValidationError
 
-from src.dependencies import (
-    get_presence_service,
-    get_user_id_for_websocket,
-    get_websocket_handler,
-)
+from src.dependencies import (get_connection_manager, get_presence_service,
+                              get_user_id_for_websocket, get_websocket_handler)
 from src.infrastructure.grpc_clients.presence import RpcPresenceService
-from src.infrastructure.websocket.manager import manager
-from src.schemas.websocket.websocket import *
 from src.infrastructure.websocket.handler import WebsocketHandler
+from src.infrastructure.websocket.manager import ConnectionManager
+from src.schemas.websocket.websocket import *
 
 router = APIRouter(prefix="/ws", tags=["Websockets"])
 
@@ -25,8 +22,9 @@ async def connection(
     user_id=Depends(get_user_id_for_websocket),
     _presence_service: RpcPresenceService = Depends(get_presence_service),
     _websocket_manager: WebsocketHandler = Depends(get_websocket_handler),
+    _connection_manager: ConnectionManager = Depends(get_connection_manager),
 ):
-    await manager.connect(user_id, ws, _presence_service)
+    await _connection_manager.connect(user_id, ws)
 
     try:
         while True:
@@ -65,5 +63,5 @@ async def connection(
         logger.info(f"User {user_id} disconnected.")
     finally:
         logger.info(f"Cleaning up for user {user_id}...")
-        await manager.disconnect(user_id, ws, _presence_service)
+        await _connection_manager.disconnect(user_id, ws)
         logger.info(f"Cleanup for user {user_id} complete.")

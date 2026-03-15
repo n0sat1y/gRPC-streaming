@@ -8,18 +8,30 @@ services:
       - GRPC_USER_HOST=user-service
       - GRPC_CHAT_HOST=chat-service
       - GRPC_MESSAGE_HOST=message-service
-      - GRPC_PRESENCE_HOST=presence-service
+      - GRPC_PRESENCE_HOST=gateway-service
+      - REDIS_HOST=gateway_redis
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
-    # depends_on:
+    depends_on:
       # kafka:
       #   condition: service_healthy
+      - gateway_redis
     volumes:
       - .:/app
 
     networks:
       - messenger
+      - default
 
+
+  gateway_redis:
+    image: redis:7-alpine
+    container_name: gateway-redis
+    volumes:
+      - presence_redis_data:/data
+    command: redis-server --appendonly yes --notify-keyspace-events Ex
+    networks:
+      - default
 
 networks:
   messenger:
