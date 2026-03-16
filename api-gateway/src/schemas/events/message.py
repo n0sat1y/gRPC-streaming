@@ -15,7 +15,8 @@ class MessageIdPayload(BaseModel):
     id: str
 
 
-class ReacionPayload(MessageIdPayload):
+class ReacionPayload(BaseModel):
+    message_id: str
     reaction: str
 
 
@@ -73,6 +74,7 @@ IncomingMessage = Union[
     DeleteMessageEvent,
     AddReactionEvent,
     RemoveReactionEvent,
+    MessagesReadEvent,
 ]
 
 

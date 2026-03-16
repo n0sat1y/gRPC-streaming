@@ -5,13 +5,16 @@ from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from loguru import logger
 
+from src.core.kafka import router as kafka_router
 from src.core.redis import redis
 from src.features.auth.service import AuthService
+from src.features.message.service import MessageService
 from src.infrastructure.grpc_clients import grpc_service
 from src.infrastructure.grpc_clients.chat import RpcChatService
 from src.infrastructure.grpc_clients.message import RpcMessageService
 from src.infrastructure.grpc_clients.presence import RpcPresenceService
 from src.infrastructure.grpc_clients.user import RpcUserService
+from src.infrastructure.redis_publishers.notifier import RedisNotifier
 from src.infrastructure.websocket.handler import WebsocketHandler
 from src.infrastructure.websocket.manager import ConnectionManager
 from src.utils.utils import decode_jwt
@@ -90,6 +93,20 @@ def get_redis():
     return redis
 
 
+def get_kafka_router():
+    return kafka_router
+
+
+def get_redis_publisher(redis=Depends(get_redis)):
+    return RedisNotifier(redis)
+
+
+def get_message_service(
+    redis_publisher=Depends(get_redis_publisher), router=Depends(get_kafka_router)
+):
+    return MessageService(redis_publisher=redis_publisher, router=router)
+
+
 def get_chat_service(stub=Depends(get_chat_stub)):
     return RpcChatService(stub)
 
@@ -102,7 +119,7 @@ def get_user_service(stub=Depends(get_user_stub)):
     return RpcUserService(stub)
 
 
-def get_message_service(stub=Depends(get_message_stub)):
+def get_rpc_message_service(stub=Depends(get_message_stub)):
     return RpcMessageService(stub)
 
 
@@ -110,7 +127,7 @@ def get_auth_service(service=Depends(get_user_service)):
     return AuthService(service)
 
 
-def get_websocket_handler(message_service=Depends(get_message_service)):
+def get_websocket_handler(message_service=Depends(get_rpc_message_service)):
     return WebsocketHandler(message_service)
 
 
@@ -120,13 +137,3 @@ def get_connection_manager(
     return ConnectionManager(
         presence_service=presence_service, redis_client=redis_client
     )
-
-
-def get_non_dependend_presence_service():
-    return RpcPresenceService(stub=get_presence_stub())
-
-
-def get_non_dependend_connection_manager(
-    redis_client=redis, presence_service=get_non_dependend_presence_service()
-):
-    return ConnectionManager(redis_client, presence_service)

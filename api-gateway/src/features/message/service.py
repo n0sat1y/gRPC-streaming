@@ -5,7 +5,7 @@ from faststream.kafka import KafkaRouter
 from loguru import logger
 from pydantic import TypeAdapter
 
-from src.infrastructure.websocket.manager import ConnectionManager
+from src.infrastructure.redis_publishers.notifier import RedisNotifier
 from src.schemas.events.message import (AddReactionEvent, CreatedMessageEvent,
                                         DeleteMessageEvent, MessagesReadEvent,
                                         RemoveReactionEvent,
@@ -13,44 +13,43 @@ from src.schemas.events.message import (AddReactionEvent, CreatedMessageEvent,
 
 
 class MessageService:
-    def __init__(self, router: KafkaRouter, connection_manager: ConnectionManager):
+    def __init__(self, router: KafkaRouter, redis_publisher: RedisNotifier):
         self.router = router
-        self.connection_manager = connection_manager
         self.read_message_pub = self.router.publisher("api_gateway.messages_read")
+        self.redis_publisher = redis_publisher
 
     async def send_message(self, data: CreatedMessageEvent):
         logger.info(f"Пришло сообщение {data.event_type}")
-        data_dict = data.model_dump(mode="json")
+        payload = data.data.model_dump(mode="json")
         sender_id = data.sender_id
         recievers = [x for x in data.recievers if x != sender_id]
-        payload = data_dict["data"]
 
-        await self.connection_manager.broadcast(
+        await self.redis_publisher.broadcast(
             recievers, {"event_type": "new_message", "payload": payload}
         )
 
-        payload.pop("sender")
-        await self.connection_manager.send_personal_message(
+        personal_payload = payload.copy()
+        personal_payload.pop("sender")
+        await self.redis_publisher.publish_to_user(
             user_id=sender_id,
             data={
                 "event_type": "message_sended",
-                "payload": payload,
+                "payload": personal_payload,
                 "request_id": data.request_id,
             },
         )
 
     async def update_message(self, data: UpdateMessageEvent):
         logger.info(f"Пришло сообщение {data.event_type}")
-        data_dict = data.model_dump(mode="json")
+        payload = data.data.model_dump(mode="json")
         sender_id = data.sender_id
         recievers = [x for x in data.recievers if x != sender_id]
-        payload = data_dict["data"]
 
-        await self.connection_manager.broadcast(
+        await self.redis_publisher.broadcast(
             recievers, {"event_type": "update_message", "payload": payload}
         )
 
-        await self.connection_manager.send_personal_message(
+        await self.redis_publisher.publish_to_user(
             user_id=sender_id,
             data={
                 "event_type": "message_updated",
@@ -61,16 +60,15 @@ class MessageService:
 
     async def delete_message(self, data: DeleteMessageEvent):
         logger.info(f"Пришло сообщение {data.event_type}")
-        data_dict = data.model_dump(mode="json")
+        payload = data.data.model_dump(mode="json")
         sender_id = data.sender_id
         recievers = [x for x in data.recievers if x != sender_id]
-        payload = data_dict["data"]
 
-        await self.connection_manager.broadcast(
+        await self.redis_publisher.broadcast(
             recievers, {"event_type": "delete_message", "payload": payload}
         )
 
-        await self.connection_manager.send_personal_message(
+        await self.redis_publisher.publish_to_user(
             user_id=sender_id,
             data={
                 "event_type": "message_deleted",
@@ -88,8 +86,10 @@ class MessageService:
         for message in messages_list:
             messages_sorted_by_sender[message.sender_id].append(message.id)
 
+        logger.debug(messages_sorted_by_sender)
+
         for key, value in messages_sorted_by_sender.items():
-            await self.connection_manager.send_personal_message(
+            await self.redis_publisher.publish_to_user(
                 user_id=key,
                 data={
                     "event_type": "read_messages",
@@ -103,7 +103,8 @@ class MessageService:
         recievers = data.recievers
         payload = data.data.model_dump(mode="json")
 
-        await self.connection_manager.broadcast(
+        logger.info(payload)
+        await self.redis_publisher.broadcast(
             recievers,
             {
                 "event_type": (

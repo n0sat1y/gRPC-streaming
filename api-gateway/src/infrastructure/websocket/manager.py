@@ -58,15 +58,3 @@ class ConnectionManager:
                     task.cancel()
                 del self.active_connections[user_id]
                 await self.presence_service.set_offline(user_id)
-
-    async def send_personal_message(self, user_id: int, data: dict):
-        channel_name = self._get_notification_channel(user_id)
-        json_data = json.dumps(data)
-        await self.redis_client.publish(channel_name, json_data)
-        logger.info(f"Отправлено сообщение пользователю {user_id}")
-
-    async def broadcast(self, recievers: list[int], data: dict):
-        coros = []
-        for reciever in recievers:
-            coros.append(self.send_personal_message(reciever, data))
-        asyncio.gather(*coros)

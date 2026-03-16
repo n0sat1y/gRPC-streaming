@@ -14,6 +14,7 @@ from src.infrastructure.grpc_clients import grpc_service
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await grpc_service.start()
+
     yield
     await grpc_service.stop()
 
@@ -28,6 +29,6 @@ app.add_middleware(
 )
 app.include_router(router)
 app.include_router(kafka_router)
-# huy
+
 if __name__ == "__main__":
     uvicorn.run("src.main:app", reload=True, host="0.0.0.0", port=8000)

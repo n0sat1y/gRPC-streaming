@@ -1,4 +1,4 @@
-from beanie.operators import AddToSet, In, Pull, Set
+from beanie.operators import AddToSet, In, Pull, Set, Unset
 from bson import ObjectId
 from loguru import logger
 
@@ -176,6 +176,11 @@ class MessageRepository:
             )
             if result.matched_count == 0:
                 raise MessageNotFoundError(message_id)
+            if result.modified_count > 0:
+                await Message.find_one(
+                    Message.id == ObjectId(message_id),
+                    {f"metadata.reactions.{reaction}": {"$size": 0}},
+                ).update(Unset({f"metadata.reactions.{reaction}": ""}))
             return result.modified_count > 0
         except Exception as e:
             logger.error(f"Database Error", e)
