@@ -1,5 +1,6 @@
 from src.repositories.chat import ChatRepository
 from src.repositories.message import MessageRepository
+from src.repositories.read_progress import ReadProgressRepository
 from src.repositories.user import UserRepository
 from src.routers.grpc import Message
 from src.routers.kafka import broker
@@ -12,6 +13,10 @@ from src.services.user import UserService
 
 def get_message_repository() -> MessageRepository:
     return MessageRepository()
+
+
+def get_read_progress_repository() -> ReadProgressRepository:
+    return ReadProgressRepository()
 
 
 def get_user_repository() -> UserRepository:
@@ -43,6 +48,7 @@ def get_chat_service(
 
 def get_message_service(
     repo: MessageRepository = get_message_repository(),
+    read_progress_repo: ReadProgressRepository = get_read_progress_repository(),
     user_service: UserService = get_user_service(),
     chat_service: ChatService = get_chat_service(),
     kafka_producer: KafkaPublisher = get_kafka_producer(),
@@ -50,6 +56,7 @@ def get_message_service(
 ) -> MessageService:
     return MessageService(
         repo=repo,
+        read_pregress_repo=read_progress_repo,
         user_service=user_service,
         chat_service=chat_service,
         kafka_producer=kafka_producer,

@@ -8,6 +8,7 @@ from src.models.replications import UserReplica
 class MessageDTO:
     message: Message
     users: dict[int, UserReplica] = field(default_factory=dict)
+    read_by: list[int] = field(default_factory=list)
 
 
 @dataclass

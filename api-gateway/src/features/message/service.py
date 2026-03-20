@@ -6,10 +6,14 @@ from loguru import logger
 from pydantic import TypeAdapter
 
 from src.infrastructure.redis_publishers.notifier import RedisNotifier
-from src.schemas.events.message import (AddReactionEvent, CreatedMessageEvent,
-                                        DeleteMessageEvent, MessagesReadEvent,
-                                        RemoveReactionEvent,
-                                        UpdateMessageEvent)
+from src.schemas.events.message import (
+    AddReactionEvent,
+    CreatedMessageEvent,
+    DeleteMessageEvent,
+    MessagesReadEvent,
+    RemoveReactionEvent,
+    UpdateMessageEvent,
+)
 
 
 class MessageService:
@@ -29,7 +33,6 @@ class MessageService:
         )
 
         personal_payload = payload.copy()
-        personal_payload.pop("sender")
         await self.redis_publisher.publish_to_user(
             user_id=sender_id,
             data={
@@ -80,20 +83,17 @@ class MessageService:
     async def mark_as_read(self, data: MessagesReadEvent):
         logger.info(f"Пришло сообщение {data.event_type}")
         data_payload = data.data
-        messages_list = data_payload
 
-        messages_sorted_by_sender = defaultdict(list)
-        for message in messages_list:
-            messages_sorted_by_sender[message.sender_id].append(message.id)
+        logger.info(data_payload)
 
-        logger.debug(messages_sorted_by_sender)
-
-        for key, value in messages_sorted_by_sender.items():
+        for message in data_payload:
+            message_id = message.id
+            author = message.sender_id
             await self.redis_publisher.publish_to_user(
-                user_id=key,
+                user_id=author,
                 data={
-                    "event_type": "read_messages",
-                    "payload": value,
+                    "event_type": "read_cursor_updated",
+                    "payload": {"cursor_id": message_id},
                 },
             )
 

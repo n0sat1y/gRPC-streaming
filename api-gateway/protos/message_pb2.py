@@ -26,7 +26,7 @@ from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\x12\x07message\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x1f\n\tMessageId\x12\x12\n\nmessage_id\x18\x01 \x01(\t\"\x92\x01\n\x12SendMessageRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x12\n\nrequest_id\x18\x05 \x01(\t\x12\x11\n\tsender_id\x18\x06 \x01(\x05\x12\x15\n\x08reply_to\x18\x07 \x01(\tH\x00\x88\x01\x01\x42\x0b\n\t_reply_to\"Y\n\x13SendMessageResponse\x12\x12\n\nmessage_id\x18\x02 \x01(\t\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"f\n\x14UpdateMessageRequest\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x13\n\x0bnew_content\x18\x02 \x01(\t\x12\x12\n\nrequest_id\x18\x03 \x01(\t\x12\x11\n\tsender_id\x18\x04 \x01(\x05\"Q\n\x14\x44\x65leteMessageRequest\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x12\n\nrequest_id\x18\x02 \x01(\t\x12\x11\n\tsender_id\x18\x03 \x01(\x05\"\'\n\x15\x44\x65leteMessageResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"*\n\nSenderData\x12\n\n\x02id\x18\x03 \x01(\x05\x12\x10\n\x08username\x18\x04 \x01(\t\"\xd4\x01\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12#\n\x06sender\x18\x03 \x01(\x0b\x32\x13.message.SenderData\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x0f\n\x07is_read\x18\x05 \x01(\x08\x12.\n\ncreated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12(\n\x08metadata\x18\x07 \x01(\x0b\x32\x11.message.MetadataH\x00\x88\x01\x01\x42\x0b\n\t_metadata\"(\n\x15GetAllMessagesRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\"1\n\x0b\x41llMessages\x12\"\n\x08messages\x18\x01 \x03(\x0b\x32\x10.message.Message\"A\n\x06ReadBy\x12\n\n\x02id\x18\x01 \x01(\x05\x12+\n\x07read_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x1d\n\tReactedBy\x12\x10\n\x08users_id\x18\x01 \x03(\x05\"S\n\tReplyData\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x10\n\x08username\x18\x03 \x01(\t\x12\x0f\n\x07preview\x18\x04 \x01(\t\"\xe3\x01\n\x08Metadata\x12\x11\n\tis_edited\x18\x01 \x01(\x08\x12\x11\n\tis_pinned\x18\x02 \x01(\x08\x12)\n\x08reply_to\x18\x03 \x01(\x0b\x32\x12.message.ReplyDataH\x00\x88\x01\x01\x12\x33\n\treactions\x18\x04 \x03(\x0b\x32 .message.Metadata.ReactionsEntry\x1a\x44\n\x0eReactionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12!\n\x05value\x18\x02 \x01(\x0b\x32\x12.message.ReactedBy:\x02\x38\x01\x42\x0b\n\t_reply_to\"\xea\x01\n\x0f\x46ullMessageData\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x0f\n\x07user_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x0f\n\x07is_read\x18\x05 \x01(\x08\x12 \n\x07read_by\x18\x06 \x03(\x0b\x32\x0f.message.ReadBy\x12.\n\ncreated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12(\n\x08metadata\x18\x08 \x01(\x0b\x32\x11.message.MetadataH\x00\x88\x01\x01\x42\x0b\n\t_metadata\"@\n\x08Reaction\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x02 \x01(\x05\x12\x10\n\x08reaction\x18\x03 \x01(\t2\xfb\x03\n\x0eMessageService\x12J\n\x0bSendMessage\x12\x1b.message.SendMessageRequest\x1a\x1c.message.SendMessageResponse\"\x00\x12\x44\n\rUpdateMessage\x12\x1d.message.UpdateMessageRequest\x1a\x12.message.MessageId\"\x00\x12P\n\rDeleteMessage\x12\x1d.message.DeleteMessageRequest\x1a\x1e.message.DeleteMessageResponse\"\x00\x12H\n\x0eGetAllMessages\x12\x1e.message.GetAllMessagesRequest\x1a\x14.message.AllMessages\"\x00\x12@\n\x0eGetMessageData\x12\x12.message.MessageId\x1a\x18.message.FullMessageData\"\x00\x12:\n\x0b\x41\x64\x64Reaction\x12\x11.message.Reaction\x1a\x16.google.protobuf.Empty\"\x00\x12=\n\x0eRemoveReaction\x12\x11.message.Reaction\x1a\x16.google.protobuf.Empty\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmessage.proto\x12\x07message\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x1f\n\tMessageId\x12\x12\n\nmessage_id\x18\x01 \x01(\t\"H\n\x08UserData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x10\n\x08username\x18\x02 \x01(\t\x12\x13\n\x06\x61vatar\x18\x03 \x01(\tH\x00\x88\x01\x01\x42\t\n\x07_avatar\"\x92\x01\n\x12SendMessageRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x12\n\nrequest_id\x18\x05 \x01(\t\x12\x11\n\tsender_id\x18\x06 \x01(\x05\x12\x15\n\x08reply_to\x18\x07 \x01(\tH\x00\x88\x01\x01\x42\x0b\n\t_reply_to\"Y\n\x13SendMessageResponse\x12\x12\n\nmessage_id\x18\x02 \x01(\t\x12.\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"f\n\x14UpdateMessageRequest\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x13\n\x0bnew_content\x18\x02 \x01(\t\x12\x12\n\nrequest_id\x18\x03 \x01(\t\x12\x11\n\tsender_id\x18\x04 \x01(\x05\"Q\n\x14\x44\x65leteMessageRequest\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x12\n\nrequest_id\x18\x02 \x01(\t\x12\x11\n\tsender_id\x18\x03 \x01(\x05\"\'\n\x15\x44\x65leteMessageResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\"\xaf\x01\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x0f\n\x07user_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12.\n\ncreated_at\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12(\n\x08metadata\x18\x07 \x01(\x0b\x32\x11.message.MetadataH\x00\x88\x01\x01\x42\x0b\n\t_metadata\"(\n\x15GetAllMessagesRequest\x12\x0f\n\x07\x63hat_id\x18\x01 \x01(\x05\"W\n\x0b\x41llMessages\x12\"\n\x08messages\x18\x01 \x03(\x0b\x32\x10.message.Message\x12$\n\tuser_data\x18\x02 \x03(\x0b\x32\x11.message.UserData\"\x1d\n\tReactedBy\x12\x10\n\x08users_id\x18\x01 \x03(\x05\"A\n\tReplyData\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x0f\n\x07preview\x18\x04 \x01(\t\"\xe3\x01\n\x08Metadata\x12\x11\n\tis_edited\x18\x01 \x01(\x08\x12\x11\n\tis_pinned\x18\x02 \x01(\x08\x12)\n\x08reply_to\x18\x03 \x01(\x0b\x32\x12.message.ReplyDataH\x00\x88\x01\x01\x12\x33\n\treactions\x18\x04 \x03(\x0b\x32 .message.Metadata.ReactionsEntry\x1a\x44\n\x0eReactionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12!\n\x05value\x18\x02 \x01(\x0b\x32\x12.message.ReactedBy:\x02\x38\x01\x42\x0b\n\t_reply_to\"\xc8\x01\n\x0f\x46ullMessageData\x12\n\n\x02id\x18\x01 \x01(\t\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x0f\n\x07user_id\x18\x03 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\x12\x0f\n\x07read_by\x18\x06 \x03(\x05\x12.\n\ncreated_at\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12(\n\x08metadata\x18\x08 \x01(\x0b\x32\x11.message.MetadataH\x00\x88\x01\x01\x42\x0b\n\t_metadata\"k\n\x13\x46ullMessageResponse\x12.\n\x0cmessage_data\x18\x01 \x01(\x0b\x32\x18.message.FullMessageData\x12$\n\tuser_data\x18\x02 \x03(\x0b\x32\x11.message.UserData\"@\n\x08Reaction\x12\x12\n\nmessage_id\x18\x01 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x02 \x01(\x05\x12\x10\n\x08reaction\x18\x03 \x01(\t\"\x81\x01\n\x15\x46orwardMessageRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\x05\x12\x0f\n\x07\x63hat_id\x18\x02 \x01(\x05\x12\x12\n\nrequest_id\x18\x03 \x01(\t\x12\x10\n\x08messages\x18\x04 \x03(\t\x12\x14\n\x07\x63ontent\x18\x05 \x01(\tH\x00\x88\x01\x01\x42\n\n\x08_content\"H\n\x16\x46orwardMessageResponse\x12.\n\x08messages\x18\x01 \x03(\x0b\x32\x1c.message.SendMessageResponse2\xd4\x04\n\x0eMessageService\x12J\n\x0bSendMessage\x12\x1b.message.SendMessageRequest\x1a\x1c.message.SendMessageResponse\"\x00\x12\x44\n\rUpdateMessage\x12\x1d.message.UpdateMessageRequest\x1a\x12.message.MessageId\"\x00\x12P\n\rDeleteMessage\x12\x1d.message.DeleteMessageRequest\x1a\x1e.message.DeleteMessageResponse\"\x00\x12H\n\x0eGetAllMessages\x12\x1e.message.GetAllMessagesRequest\x1a\x14.message.AllMessages\"\x00\x12\x44\n\x0eGetMessageData\x12\x12.message.MessageId\x1a\x1c.message.FullMessageResponse\"\x00\x12:\n\x0b\x41\x64\x64Reaction\x12\x11.message.Reaction\x1a\x16.google.protobuf.Empty\"\x00\x12=\n\x0eRemoveReaction\x12\x11.message.Reaction\x1a\x16.google.protobuf.Empty\"\x00\x12S\n\x0e\x46orwardMessage\x12\x1e.message.ForwardMessageRequest\x1a\x1f.message.ForwardMessageResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,38 +37,42 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_METADATA_REACTIONSENTRY']._serialized_options = b'8\001'
   _globals['_MESSAGEID']._serialized_start=88
   _globals['_MESSAGEID']._serialized_end=119
-  _globals['_SENDMESSAGEREQUEST']._serialized_start=122
-  _globals['_SENDMESSAGEREQUEST']._serialized_end=268
-  _globals['_SENDMESSAGERESPONSE']._serialized_start=270
-  _globals['_SENDMESSAGERESPONSE']._serialized_end=359
-  _globals['_UPDATEMESSAGEREQUEST']._serialized_start=361
-  _globals['_UPDATEMESSAGEREQUEST']._serialized_end=463
-  _globals['_DELETEMESSAGEREQUEST']._serialized_start=465
-  _globals['_DELETEMESSAGEREQUEST']._serialized_end=546
-  _globals['_DELETEMESSAGERESPONSE']._serialized_start=548
-  _globals['_DELETEMESSAGERESPONSE']._serialized_end=587
-  _globals['_SENDERDATA']._serialized_start=589
-  _globals['_SENDERDATA']._serialized_end=631
-  _globals['_MESSAGE']._serialized_start=634
-  _globals['_MESSAGE']._serialized_end=846
-  _globals['_GETALLMESSAGESREQUEST']._serialized_start=848
-  _globals['_GETALLMESSAGESREQUEST']._serialized_end=888
-  _globals['_ALLMESSAGES']._serialized_start=890
-  _globals['_ALLMESSAGES']._serialized_end=939
-  _globals['_READBY']._serialized_start=941
-  _globals['_READBY']._serialized_end=1006
-  _globals['_REACTEDBY']._serialized_start=1008
-  _globals['_REACTEDBY']._serialized_end=1037
-  _globals['_REPLYDATA']._serialized_start=1039
-  _globals['_REPLYDATA']._serialized_end=1122
-  _globals['_METADATA']._serialized_start=1125
-  _globals['_METADATA']._serialized_end=1352
-  _globals['_METADATA_REACTIONSENTRY']._serialized_start=1271
-  _globals['_METADATA_REACTIONSENTRY']._serialized_end=1339
-  _globals['_FULLMESSAGEDATA']._serialized_start=1355
-  _globals['_FULLMESSAGEDATA']._serialized_end=1589
-  _globals['_REACTION']._serialized_start=1591
-  _globals['_REACTION']._serialized_end=1655
-  _globals['_MESSAGESERVICE']._serialized_start=1658
-  _globals['_MESSAGESERVICE']._serialized_end=2165
+  _globals['_USERDATA']._serialized_start=121
+  _globals['_USERDATA']._serialized_end=193
+  _globals['_SENDMESSAGEREQUEST']._serialized_start=196
+  _globals['_SENDMESSAGEREQUEST']._serialized_end=342
+  _globals['_SENDMESSAGERESPONSE']._serialized_start=344
+  _globals['_SENDMESSAGERESPONSE']._serialized_end=433
+  _globals['_UPDATEMESSAGEREQUEST']._serialized_start=435
+  _globals['_UPDATEMESSAGEREQUEST']._serialized_end=537
+  _globals['_DELETEMESSAGEREQUEST']._serialized_start=539
+  _globals['_DELETEMESSAGEREQUEST']._serialized_end=620
+  _globals['_DELETEMESSAGERESPONSE']._serialized_start=622
+  _globals['_DELETEMESSAGERESPONSE']._serialized_end=661
+  _globals['_MESSAGE']._serialized_start=664
+  _globals['_MESSAGE']._serialized_end=839
+  _globals['_GETALLMESSAGESREQUEST']._serialized_start=841
+  _globals['_GETALLMESSAGESREQUEST']._serialized_end=881
+  _globals['_ALLMESSAGES']._serialized_start=883
+  _globals['_ALLMESSAGES']._serialized_end=970
+  _globals['_REACTEDBY']._serialized_start=972
+  _globals['_REACTEDBY']._serialized_end=1001
+  _globals['_REPLYDATA']._serialized_start=1003
+  _globals['_REPLYDATA']._serialized_end=1068
+  _globals['_METADATA']._serialized_start=1071
+  _globals['_METADATA']._serialized_end=1298
+  _globals['_METADATA_REACTIONSENTRY']._serialized_start=1217
+  _globals['_METADATA_REACTIONSENTRY']._serialized_end=1285
+  _globals['_FULLMESSAGEDATA']._serialized_start=1301
+  _globals['_FULLMESSAGEDATA']._serialized_end=1501
+  _globals['_FULLMESSAGERESPONSE']._serialized_start=1503
+  _globals['_FULLMESSAGERESPONSE']._serialized_end=1610
+  _globals['_REACTION']._serialized_start=1612
+  _globals['_REACTION']._serialized_end=1676
+  _globals['_FORWARDMESSAGEREQUEST']._serialized_start=1679
+  _globals['_FORWARDMESSAGEREQUEST']._serialized_end=1808
+  _globals['_FORWARDMESSAGERESPONSE']._serialized_start=1810
+  _globals['_FORWARDMESSAGERESPONSE']._serialized_end=1882
+  _globals['_MESSAGESERVICE']._serialized_start=1885
+  _globals['_MESSAGESERVICE']._serialized_end=2481
 # @@protoc_insertion_point(module_scope)

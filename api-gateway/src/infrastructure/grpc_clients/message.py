@@ -67,14 +67,14 @@ class RpcMessageService:
         response = await self.stub.GetAllMessages(request)
         logger.info(f"Получено сообщений: {len(response.messages)}")
         data = MessageToDict(response, preserving_proto_field_name=True)
-        # return GetAllMessagesSchema.model_validate(data)
-        return data
+        return GetAllMessagesSchema.model_validate(data)
 
     @handle_grpc_exceptions
     async def get_message_data(self, message_id: str):
         request = message_pb2.MessageId(message_id=message_id)
         response = await self.stub.GetMessageData(request)
-        logger.info(f"Получено сообщение: {response.id}")
+        print(response)
+        logger.info(f"Получено сообщение: {response.message_data.id}")
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
 

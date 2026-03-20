@@ -21,7 +21,7 @@ class MessageData(BaseModel):
     id: str
     chat_id: int
     content: str
-    sender: UserData
+    user_id: int
     created_at: datetime
 
 

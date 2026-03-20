@@ -66,7 +66,7 @@ class MessageServiceStub(object):
         self.GetMessageData = channel.unary_unary(
             "/message.MessageService/GetMessageData",
             request_serializer=message__pb2.MessageId.SerializeToString,
-            response_deserializer=message__pb2.FullMessageData.FromString,
+            response_deserializer=message__pb2.FullMessageResponse.FromString,
             _registered_method=True,
         )
         self.AddReaction = channel.unary_unary(
@@ -166,7 +166,7 @@ def add_MessageServiceServicer_to_server(servicer, server):
         "GetMessageData": grpc.unary_unary_rpc_method_handler(
             servicer.GetMessageData,
             request_deserializer=message__pb2.MessageId.FromString,
-            response_serializer=message__pb2.FullMessageData.SerializeToString,
+            response_serializer=message__pb2.FullMessageResponse.SerializeToString,
         ),
         "AddReaction": grpc.unary_unary_rpc_method_handler(
             servicer.AddReaction,
@@ -333,7 +333,7 @@ class MessageService(object):
             target,
             "/message.MessageService/GetMessageData",
             message__pb2.MessageId.SerializeToString,
-            message__pb2.FullMessageData.FromString,
+            message__pb2.FullMessageResponse.FromString,
             options,
             channel_credentials,
             insecure,

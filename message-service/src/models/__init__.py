@@ -30,26 +30,12 @@ class Message(Document):
     user_id: int
     chat_id: int
     content: str
-    is_read: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: MetaData = Field(default_factory=MetaData)
-
-    read_by: List[BackLink["ReadStatus"]] = Field(
-        default_factory=list, json_schema_extra={"original_field": "message_id"}
-    )
 
     class Settings:
         name = "messages"
         indexes = ["chat_id", "user_id", ("chat_id", "-created_at")]
-
-
-class ReadStatus(Document):
-    message_id: Link[Message]
-    read_by: int
-    read_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    class Settings:
-        name = "read_status"
 
 
 class ReadProgress(Document):

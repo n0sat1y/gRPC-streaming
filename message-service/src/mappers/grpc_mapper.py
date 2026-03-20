@@ -4,6 +4,7 @@ from google.protobuf import empty_pb2
 
 from protos import message_pb2, message_pb2_grpc
 from src.dto import ManyMessagesDTO, MessageDTO
+from src.models.replications import UserReplica
 
 
 class GrpcMapper:
@@ -15,12 +16,10 @@ class GrpcMapper:
     ) -> Union[message_pb2.Message, message_pb2.FullMessageData]:
         reply_to_obj = message_pb2.ReplyData()
         message = message_data.message
-        users = message_data.users
         reply_data = message.metadata.reply_to
         if reply_data:
             reply_to_obj.message_id = reply_data.message_id
             reply_to_obj.user_id = reply_data.user_id
-            reply_to_obj.username = users[reply_data.user_id].username
             reply_to_obj.preview = reply_data.preview
 
         metadata_obj = message_pb2.Metadata(
@@ -42,20 +41,31 @@ class GrpcMapper:
         obj: message_pb2.Message,
     ) -> message_pb2.Message:
         message = message_data.message
-        users = message_data.users
         obj.id = str(message.id)
         obj.chat_id = message.chat_id
-        obj.sender.CopyFrom(
-            message_pb2.SenderData(
-                id=message.user_id, username=users[message.user_id].username
-            )
-        )
+        obj.user_id = message.user_id
         obj.content = message.content
-        obj.is_read = message.is_read
         obj.created_at.FromDatetime(message.created_at)
         if message.metadata:
             obj = cls._add_metadata(message_data, obj)
         print(obj)
+        return obj
+
+    @classmethod
+    def _add_user_data(
+        cls,
+        users_data: dict[int, UserReplica],
+        obj: Union[message_pb2.AllMessages, message_pb2.FullMessageResponse],
+    ) -> Union[message_pb2.AllMessages, message_pb2.FullMessageResponse]:
+        users_list = []
+        for user_data in users_data.values():
+            user_obj = message_pb2.UserData(
+                id=user_data.user_id,
+                username=user_data.username,
+                avatar=None,
+            )
+            users_list.append(user_obj)
+        obj.user_data.extend(users_list)
         return obj
 
     @classmethod
@@ -67,35 +77,34 @@ class GrpcMapper:
 
     @classmethod
     def get_all(cls, messages: ManyMessagesDTO) -> message_pb2.AllMessages:
-        response = []
+        messages_obj = []
         for message in messages.messages:
-            message_data = MessageDTO(message=message, users=messages.users)
+            message_data = MessageDTO(message=message)
             message_obj = message_pb2.Message()
             message_obj = cls._get_slim_message_obj(
                 message_data=message_data, obj=message_obj
             )
-            response.append(message_obj)
-        return message_pb2.AllMessages(messages=response)
+            messages_obj.append(message_obj)
+        response_obj = message_pb2.AllMessages(messages=messages_obj)
+        response_obj = cls._add_user_data(messages.users, response_obj)
+        return response_obj
 
     @classmethod
     def get_message_data(cls, message_data: MessageDTO) -> message_pb2.FullMessageData:
         message = message_data.message
-        response_obj = message_pb2.FullMessageData(
+        users_data = message_data.users
+        message_obj = message_pb2.FullMessageData(
             id=str(message.id),
             chat_id=message.chat_id,
             user_id=message.user_id,
             content=message.content,
-            is_read=message.is_read,
+            read_by=message_data.read_by,
         )
-        read_by_list = []
-        for data in message.read_by:
-            read_by_obj = message_pb2.ReadBy(id=data.read_by)
-            read_by_obj.read_at.FromDatetime(data.read_at)
-            read_by_list.append(read_by_obj)
-        response_obj.read_by.extend(read_by_list)
-        response_obj.created_at.FromDatetime(message.created_at)
+        message_obj.created_at.FromDatetime(message.created_at)
         if message.metadata:
-            response_obj = cls._add_metadata(message_data, response_obj)
+            response_obj = cls._add_metadata(message_data, message_obj)
+        response_obj = message_pb2.FullMessageResponse(message_data=message_obj)
+        response_obj = cls._add_user_data(users_data, response_obj)
         return response_obj
 
     @classmethod

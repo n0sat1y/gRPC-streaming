@@ -19,7 +19,7 @@ def handle_grpc_exceptions(func: F) -> F:
             details = e.details()
             code = e.code()
 
-            logger.error(
+            logger.exception(
                 f"gRPC error in {func.__name__} | Code: {code} | Details: {details}"
             )
 
@@ -38,7 +38,7 @@ def handle_grpc_exceptions(func: F) -> F:
                 status_code=CodeEnum.from_grpc_code(code), detail=details
             )
         except Exception as e:
-            logger.error(f"Unexpected error in {func.__name__}: {e}")
+            logger.exception(f"Unexpected error in {func.__name__}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",

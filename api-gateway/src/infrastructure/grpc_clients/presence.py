@@ -22,7 +22,6 @@ class RpcPresenceService:
     async def set_online(self, user_id: int, ttl: int | None = None):
         try:
             request = presence_pb2.SetOnlineRequest(id=user_id, ttl=ttl)
-            logger.info("----------------------------------")
             await self.stub.SetOnline(request)
             logger.info(f"Пользователь {user_id} в сети")
         except grpc.RpcError as e:

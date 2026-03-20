@@ -13,7 +13,14 @@ class KafkaPublisher:
         self.logger = logger
 
     async def _publish(
-        self, event: Union[CreatedMessageEvent, UpdateMessageEvent, DeleteMessageEvent]
+        self,
+        event: Union[
+            CreatedMessageEvent,
+            UpdateMessageEvent,
+            DeleteMessageEvent,
+            MessagesReadEvent,
+            ReactionEvent,
+        ],
     ) -> None:
         await self.broker.publish(event, self.topic)
 
@@ -66,6 +73,7 @@ class KafkaPublisher:
 
     async def read_message(self, data: list[SlimMessageData]) -> None:
         self.logger.info("Публикуем событие чтения сообщений в Kafka")
+        self.logger.info(data)
         return await self._publish(MessagesReadEvent(data=data))
 
     async def add_reaction(
