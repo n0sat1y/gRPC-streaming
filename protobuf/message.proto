@@ -9,7 +9,7 @@ service MessageService {
     rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {}
     rpc UpdateMessage (UpdateMessageRequest) returns (MessageId) {}
     rpc DeleteMessage (DeleteMessageRequest) returns (DeleteMessageResponse) {}
-    rpc GetAllMessages (GetAllMessagesRequest) returns (AllMessages) {}
+    rpc GetContext (GetContextRequest) returns (ContextResponse) {}
     rpc GetMessageData (MessageId) returns (FullMessageResponse) {}
     rpc AddReaction (Reaction) returns (google.protobuf.Empty) {}
     rpc RemoveReaction (Reaction) returns (google.protobuf.Empty) {}
@@ -66,13 +66,24 @@ message Message {
     optional Metadata metadata = 7;
 }
 
-message GetAllMessagesRequest {
+message GetContextRequest {
     int32 chat_id = 1;
+    int32 user_id = 2;
+    optional string cursor_id = 3;
+    enum DirectionEnum {
+        UNSPECIFIED = 0;
+        BEFORE = 1;
+        AFTER = 2; } 
+    DirectionEnum direction = 4;
+    int32 limit = 5;
 }
 
-message AllMessages {
-    repeated Message messages = 1;
-    repeated UserData user_data = 2;
+message ContextResponse {
+    int32 count = 1;
+    int32 unread_count = 2;
+    optional string last_read_message_id = 3;
+    repeated Message messages = 4;
+    repeated UserData user_data = 5;
 }
 
 

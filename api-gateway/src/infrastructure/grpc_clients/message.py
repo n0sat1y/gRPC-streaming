@@ -8,8 +8,11 @@ from loguru import logger
 from protos import message_pb2, message_pb2_grpc
 from src.core.config import settings
 from src.schemas.api.message import GetAllMessagesSchema
-from src.utils.decorators.grpc import (handle_grpc_exceptions,
-                                       handle_websocket_grpc_exceptions)
+from src.utils.decorators.grpc import (
+    handle_grpc_exceptions,
+    handle_websocket_grpc_exceptions,
+)
+from src.utils.enums.grpc_enums import DirectionEnum, direction_enum_mapper
 
 
 class RpcMessageService:
@@ -62,12 +65,28 @@ class RpcMessageService:
         return response.status
 
     @handle_grpc_exceptions
-    async def get_all_messages(self, chat_id: int) -> GetAllMessagesSchema:
-        request = message_pb2.GetAllMessagesRequest(chat_id=chat_id)
-        response = await self.stub.GetAllMessages(request)
+    async def get_context(
+        self,
+        chat_id: int,
+        user_id: int,
+        limit: int,
+        direction: DirectionEnum,
+        cursor_id: str | None = None,
+    ):
+        mapped_direction = direction_enum_mapper[direction]
+        request = message_pb2.GetContextRequest(
+            chat_id=chat_id,
+            user_id=user_id,
+            cursor_id=cursor_id,
+            limit=limit,
+            direction=mapped_direction,
+        )
+        print(request)
+        response = await self.stub.GetContext(request)
         logger.info(f"Получено сообщений: {len(response.messages)}")
         data = MessageToDict(response, preserving_proto_field_name=True)
-        return GetAllMessagesSchema.model_validate(data)
+        # return GetAllMessagesSchema.model_validate(data)
+        return data
 
     @handle_grpc_exceptions
     async def get_message_data(self, message_id: str):

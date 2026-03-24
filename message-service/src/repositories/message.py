@@ -1,3 +1,6 @@
+import asyncio
+
+import pymongo
 from beanie.operators import AddToSet, In, Pull, Set, Unset
 from bson import ObjectId
 from loguru import logger
@@ -17,15 +20,75 @@ class MessageRepository:
             logger.error(f"Database Error {e}")
             raise e
 
-    async def get_all(self, chat_id: int, fetch_links: bool = False):
+    async def get_context(
+        self,
+        chat_id: int,
+        cursor_id: str | None,
+        limit_before: int = 0,
+        limit_after: int = 0,
+    ):
         try:
-            messages = await Message.find_many(Message.chat_id == chat_id).to_list()
-            return messages
+            if not cursor_id:
+                messages = (
+                    await Message.find(Message.chat_id == chat_id)
+                    .limit(limit_after + limit_before + 1)
+                    .to_list()
+                )
+                return messages
+
+            tasks = []
+            center_oid = ObjectId(cursor_id)
+
+            if limit_before > 0:
+                query_before = (
+                    Message.find(Message.chat_id == chat_id, Message.id < center_oid)
+                    .sort(-Message.id)
+                    .limit(limit_before)
+                )
+                tasks.append(query_before.to_list())
+
+            if limit_after > 0:
+                query_after = (
+                    Message.find(Message.chat_id == chat_id, Message.id > center_oid)
+                    .sort(Message.id)
+                    .limit(limit_after)
+                )
+                tasks.append(query_after.to_list())
+
+            results = await asyncio.gather(*tasks)
+
+            messages_before = []
+            messages_after = []
+
+            task_index = 0
+            if limit_before > 0:
+                messages_before = results[task_index]
+                messages_before.reverse()
+                task_index += 1
+            if limit_after > 0:
+                messages_after = results[task_index]
+
+            center_message = await Message.get(center_oid)
+
+            return messages_before + [center_message] + messages_after
         except Exception as e:
             logger.error(f"Database Error", e)
             raise e
 
-    async def get_multiple(
+    async def get_unread_count(
+        self, chat_id: int, user_id: int, cursor_id: str | None = None
+    ) -> int:
+        try:
+            request = [Message.chat_id == chat_id, Message.user_id != user_id]
+            if cursor_id:
+                request.append(Message.id > ObjectId(cursor_id))
+            count = await Message.find(*request).count()
+            return count
+        except Exception as e:
+            logger.error(f"Database Error", e)
+            raise e
+
+    async def get_in_range(
         self, chat_id: int, first_message_id: str | None, last_message_id: str
     ) -> list[Message]:
         try:

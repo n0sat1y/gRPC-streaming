@@ -13,5 +13,8 @@ class MessageDTO:
 
 @dataclass
 class ManyMessagesDTO:
+    count: int | None = None
+    unread_count: int | None = None
     messages: list[Message] = field(default_factory=list)
     users: dict[int, UserReplica] = field(default_factory=dict)
+    last_read_message_id: str | None = None

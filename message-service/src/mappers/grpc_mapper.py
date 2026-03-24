@@ -48,15 +48,14 @@ class GrpcMapper:
         obj.created_at.FromDatetime(message.created_at)
         if message.metadata:
             obj = cls._add_metadata(message_data, obj)
-        print(obj)
         return obj
 
     @classmethod
     def _add_user_data(
         cls,
         users_data: dict[int, UserReplica],
-        obj: Union[message_pb2.AllMessages, message_pb2.FullMessageResponse],
-    ) -> Union[message_pb2.AllMessages, message_pb2.FullMessageResponse]:
+        obj: Union[message_pb2.ContextResponse, message_pb2.FullMessageResponse],
+    ) -> Union[message_pb2.ContextResponse, message_pb2.FullMessageResponse]:
         users_list = []
         for user_data in users_data.values():
             user_obj = message_pb2.UserData(
@@ -76,7 +75,7 @@ class GrpcMapper:
         return response
 
     @classmethod
-    def get_all(cls, messages: ManyMessagesDTO) -> message_pb2.AllMessages:
+    def get_context(cls, messages: ManyMessagesDTO) -> message_pb2.ContextResponse:
         messages_obj = []
         for message in messages.messages:
             message_data = MessageDTO(message=message)
@@ -85,8 +84,11 @@ class GrpcMapper:
                 message_data=message_data, obj=message_obj
             )
             messages_obj.append(message_obj)
-        response_obj = message_pb2.AllMessages(messages=messages_obj)
+        response_obj = message_pb2.ContextResponse(messages=messages_obj)
         response_obj = cls._add_user_data(messages.users, response_obj)
+        response_obj.count = len(messages.messages)
+        response_obj.unread_count = messages.unread_count
+        response_obj.last_read_message_id = messages.last_read_message_id
         return response_obj
 
     @classmethod

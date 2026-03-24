@@ -7,6 +7,7 @@ from loguru import logger
 
 from protos import message_pb2, message_pb2_grpc
 from src.decorators import handle_exceptions
+from src.enums.grpc_enums import DirectionEnum
 from src.mappers.grpc_mapper import mapper
 from src.models import Message as MessageModel
 from src.routers.kafka import broker
@@ -37,9 +38,15 @@ class Message(message_pb2_grpc.MessageServiceServicer):
         return response
 
     @handle_exceptions
-    async def GetAllMessages(self, request, context):
-        messages = await self.service.get_all(request.chat_id)
-        return mapper.get_all(messages)
+    async def GetContext(self, request, context):
+        messages = await self.service.get_context(
+            chat_id=request.chat_id,
+            user_id=request.user_id,
+            cursor_id=request.cursor_id if request.cursor_id else None,
+            direction=DirectionEnum(request.direction),
+            limit=request.limit,
+        )
+        return mapper.get_context(messages)
 
     @handle_exceptions
     async def GetMessageData(self, request, context):

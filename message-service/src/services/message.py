@@ -9,6 +9,7 @@ from faststream.kafka import KafkaBroker
 from loguru import logger
 
 from src.dto import ManyMessagesDTO, MessageDTO
+from src.enums.grpc_enums import DirectionEnum
 from src.exceptions.chat import *
 from src.exceptions.message import *
 from src.exceptions.user import *
@@ -67,9 +68,62 @@ class MessageService:
 
         return message_data
 
-    async def get_all(self, chat_id: int) -> ManyMessagesDTO:
-        messages = await self.repo.get_all(chat_id, fetch_links=True)
-        result = ManyMessagesDTO(messages=messages)
+    async def get_context(
+        self,
+        chat_id: int,
+        user_id: int,
+        direction: DirectionEnum,
+        cursor_id: str | None = None,
+        limit: int = 50,
+    ) -> ManyMessagesDTO:
+        chat = await self.chat_service.get(chat_id)
+        user = await self.user_service.get(user_id)
+        self.access_policy.can_see_chat(chat=chat, user_id=user_id)
+
+        logger.info(
+            f"Получаем сообщения из чата {chat_id=} ({direction=}, {cursor_id=})"
+        )
+        last_read_message = await self.progress_repo.get_last_read_message_by_user(
+            chat_id=chat_id, user_id=user_id
+        )
+        unread_count_coro = self.repo.get_unread_count(
+            chat_id=chat_id, user_id=user_id, cursor_id=last_read_message
+        )
+        limit -= 1
+
+        if not cursor_id:
+            cursor_id = last_read_message
+        if direction == DirectionEnum.BEFORE:
+            messages_coro = self.repo.get_context(
+                chat_id=chat_id,
+                cursor_id=cursor_id if cursor_id else None,
+                limit_before=limit,
+            )
+        elif direction == DirectionEnum.AFTER:
+            if not cursor_id:
+                raise MessageNotFoundError(message_id=cursor_id)
+            messages_coro = self.repo.get_context(
+                chat_id=chat_id, cursor_id=cursor_id, limit_after=limit
+            )
+        else:
+            limit_after = limit // 2
+            limit_before = limit - limit_after
+            if not cursor_id:
+                raise MessageNotFoundError(message_id=cursor_id)
+            messages_coro = self.repo.get_context(
+                chat_id=chat_id,
+                cursor_id=cursor_id,
+                limit_before=limit_before,
+                limit_after=limit_after,
+            )
+
+        messages, unread_count = await asyncio.gather(messages_coro, unread_count_coro)
+
+        result = ManyMessagesDTO(
+            messages=messages,
+            last_read_message_id=last_read_message,
+            unread_count=unread_count,
+        )
         logger.info(f"Получено {len(result.messages)} сообщений из чата {chat_id=}")
         user_ids = set()
         for message in messages:
@@ -190,7 +244,7 @@ class MessageService:
         )
         await self.progress_repo.set_last_read_message(chat_id, user_id, message_id)
         logger.info(f"Последнее прочитанное сообщение пользователя {user_id} обновлено")
-        read_messages_list = await self.repo.get_multiple(
+        read_messages_list = await self.repo.get_in_range(
             chat_id,
             previous_read_message if previous_read_message else None,
             message_id,
@@ -263,4 +317,4 @@ class MessageService:
         for message_id in messages:
             coros.append(self.get(message_id))
 
-        messages_data = asyncio.gather(*coros)
+        messages_data = await asyncio.gather(*coros)
