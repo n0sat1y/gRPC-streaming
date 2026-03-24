@@ -93,6 +93,11 @@ class MessageService:
 
         if not cursor_id:
             cursor_id = last_read_message
+        else:
+            cursor_message = await self.repo.get(message_id=cursor_id)
+            if not cursor_message or cursor_message.chat_id != chat_id:
+                raise MessageNotFoundError(message_id=cursor_id)
+
         if direction == DirectionEnum.BEFORE:
             messages_coro = self.repo.get_context(
                 chat_id=chat_id,
@@ -167,6 +172,13 @@ class MessageService:
         )
         message = await self.repo.insert(message)
         logger.info(f"Добавлено сообщение {message.id=} в {chat_id=}")
+
+        await self.progress_repo.set_last_read_message(
+            chat_id=chat_id, user_id=user_id, message_id=str(message.id)
+        )
+        logger.info(
+            f"Счетчик последнего прочитанного сообщения обновлен ({user_id=}, {chat_id=}, {message.id=})"
+        )
 
         users = await self.user_service.get_multiple(chat.members)
         active_recievers = [
@@ -257,7 +269,9 @@ class MessageService:
                 authors[author_id] = message
         if authors:
             last_read_chat_message = (
-                await self.progress_repo.get_last_read_chat_message(chat_id=chat_id)
+                await self.progress_repo.get_last_read_chat_message(
+                    chat_id=chat_id, user_id=user_id
+                )
             )
             event_data = []
             for author, message in authors.items():

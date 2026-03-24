@@ -6,11 +6,15 @@ from src.models import Message, ReadProgress
 
 
 class ReadProgressRepository:
-    async def get_last_read_chat_message(self, chat_id: int) -> str | None:
+    async def get_last_read_chat_message(
+        self, chat_id: int, user_id: int
+    ) -> str | None:
         try:
             progress = (
                 await ReadProgress.find(
-                    ReadProgress.chat_id == chat_id, sort=[("_id", -1)]
+                    ReadProgress.chat_id == chat_id,
+                    ReadProgress.user_id != user_id,
+                    sort=[("_id", -1)],
                 )
                 .limit(1)
                 .to_list()
