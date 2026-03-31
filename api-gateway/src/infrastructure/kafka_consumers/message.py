@@ -18,6 +18,8 @@ async def message_event(
     message: IncomingMessage = TypeAdapter(IncomingMessage).validate_python(data)
     if message.event_type == "MessageCreated":
         await service.send_message(data)
+    elif message.event_type == "MessagesCreated":
+        await service.forward_messages(data)
     elif message.event_type == "MessageUpdated":
         await service.update_message(data)
     elif message.event_type == "MessageDeleted":

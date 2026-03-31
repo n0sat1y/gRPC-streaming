@@ -1,10 +1,12 @@
 import grpc
+from fastapi import HTTPException
 from loguru import logger
 
 from src.core.kafka import router
 from src.infrastructure.grpc_clients.message import RpcMessageService
 from src.schemas.events.message import ApiGatewayReadEvent
 from src.schemas.websocket.websocket import *
+from src.utils.exceptions import GrpcError
 
 
 class WebsocketHandler:
@@ -18,6 +20,7 @@ class WebsocketHandler:
             "mark_as_read": self.mark_as_read,
             "add_reaction": self.add_reaction,
             "remove_reaction": self.remove_reaction,
+            "forward_messages": self.forward_messages,
         }
 
     async def handle_incoming_message(self, user_id: int, message: IncomingMessage):
@@ -27,9 +30,9 @@ class WebsocketHandler:
                 logger.warning(f"Неизвестный тип события: {message.event_type}")
                 return
             await event(user_id, message)
-        except grpc.RpcError as e:
+        except GrpcError as e:
             return ErrorResponse(
-                payload=ErrorPayload(code=e.code().name, details=e.details())
+                payload=ErrorPayload(code=e.code.name, details=e.detail)
             ).model_dump()
 
     async def send_message(self, user_id: int, message: SendMessageEvent):
@@ -79,4 +82,14 @@ class WebsocketHandler:
             author=user_id,
             message_id=message.payload.message_id,
             reaction=message.payload.reaction,
+        )
+
+    async def forward_messages(self, user_id: int, message: ForwardMessagesEvent):
+        print(message)
+        await self.rpc_message_service.forward_messages(
+            user_id=user_id,
+            chat_id=message.payload.chat_id,
+            messages=message.payload.messages,
+            content=message.payload.content,
+            request_id=message.request_id,
         )

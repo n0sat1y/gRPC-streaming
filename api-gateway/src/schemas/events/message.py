@@ -3,7 +3,7 @@ from typing import Literal, Union
 
 from pydantic import BaseModel, ConfigDict
 
-from src.schemas.api.message import MessageData
+# from src.schemas.api.message import MessageData
 
 
 class UpdateMessagePayload(BaseModel):
@@ -20,7 +20,7 @@ class ReacionPayload(BaseModel):
     reaction: str
 
 
-class SlimMessageData(BaseModel):
+class Slimdict(BaseModel):
     id: str
     sender_id: int
 
@@ -28,7 +28,15 @@ class SlimMessageData(BaseModel):
 class CreatedMessageEvent(BaseModel):
     event_type: Literal["MessageCreated"]
     recievers: list[int]
-    data: MessageData
+    data: dict
+    request_id: str
+    sender_id: int
+
+
+class CreatedManyMessagesEvent(BaseModel):
+    event_type: str = "MessagesCreated"
+    recievers: list[int]
+    data: list[dict]
     request_id: str
     sender_id: int
 
@@ -65,11 +73,12 @@ class RemoveReactionEvent(BaseModel):
 
 class MessagesReadEvent(BaseModel):
     event_type: Literal["MessagesRead"]
-    data: list[SlimMessageData]
+    data: list[Slimdict]
 
 
 IncomingMessage = Union[
     CreatedMessageEvent,
+    CreatedManyMessagesEvent,
     UpdateMessageEvent,
     DeleteMessageEvent,
     AddReactionEvent,

@@ -8,10 +8,7 @@ from loguru import logger
 from protos import message_pb2, message_pb2_grpc
 from src.core.config import settings
 from src.schemas.api.message import GetAllMessagesSchema
-from src.utils.decorators.grpc import (
-    handle_grpc_exceptions,
-    handle_websocket_grpc_exceptions,
-)
+from src.utils.decorators.grpc import handle_grpc_exceptions
 from src.utils.enums.grpc_enums import DirectionEnum, direction_enum_mapper
 
 
@@ -19,6 +16,7 @@ class RpcMessageService:
     def __init__(self, stub: message_pb2_grpc.MessageServiceStub):
         self.stub = stub
 
+    @handle_grpc_exceptions
     async def send_message(
         self,
         chat_id: int,
@@ -32,7 +30,6 @@ class RpcMessageService:
             chat_id=chat_id,
             content=content,
             request_id=request_id,
-            sender_id=sender_id,
             reply_to=reply_to,
         )
         response = await self.stub.SendMessage(request)
@@ -41,6 +38,7 @@ class RpcMessageService:
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
 
+    @handle_grpc_exceptions
     async def update_message(
         self, message_id: str, new_content: str, request_id: str, sender_id: int
     ) -> str:
@@ -54,6 +52,7 @@ class RpcMessageService:
         logger.info(f"Обновлено сообщение: {response.message_id}")
         return response.message_id
 
+    @handle_grpc_exceptions
     async def delete_message(
         self, message_id: str, request_id: str, sender_id: int
     ) -> str:
@@ -112,3 +111,22 @@ class RpcMessageService:
         )
         response = await self.stub.RemoveReaction(request)
         return None
+
+    @handle_grpc_exceptions
+    async def forward_messages(
+        self,
+        user_id: int,
+        chat_id: int,
+        messages: list[str],
+        request_id: str,
+        content: Optional[str] = None,
+    ):
+        request = message_pb2.ForwardMessageRequest(
+            user_id=user_id,
+            chat_id=chat_id,
+            request_id=request_id,
+            messages=messages,
+            content=content,
+        )
+        response = await self.stub.ForwardMessage(request)
+        return response

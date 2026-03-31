@@ -3,6 +3,7 @@ from typing import Union
 from faststream.kafka import KafkaBroker
 from loguru import logger
 
+from src.models import Message
 from src.schemas.message import *
 
 
@@ -12,24 +13,28 @@ class KafkaPublisher:
         self.topic = topic
         self.logger = logger
 
-    async def _publish(
-        self,
-        event: Union[
-            CreatedMessageEvent,
-            UpdateMessageEvent,
-            DeleteMessageEvent,
-            MessagesReadEvent,
-            ReactionEvent,
-        ],
-    ) -> None:
+    async def _publish(self, event: EventBase) -> None:
         await self.broker.publish(event, self.topic)
 
     async def create_message(
-        self, data: MessageData, recievers: list[int], request_id: str, sender_id: int
+        self, data: Message, recievers: list[int], request_id: str, sender_id: int
     ) -> None:
         self.logger.info("Публикуем событие создания сообщения в Kafka")
         return await self._publish(
             CreatedMessageEvent(
+                recievers=recievers,
+                data=data,
+                request_id=request_id,
+                sender_id=sender_id,
+            )
+        )
+
+    async def create_many_messages(
+        self, data: list[Message], recievers: list[int], request_id: str, sender_id: int
+    ) -> None:
+        self.logger.info("Публикуем событие создания сообщения в Kafka")
+        return await self._publish(
+            CreatedManyMessagesEvent(
                 recievers=recievers,
                 data=data,
                 request_id=request_id,

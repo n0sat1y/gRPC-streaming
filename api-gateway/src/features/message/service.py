@@ -6,14 +6,12 @@ from loguru import logger
 from pydantic import TypeAdapter
 
 from src.infrastructure.redis_publishers.notifier import RedisNotifier
-from src.schemas.events.message import (
-    AddReactionEvent,
-    CreatedMessageEvent,
-    DeleteMessageEvent,
-    MessagesReadEvent,
-    RemoveReactionEvent,
-    UpdateMessageEvent,
-)
+from src.schemas.events.message import (AddReactionEvent,
+                                        CreatedManyMessagesEvent,
+                                        CreatedMessageEvent,
+                                        DeleteMessageEvent, MessagesReadEvent,
+                                        RemoveReactionEvent,
+                                        UpdateMessageEvent)
 
 
 class MessageService:
@@ -24,7 +22,8 @@ class MessageService:
 
     async def send_message(self, data: CreatedMessageEvent):
         logger.info(f"Пришло сообщение {data.event_type}")
-        payload = data.data.model_dump(mode="json")
+        # payload = data.data.model_dump(mode="json")
+        payload = data.data
         sender_id = data.sender_id
         recievers = [x for x in data.recievers if x != sender_id]
 
@@ -37,6 +36,27 @@ class MessageService:
             user_id=sender_id,
             data={
                 "event_type": "message_sended",
+                "payload": personal_payload,
+                "request_id": data.request_id,
+            },
+        )
+
+    async def forward_messages(self, data: CreatedManyMessagesEvent):
+        logger.info(f"Пришло сообщение {data.event_type}")
+        # payload = data.data.model_dump(mode="json")
+        payload = data.data
+        sender_id = data.sender_id
+        recievers = [x for x in data.recievers if x != sender_id]
+
+        await self.redis_publisher.broadcast(
+            recievers, {"event_type": "new_messages", "payload": payload}
+        )
+
+        personal_payload = payload.copy()
+        await self.redis_publisher.publish_to_user(
+            user_id=sender_id,
+            data={
+                "event_type": "messages_sended",
                 "payload": personal_payload,
                 "request_id": data.request_id,
             },

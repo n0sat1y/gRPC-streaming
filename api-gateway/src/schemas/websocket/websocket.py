@@ -3,6 +3,16 @@ from typing import Literal, Optional, Union
 from pydantic import BaseModel
 
 
+class PayloadBase(BaseModel):
+    pass
+
+
+class EventBase(BaseModel):
+    event_type: str
+    payload: PayloadBase
+    request_id: str
+
+
 class ErrorPayload(BaseModel):
     code: str
     details: str
@@ -13,13 +23,13 @@ class ErrorResponse(BaseModel):
     payload: ErrorPayload
 
 
-class SendMessagePayload(BaseModel):
+class SendMessagePayload(PayloadBase):
     chat_id: int
     content: str
     reply_to: Optional[str] = None
 
 
-class DeleteMessagePayload(BaseModel):
+class DeleteMessagePayload(PayloadBase):
     message_id: str
 
 
@@ -27,52 +37,60 @@ class EditMessagePayload(DeleteMessagePayload):
     new_content: str
 
 
-class ReadMessagesPayload(BaseModel):
+class ReadMessagesPayload(PayloadBase):
     chat_id: int
     last_read_message: str
 
 
-class AddReactionPayload(BaseModel):
+class AddReactionPayload(PayloadBase):
     message_id: str
     reaction: str
 
 
-class RemoveReactionPayload(BaseModel):
+class RemoveReactionPayload(PayloadBase):
     message_id: str
     reaction: str
 
 
-class SendMessageEvent(BaseModel):
+class ForwardMessagesPayload(PayloadBase):
+    chat_id: int
+    messages: list[str]
+    content: Optional[str] = None
+
+
+class SendMessageEvent(EventBase):
     event_type: Literal["send_message"]
     payload: SendMessagePayload
-    request_id: str
 
 
-class DeleteMessageEvent(BaseModel):
+class DeleteMessageEvent(EventBase):
     event_type: Literal["delete_message"]
     payload: DeleteMessagePayload
-    request_id: str
 
 
-class EditMessageEvent(BaseModel):
+class EditMessageEvent(EventBase):
     event_type: Literal["edit_message"]
     payload: EditMessagePayload
-    request_id: str
 
 
-class ReadMessagesEvent(BaseModel):
+class ReadMessagesEvent(EventBase):
     event_type: Literal["mark_as_read"]
     payload: ReadMessagesPayload
 
 
-class AddReactionEvent(BaseModel):
+class AddReactionEvent(EventBase):
     event_type: Literal["add_reaction"]
     payload: AddReactionPayload
 
 
-class RemoveReactionEvent(BaseModel):
+class RemoveReactionEvent(EventBase):
     event_type: Literal["remove_reaction"]
     payload: RemoveReactionPayload
+
+
+class ForwardMessagesEvent(EventBase):
+    event_type: Literal["forward_messages"]
+    payload: ForwardMessagesPayload
 
 
 IncomingMessage = Union[
@@ -82,4 +100,5 @@ IncomingMessage = Union[
     ReadMessagesEvent,
     AddReactionEvent,
     RemoveReactionEvent,
+    ForwardMessagesEvent,
 ]

@@ -31,7 +31,6 @@ class Message(message_pb2_grpc.MessageServiceServicer):
             request.chat_id,
             request.content,
             request.request_id,
-            request.sender_id,
             request.reply_to,
         )
         response = mapper.send_message(message)
@@ -86,10 +85,12 @@ class Message(message_pb2_grpc.MessageServiceServicer):
 
     @handle_exceptions
     async def ForwardMessage(self, request, context):
-        await self.service.forward_message(
+        messages = await self.service.forward_message(
             user_id=request.user_id,
             chat_id=request.chat_id,
             messages=request.messages,
             request_id=request.request_id,
             content=request.content,
         )
+        response = mapper.forward_message(messages)
+        return response

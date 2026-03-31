@@ -42,12 +42,16 @@ class MessageService:
         self.kafka_producer = kafka_producer
         self.access_policy = access_policy
 
-    async def get(self, message_id: str, get_full: bool = False) -> MessageDTO:
-        logger.info(f"Получаем сообщение {message_id}")
+    async def _get_model(self, message_id: str) -> Message:
         message = await self.repo.get(message_id)
         if not message:
             logger.warning(f"Не найдено сообщение {message_id}")
             raise MessageNotFoundError(message_id=message_id)
+        return message
+
+    async def get(self, message_id: str, get_full: bool = False) -> MessageDTO:
+        logger.info(f"Получаем сообщение {message_id}")
+        message = await self._get_model(message_id)
         message_data = MessageDTO(message=message)
         user_ids = set()
         user_ids.add(message.user_id)
@@ -148,29 +152,21 @@ class MessageService:
         chat_id: int,
         content: str,
         request_id: str,
-        sender_id: int,
         reply_to: Optional[str] = None,
     ) -> MessageDTO:
         chat = await self.chat_service.get(chat_id)
         user = await self.user_service.get(user_id)
         self.access_policy.can_see_chat(user_id, chat)
 
-        metadata = MetaData()
+        reply_to_message = None
         if reply_to:
-            reply_to_message = (await self.get(reply_to)).message
-            if reply_to_message.chat_id == chat_id:
-                reply_to_user = await self.user_service.get(reply_to_message.user_id)
-                reply_data = ReplyData(
-                    message_id=reply_to,
-                    user_id=reply_to_user.user_id,
-                    preview=(slim_text_formatter(reply_to_message.content)),
-                )
-                metadata.reply_to = reply_data
+            reply_to_message = await self._get_model(reply_to)
+            if not reply_to_message.chat_id == chat_id:
+                raise AccessDeniedError()
 
-        message = Message(
-            user_id=user_id, chat_id=chat_id, content=content, metadata=metadata
+        message = await self.repo.insert(
+            user_id=user_id, chat_id=chat_id, content=content, reply_to=reply_to_message
         )
-        message = await self.repo.insert(message)
         logger.info(f"Добавлено сообщение {message.id=} в {chat_id=}")
 
         await self.progress_repo.set_last_read_message(
@@ -185,18 +181,11 @@ class MessageService:
             member.user_id for member in users if member.is_active == True
         ]
 
-        event_data = MessageData(
-            id=str(message.id),
-            chat_id=message.chat_id,
-            content=message.content,
-            user_id=message.user_id,
-            created_at=message.created_at,
-        )
         await self.kafka_producer.create_message(
             recievers=active_recievers,
-            data=event_data,
+            data=message,
             request_id=request_id,
-            sender_id=sender_id,
+            sender_id=user_id,
         )
 
         return MessageDTO(message=message)
@@ -206,8 +195,8 @@ class MessageService:
     ) -> MessageDTO:
         logger.info(f"Обновляем сообщение {message_id}")
 
-        message_data = await self.get(message_id)
-        message = message_data.message
+        message_data = await self._get_model(message_id)
+        message = message_data
         self.access_policy.can_modify(user_id=sender_id, message=message)
         message = await self.repo.update(message, new_content)
         logger.info(f"Обновлено сообщение: {message_id}")
@@ -227,12 +216,12 @@ class MessageService:
 
     async def delete(self, message_id: str, request_id: str, sender_id: int) -> None:
         logger.info(f"Удаляем сообщение {message_id}")
-        message = await self.get(message_id)
-        self.access_policy.can_modify(sender_id, message.message)
-        await self.repo.delete(message.message)
+        message = await self._get_model(message_id)
+        self.access_policy.can_modify(sender_id, message)
+        await self.repo.delete(message)
         logger.info(f"Удалено сообщение {message_id}")
 
-        recievers = await self.chat_service.get_active_members(message.message.chat_id)
+        recievers = await self.chat_service.get_active_members(message.chat_id)
         await self.kafka_producer.delete_message(
             recievers=recievers,
             data=MessageIdPayload(id=str(message_id)),
@@ -283,13 +272,11 @@ class MessageService:
 
     async def add_reaction(self, message_id: str, reaction: str, author: int) -> None:
         await self.user_service.get(author)
-        message = await self.get(message_id)
+        message = await self._get_model(message_id)
         logger.info(f"Добавляем реакцию в сообщение: {message_id}")
         result = await self.repo.add_reaction(message_id, reaction, author)
         if result > 0:
-            recievers = await self.chat_service.get_active_members(
-                message.message.chat_id
-            )
+            recievers = await self.chat_service.get_active_members(message.chat_id)
             event_data = Reaction(message_id=message_id, reaction=reaction)
             await self.kafka_producer.add_reaction(
                 data=event_data, sender_id=author, recievers=recievers
@@ -301,13 +288,11 @@ class MessageService:
         self, message_id: str, reaction: str, author: int
     ) -> None:
         await self.user_service.get(author)
-        message = await self.get(message_id)
+        message = await self._get_model(message_id)
         logger.info(f"Удаляем реакцию реакцию из сообщения: {message_id}")
         result = await self.repo.remove_reaction(message_id, reaction, author)
         if result > 0:
-            recievers = await self.chat_service.get_active_members(
-                message.message.chat_id
-            )
+            recievers = await self.chat_service.get_active_members(message.chat_id)
             event_data = Reaction(message_id=message_id, reaction=reaction)
             await self.kafka_producer.remove_reaction(
                 data=event_data, sender_id=author, recievers=recievers
@@ -329,6 +314,53 @@ class MessageService:
 
         coros = []
         for message_id in messages:
-            coros.append(self.get(message_id))
+            coros.append(self._get_model(message_id))
 
         messages_data = await asyncio.gather(*coros)
+        if not messages_data:
+            logger.warning("Попытка пересылки несуществующих сообщений")
+            raise ForwardMessageFailed(detail="Messages not found")
+
+        chat_ids = set()
+        for message in messages_data:
+            chat_ids.add(message.chat_id)
+
+        if not len(chat_ids) == 1:
+            logger.warning("Попытка пересылки сообщений с нескольких чатов")
+            raise ForwardMessageFailed(
+                detail="User cant foward message from multiple chats"
+            )
+
+        from_chat = await self.chat_service.get(list(chat_ids)[0])
+        self.access_policy.can_see_chat(user_id, from_chat)
+        if from_chat == chat_id:
+            logger.warning("Попытка пересылки с того же чата")
+            raise ForwardMessageFailed(
+                detail="User cant forward messages from same chat"
+            )
+
+        new_messages = await self.repo.forward_messages(
+            user_id, chat_id, messages_data, content
+        )
+        logger.info(f"Добавлено сообщений {len(new_messages)}")
+
+        await self.progress_repo.set_last_read_message(
+            chat_id=chat_id, user_id=user_id, message_id=str(new_messages[-1].id)
+        )
+        logger.info(
+            f"Счетчик последнего прочитанного сообщения обновлен ({user_id=}, {chat_id=}, {new_messages[-1].id})"
+        )
+
+        users = await self.user_service.get_multiple(chat.members)
+        active_recievers = [
+            member.user_id for member in users if member.is_active == True
+        ]
+
+        await self.kafka_producer.create_many_messages(
+            recievers=active_recievers,
+            data=new_messages,
+            request_id=request_id,
+            sender_id=user_id,
+        )
+
+        return ManyMessagesDTO(messages=new_messages)

@@ -1,6 +1,7 @@
 import enum
-from grpc import StatusCode
+
 from fastapi import status
+from grpc import StatusCode
 
 
 class CodeEnum(enum.Enum):
@@ -21,7 +22,7 @@ class CodeEnum(enum.Enum):
     UNIMPLEMENTED = status.HTTP_501_NOT_IMPLEMENTED
     UNAVAILABLE = status.HTTP_503_SERVICE_UNAVAILABLE
     DEADLINE_EXCEEDED = status.HTTP_504_GATEWAY_TIMEOUT
-    
+
     @classmethod
     def from_grpc_code(cls, grpc_code: StatusCode) -> int:
         """Конвертирует gRPC StatusCode в HTTP код"""
@@ -45,27 +46,19 @@ class CodeEnum(enum.Enum):
             StatusCode.DATA_LOSS: cls.DATA_LOSS.value,
         }
         return mapping.get(grpc_code, cls.INTERNAL.value)
-    
+
 
 class WsCloseCodeEnum(enum.Enum):
-    """
-    Перечисление кодов закрытия WebSocket.
-    Основные коды согласно RFC 6455.
-    """
     NORMAL = status.WS_1000_NORMAL_CLOSURE
-    POLICY_VIOLATION = status.WS_1008_POLICY_VIOLATION 
+    POLICY_VIOLATION = status.WS_1008_POLICY_VIOLATION
     INTERNAL_ERROR = status.WS_1011_INTERNAL_ERROR
     TRY_AGAIN_LATER = status.WS_1013_TRY_AGAIN_LATER
 
     @classmethod
     def from_grpc_code(cls, grpc_code: StatusCode) -> int:
-        """
-        Конвертирует gRPC StatusCode в WebSocket Close Code.
-        Происходит группировка детальных gRPC статусов в общие категории WS.
-        """
         mapping = {
             StatusCode.OK: cls.NORMAL.value,
-            StatusCode.CANCELLED: cls.NORMAL.value, 
+            StatusCode.CANCELLED: cls.NORMAL.value,
             StatusCode.INVALID_ARGUMENT: cls.POLICY_VIOLATION.value,
             StatusCode.NOT_FOUND: cls.POLICY_VIOLATION.value,
             StatusCode.OUT_OF_RANGE: cls.POLICY_VIOLATION.value,

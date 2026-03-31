@@ -3,6 +3,12 @@ from typing import Literal, Union
 
 from pydantic import BaseModel
 
+from src.models import Message
+
+
+class EventBase(BaseModel):
+    event_type: str
+
 
 class IdBase(BaseModel):
     id: int
@@ -34,15 +40,23 @@ class MessageIdPayload(BaseModel):
     id: str
 
 
-class CreatedMessageEvent(BaseModel):
+class CreatedMessageEvent(EventBase):
     event_type: str = "MessageCreated"
     recievers: list[int]
-    data: MessageData
+    data: Message
     request_id: str
     sender_id: int
 
 
-class UpdateMessageEvent(BaseModel):
+class CreatedManyMessagesEvent(EventBase):
+    event_type: str = "MessagesCreated"
+    recievers: list[int]
+    data: list[Message]
+    request_id: str
+    sender_id: int
+
+
+class UpdateMessageEvent(EventBase):
     event_type: str = "MessageUpdated"
     recievers: list[int]
     data: UpdateMessagePayload
@@ -50,7 +64,7 @@ class UpdateMessageEvent(BaseModel):
     sender_id: int
 
 
-class DeleteMessageEvent(BaseModel):
+class DeleteMessageEvent(EventBase):
     event_type: str = "MessageDeleted"
     recievers: list[int]
     data: MessageIdPayload
@@ -69,12 +83,12 @@ class SlimMessageData(BaseModel):
     sender_id: int
 
 
-class MessagesReadEvent(BaseModel):
+class MessagesReadEvent(EventBase):
     event_type: str = "MessagesRead"
     data: list[SlimMessageData]
 
 
-class ReactionEvent(BaseModel):
+class ReactionEvent(EventBase):
     event_type: Literal["ReactionAdded", "ReactionRemoved"]
     recievers: list[int]
     data: Reaction

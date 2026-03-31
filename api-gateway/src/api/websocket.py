@@ -10,6 +10,7 @@ from src.infrastructure.grpc_clients.presence import RpcPresenceService
 from src.infrastructure.websocket.handler import WebsocketHandler
 from src.infrastructure.websocket.manager import ConnectionManager
 from src.schemas.websocket.websocket import *
+from src.utils.exceptions import GrpcError
 
 router = APIRouter(prefix="/ws", tags=["Websockets"])
 
@@ -32,7 +33,10 @@ async def connection(
                 recieve_data = await asyncio.wait_for(
                     ws.receive_json(), timeout=PING_INTERVAL
                 )
-                await _presence_service.refresh_online(user_id)
+                try:
+                    await _presence_service.refresh_online(user_id)
+                except GrpcError as e:
+                    logger.warning(f"Failed to refresh online status: {e.detail}")
                 if recieve_data == {"type": "pong"}:
                     continue
 

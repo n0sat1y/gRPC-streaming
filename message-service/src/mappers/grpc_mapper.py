@@ -15,17 +15,24 @@ class GrpcMapper:
         obj: Union[message_pb2.Message, message_pb2.FullMessageData],
     ) -> Union[message_pb2.Message, message_pb2.FullMessageData]:
         reply_to_obj = message_pb2.ReplyData()
+        forward_from_obj = message_pb2.ForwardData()
         message = message_data.message
         reply_data = message.metadata.reply_to
+        forward_data = message.metadata.forward_from
         if reply_data:
             reply_to_obj.message_id = reply_data.message_id
             reply_to_obj.user_id = reply_data.user_id
             reply_to_obj.preview = reply_data.preview
 
+        if forward_data:
+            forward_from_obj.from_message_id = forward_data.from_message_id
+            forward_from_obj.from_chat_id = forward_data.from_chat_id
+            forward_from_obj.sender_user_id = forward_data.sender_user_id
         metadata_obj = message_pb2.Metadata(
             is_edited=message.metadata.is_edited,
             is_pinned=message.metadata.is_pinned,
             reply_to=reply_to_obj,
+            forward_from=forward_from_obj,
         )
         for reaction, reacted_by in message.metadata.reactions.items():
             reacted_by_obj = message_pb2.ReactedBy(users_id=reacted_by)
@@ -124,6 +131,20 @@ class GrpcMapper:
     @classmethod
     def remove_reaction(cls) -> empty_pb2.Empty:
         return empty_pb2.Empty()
+
+    @classmethod
+    def forward_message(
+        cls, messages: ManyMessagesDTO
+    ) -> message_pb2.ForwardMessageResponse:
+        response = message_pb2.ForwardMessageResponse()
+        response_lst = []
+        for message_data in messages.messages:
+            message = message_pb2.SendMessageResponse()
+            message.message_id = str(message_data.id)
+            message.created_at.FromDatetime(message_data.created_at)
+            response_lst.append(message)
+        response.messages.extend(response_lst)
+        return response
 
 
 mapper = GrpcMapper

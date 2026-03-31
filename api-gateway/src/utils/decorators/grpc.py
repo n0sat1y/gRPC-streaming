@@ -5,12 +5,12 @@ import grpc
 from fastapi import HTTPException, WebSocket, status
 from loguru import logger
 
-from src.utils.enums.status_code import CodeEnum, WsCloseCodeEnum
+from src.utils.exceptions import GrpcError
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def handle_grpc_exceptions(func: F) -> F:
+def handle_grpc_exceptions(func: F):
     @wraps(func)
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
@@ -19,73 +19,22 @@ def handle_grpc_exceptions(func: F) -> F:
             details = e.details()
             code = e.code()
 
-            logger.exception(
+            error = GrpcError(code=code, detail=details)
+            logger.error(
                 f"gRPC error in {func.__name__} | Code: {code} | Details: {details}"
             )
-
             if code == grpc.StatusCode.UNAVAILABLE:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=f"Service unavailable",
-                )
+                error.detail = "Service unavailable"
+                raise error
 
             if code == grpc.StatusCode.DEADLINE_EXCEEDED:
-                raise HTTPException(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    detail="Service timeout",
-                )
-            raise HTTPException(
-                status_code=CodeEnum.from_grpc_code(code), detail=details
-            )
+                error.detail = "Service timeout"
+                raise error
+            raise error
         except Exception as e:
             logger.exception(f"Unexpected error in {func.__name__}: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error",
+            raise GrpcError(
+                code=grpc.StatusCode.UNKNOWN, detail="Internal server error"
             )
-
-    return wrapper
-
-
-def _find_websocket_in_args(*args: Any, **kwargs: Any) -> Optional[WebSocket]:
-    for arg in args:
-        if isinstance(arg, WebSocket):
-            return arg
-    for arg in kwargs.values():
-        if isinstance(arg, WebSocket):
-            return arg
-    return None
-
-
-def handle_websocket_grpc_exceptions(func: F) -> F:
-    @wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
-        websocket = _find_websocket_in_args(*args, **kwargs)
-
-        try:
-            return await func(*args, **kwargs)
-
-        except grpc.aio.AioRpcError as e:
-            logger.error(f"gRPC error в задаче '{func.__name__}': {e.details()}")
-            if websocket:
-                ws_code = WsCloseCodeEnum.from_grpc_code(e.code())
-                reason = e.details() or "gRPC communication error"
-                try:
-                    await websocket.close(code=ws_code, reason=reason)
-                except RuntimeError:
-                    pass
-            return
-
-        except Exception as e:
-            logger.error(f"Неожиданная ошибка в задаче '{func.__name__}': {e}")
-            if websocket:
-                try:
-                    await websocket.close(
-                        code=status.WS_1011_INTERNAL_ERROR,
-                        reason="Internal Server Error",
-                    )
-                except RuntimeError:
-                    pass
-            return
 
     return wrapper

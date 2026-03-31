@@ -1,6 +1,6 @@
 import grpc
 
-from src.exceptions import AppException, NotFoundError
+from src.exceptions import AccessDeniedError, AppException, NotFoundError
 
 
 class MessageNotFoundError(NotFoundError):
@@ -14,3 +14,10 @@ class ReacionNotAdded(AppException):
 
     def __init__(self):
         super().__init__(f"Reaction already added")
+
+
+class ForwardMessageFailed(AppException):
+    status_code = grpc.StatusCode.ABORTED
+
+    def __init__(self, detail=None) -> None:
+        super().__init__(f"Failde to forward messages, detail={detail}")
