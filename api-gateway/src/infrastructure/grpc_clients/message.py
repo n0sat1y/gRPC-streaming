@@ -16,7 +16,7 @@ class RpcMessageService:
     def __init__(self, stub: message_pb2_grpc.MessageServiceStub):
         self.stub = stub
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def send_message(
         self,
         chat_id: int,
@@ -38,7 +38,7 @@ class RpcMessageService:
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def update_message(
         self, message_id: str, new_content: str, request_id: str, sender_id: int
     ) -> str:
@@ -52,7 +52,7 @@ class RpcMessageService:
         logger.info(f"Обновлено сообщение: {response.message_id}")
         return response.message_id
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def delete_message(
         self, message_id: str, request_id: str, sender_id: int
     ) -> str:
@@ -63,7 +63,7 @@ class RpcMessageService:
         logger.info(f"Удалено сообщение: {message_id}")
         return response.status
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def get_context(
         self,
         chat_id: int,
@@ -87,7 +87,7 @@ class RpcMessageService:
         # return GetAllMessagesSchema.model_validate(data)
         return data
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def get_message_data(self, message_id: str):
         request = message_pb2.MessageId(message_id=message_id)
         response = await self.stub.GetMessageData(request)
@@ -96,7 +96,7 @@ class RpcMessageService:
         data = MessageToDict(response, preserving_proto_field_name=True)
         return data
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def add_reaction(self, message_id: str, reaction: str, author: int):
         request = message_pb2.Reaction(
             message_id=message_id, reaction=reaction, author=author
@@ -104,7 +104,7 @@ class RpcMessageService:
         response = await self.stub.AddReaction(request)
         return None
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def remove_reaction(self, message_id: str, reaction: str, author: int):
         request = message_pb2.Reaction(
             message_id=message_id, reaction=reaction, author=author
@@ -112,7 +112,7 @@ class RpcMessageService:
         response = await self.stub.RemoveReaction(request)
         return None
 
-    @handle_grpc_exceptions
+    @handle_grpc_exceptions()
     async def forward_messages(
         self,
         user_id: int,

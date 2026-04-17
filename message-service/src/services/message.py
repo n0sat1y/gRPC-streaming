@@ -282,7 +282,7 @@ class MessageService:
                 data=event_data, sender_id=author, recievers=recievers
             )
         else:
-            raise ReacionNotAdded()
+            raise ReacionAlreadyExists()
 
     async def remove_reaction(
         self, message_id: str, reaction: str, author: int
@@ -298,7 +298,7 @@ class MessageService:
                 data=event_data, sender_id=author, recievers=recievers
             )
         else:
-            raise ReacionNotAdded()
+            raise ReacionAlreadyExists()
 
     async def forward_message(
         self,
@@ -312,12 +312,15 @@ class MessageService:
         user = await self.user_service.get(user_id)
         self.access_policy.can_see_chat(user_id, chat)
 
+        if not messages:
+            logger.warning(f"Сообщения для пересылки не были переданы - {request_id}")
+
         coros = []
         for message_id in messages:
             coros.append(self._get_model(message_id))
 
         messages_data = await asyncio.gather(*coros)
-        if not messages_data:
+        if len(messages_data) != len(messages):
             logger.warning("Попытка пересылки несуществующих сообщений")
             raise ForwardMessageFailed(detail="Messages not found")
 

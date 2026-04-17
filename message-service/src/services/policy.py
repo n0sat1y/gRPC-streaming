@@ -1,4 +1,7 @@
+from loguru import logger
+
 from src.exceptions import AccessDeniedError
+from src.exceptions.message import *
 from src.models import Message
 from src.models.replications import ChatReplica, UserReplica
 
@@ -11,3 +14,7 @@ class AccessPolicy:
     def can_see_chat(self, user_id: int, chat: ChatReplica):
         if not user_id in chat.members:
             raise AccessDeniedError()
+
+    def can_forward(self, user_id: int, chats: list[ChatReplica]):
+        for chat in chats:
+            self.can_see_chat(user_id, chat)

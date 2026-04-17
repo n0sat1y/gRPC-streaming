@@ -9,7 +9,7 @@ class MessageNotFoundError(NotFoundError):
         super().__init__(f"Message not found: {self.message_id}")
 
 
-class ReacionNotAdded(AppException):
+class ReacionAlreadyExists(AppException):
     status_code = grpc.StatusCode.ALREADY_EXISTS
 
     def __init__(self):
@@ -20,4 +20,4 @@ class ForwardMessageFailed(AppException):
     status_code = grpc.StatusCode.ABORTED
 
     def __init__(self, detail=None) -> None:
-        super().__init__(f"Failde to forward messages, detail={detail}")
+        super().__init__(f"Failed to forward messages, detail={detail}")
