@@ -1,14 +1,19 @@
+from src.core.redis import redis
 from src.repositories.chat import ChatRepository
 from src.repositories.message import MessageRepository
 from src.repositories.read_progress import ReadProgressRepository
 from src.repositories.user import UserRepository
-from src.routers.grpc import Message
 from src.routers.kafka import broker
 from src.routers.kafka.producer import KafkaPublisher
 from src.services.chat import ChatService
 from src.services.message import MessageService
 from src.services.policy import AccessPolicy
 from src.services.user import UserService
+from src.repositories.redis import RedisRepository
+
+
+def get_redis() -> RedisRepository:
+    return RedisRepository(redis_client=redis)
 
 
 def get_message_repository() -> MessageRepository:
@@ -62,10 +67,3 @@ def get_message_service(
         kafka_producer=kafka_producer,
         access_policy=access_policy,
     )
-
-
-def get_grpc_message_service(
-    chat_service: ChatService = get_chat_service(),
-    message_service: MessageService = get_message_service(),
-) -> Message:
-    return Message(chat_service=chat_service, message_service=message_service)

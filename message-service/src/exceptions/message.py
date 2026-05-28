@@ -1,6 +1,11 @@
 import grpc
 
-from src.exceptions import AccessDeniedError, AppException, NotFoundError
+from src.exceptions import (
+    AccessDeniedError,
+    AppException,
+    NotFoundError,
+    ProcessCanselled,
+)
 
 
 class MessageNotFoundError(NotFoundError):
@@ -21,3 +26,9 @@ class ForwardMessageFailed(AppException):
 
     def __init__(self, detail=None) -> None:
         super().__init__(f"Failed to forward messages, detail={detail}")
+
+
+class RequestIdAlreadyProcessedError(ProcessCanselled):
+    def __init__(self, request_id: str):
+        self.detail = f"Request_id already processed: {request_id}"
+        super().__init__(self.detail)

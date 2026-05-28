@@ -5,6 +5,8 @@ services:
     depends_on:
       message_mongodb:
         condition: service_started
+      message_redis:
+        condition: service_started
       # kafka:
       #   condition: service_healthy
     env_file:
@@ -13,15 +15,15 @@ services:
       - MONGO_HOST=message-mongo
       - KAFKA_HOST=kafka
       - KAFKA_PORT=9094
+      - REDIS_HOST=message-redis
     volumes:
       - .:/app
     networks:
       - messenger
       - default
 
-
   message_mongodb:
-    image: mongo:latest 
+    image: mongo:latest
     container_name: message-mongo
     ports:
       - "27017:27017"
@@ -35,8 +37,18 @@ services:
     networks:
       - default
 
+  message_redis:
+    image: redis:7-alpine
+    container_name: message-redis
+    volumes:
+      - message_redis_data:/data
+    command: redis-server --appendonly yes --notify-keyspace-events Ex
+    networks:
+      - default
+
 volumes:
   message_mongo_data:
+  message_redis_data:
 
 networks:
   messenger:

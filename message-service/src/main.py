@@ -8,13 +8,14 @@ from loguru import logger
 from motor.motor_asyncio import AsyncIOMotorClient
 
 import src.routers.kafka.subscriber
+import src.core.deps as deps
 from protos import message_pb2, message_pb2_grpc
 from src.core.config import settings
-from src.core.deps import get_grpc_message_service as MessageRouter
 from src.models import Message as MessageModel
 from src.models import MetaData, ReadProgress
 from src.models.replications import ChatReplica, UserReplica
 from src.routers.kafka import broker
+from src.routers.grpc import Message
 
 app = FastStream(broker)
 server: grpc.aio.Server | None = None
@@ -34,8 +35,11 @@ async def startup():
         ],
     )
 
+    MessageRouter = Message(
+        chat_service=deps.get_chat_service(), message_service=deps.get_message_service()
+    )
     server = grpc.aio.server(futures.ThreadPoolExecutor(max_workers=10))
-    message_pb2_grpc.add_MessageServiceServicer_to_server(MessageRouter(), server)
+    message_pb2_grpc.add_MessageServiceServicer_to_server(MessageRouter, server)
     server.add_insecure_port(f"[::]:{settings.GRPC_PORT}")
     await server.start()
     logger.info(f"Listening on port :{settings.GRPC_PORT}")
@@ -43,7 +47,7 @@ async def startup():
 
 @app.on_shutdown
 async def shutdown():
-    await server.stop(1)
+    await server.stop(1.0)
 
 
 if __name__ == "__main__":

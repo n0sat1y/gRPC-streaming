@@ -28,3 +28,10 @@ class AccessDeniedError(AppException):
 
     def __init__(self) -> None:
         super().__init__("Access denied")
+
+
+class ProcessCanselled(AppException):
+    status_code = grpc.StatusCode.CANCELLED
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"Operation cancelled. Detail: {detail}")
